@@ -1,8 +1,17 @@
 PRODUCT REQUIREMENTS DOCUMENT (PRD)
 Multi-Tenant White-Label SaaS Platform for Car Dealerships
+Demo Tenant: demobazar.webshine.sk
 1. Executive Summary
 
-We are building a multi-tenant white-label SaaS platform for car dealerships.
+We are building a modern, production-ready, multi-tenant white-label SaaS web application for car dealerships (autobazár platform).
+
+This system will serve as:
+
+Public-facing dealership website (frontend)
+
+Internal administration system (backend UI)
+
+Scalable SaaS platform for multiple dealerships
 
 The platform must:
 
@@ -18,23 +27,15 @@ Be hosted on a Hetzner Cloud VPS (Ubuntu 24.04)
 
 Be deployed from GitHub
 
+Follow modern UI/UX standards
+
 Be production-ready and scalable
 
-This document defines:
+Demo tenant domain:
 
-Infrastructure constraints
+https://demobazar.webshine.sk
 
-Application architecture
-
-Deployment model
-
-Multi-tenant behavior
-
-Security requirements
-
-Technical implementation boundaries
-
-2. Infrastructure (Already Implemented – Must Be Respected)
+2. Infrastructure (Already Implemented – MUST BE RESPECTED)
 2.1 Server Environment
 
 Provider: Hetzner Cloud
@@ -45,18 +46,22 @@ Docker Engine installed (official repository)
 
 Docker Compose plugin installed
 
-UFW firewall enabled (ports 22, 80, 443)
+UFW firewall enabled (ports 22, 80, 443 only)
 
 Root SSH disabled
 
 Fail2ban enabled
 
+Automatic security updates enabled
+
 2.2 Docker Architecture
-Global Docker Network
+
+Global Docker network:
+
 docker network create web
 
 
-All containers must attach to:
+All containers MUST attach to:
 
 network: web
 
@@ -111,7 +116,7 @@ Postgres is accessible only inside Docker network.
 
 Database-per-tenant strategy.
 
-Each tenant must have:
+Each tenant has:
 
 Dedicated PostgreSQL database
 
@@ -119,7 +124,7 @@ Dedicated PostgreSQL user
 
 Public privileges revoked
 
-Example for demo tenant:
+Demo tenant:
 
 Database:
 
@@ -135,35 +140,7 @@ Owner:
 
 demo_bazar_user
 
-3.2 Tenant Naming Rules
-
-Tenant slug rules:
-
-lowercase
-
-no diacritics
-
-hyphen allowed for folders
-
-underscore for database names
-
-Example:
-
-Folder:
-
-auto-dom
-
-
-Database:
-
-auto_dom
-
-
-User:
-
-auto_dom_user
-
-3.3 Server File Structure
+3.2 Server File Structure
 /srv
    /proxy
       /traefik
@@ -181,30 +158,108 @@ Principles:
 
 Containers are stateless
 
-Persistent data must be stored in /srv/data
+Persistent data stored in /srv/data
 
-Tenant config must be stored in /srv/tenants/<tenant_slug>
+Tenant config stored in /srv/tenants/<tenant_slug>
 
-4. Application Requirements
-4.1 Framework
+4. Application Type & Architecture
+
+This is a full-stack web application consisting of:
+
+A) Public Frontend (Car Dealership Website)
+B) Admin Backend (Dealership Management System)
+
+Built with:
 
 Next.js (App Router)
 
-Node.js runtime
-
 TypeScript
 
-Server Components
+Prisma
 
-API routes for backend logic
+PostgreSQL
 
-No Nginx inside app container.
-No SQLite.
-No direct DB exposure.
+Tailwind CSS
 
-4.2 Environment Variables (Required)
+Modern component system (e.g., shadcn/ui)
 
-Application must read configuration only from environment variables.
+5. Public Frontend Requirements
+
+The public website must:
+
+Be modern, responsive, mobile-first
+
+Follow professional automotive UI standards
+
+Use clean typography and strong visual hierarchy
+
+Be SEO-friendly
+
+Main navigation:
+
+Home
+
+Vehicles (Offer)
+
+About Us
+
+Contact
+
+Features:
+
+Vehicles listing page
+
+Vehicle detail page
+
+Filtering (basic for now)
+
+Static About page
+
+Static Contact page
+
+Future-ready for branding (logo, colors per tenant).
+
+6. Admin Backend Requirements
+
+Modern dashboard-style UI.
+
+Must include:
+
+Authentication
+
+Email + password login
+
+Admin role (initially single role)
+
+User Management
+
+CRUD users
+
+Role support (future-ready)
+
+Vehicle Management
+
+CRUD vehicles
+
+Upload vehicle images
+
+Status field (available, reserved, sold)
+
+Image gallery
+
+Import Settings (Phase 1 – UI Only)
+
+Section to define XML feed URL (autobazar.eu)
+
+Store feed URL in database
+
+DO NOT implement actual sync yet
+
+Architecture must allow background sync every 30 minutes later
+
+7. Environment Configuration
+
+App must read from environment variables only.
 
 Example:
 
@@ -217,178 +272,71 @@ PORT=3000
 
 No hardcoded DB names.
 
-4.3 Core Modules (Phase 1)
-Admin Backend
+8. Docker Requirements
 
-Authentication (email/password)
+Must generate:
 
-Role-based access (admin initially)
-
-Dashboard overview
-
-Vehicle Management
-
-CRUD vehicles
-
-Image uploads
-
-Status (available, reserved, sold)
-
-Client Management
-
-CRUD clients
-
-Link client to vehicle
-
-Contract Generation
-
-Generate PDF contracts
-
-Store in /app/pdfs
-
-Persist in mounted volume
-
-4.4 Public Frontend
-
-List vehicles
-
-Vehicle detail page
-
-SEO-friendly routes
-
-Tenant branding support (logo, colors later)
-
-5. Docker Requirements for App
-
-Claude must generate:
-
-5.1 Dockerfile
-
-Production optimized:
+Dockerfile
 
 Multi-stage build
 
 Node 20+
 
-Minimal final image
+Production optimized
 
-Expose port 3000
+Expose 3000
 
-CMD to start Next.js in production mode
+Start in production mode
 
-5.2 docker-compose template (tenant-level)
+Tenant docker-compose template
 
-Each tenant will have:
+For demo tenant:
 
-/srv/tenants/demo_bazar/docker-compose.yml
+Host:
+
+demobazar.webshine.sk
 
 
-It must:
+Traefik labels must include:
 
-Use shared Docker network web
+traefik.enable=true
+traefik.http.routers.demobazar.rule=Host(`demobazar.webshine.sk`)
+traefik.http.routers.demobazar.entrypoints=websecure
+traefik.http.routers.demobazar.tls.certresolver=le
 
-Not expose ports publicly
 
-Use Traefik labels
+Must:
+
+Join external network web
+
+Not expose ports
 
 Mount uploads and pdf volumes
 
-Example Traefik labels:
+9. Deployment Strategy
 
-traefik.enable=true
-traefik.http.routers.demo.rule=Host(`demo.webshine.sk`)
-traefik.http.routers.demo.entrypoints=websecure
-traefik.http.routers.demo.tls.certresolver=le
-
-6. Deployment Strategy
-6.1 GitHub-Based Deployment
-
-Claude Code will:
-
-Generate repository
-
-Push to GitHub
+GitHub repository: dealership
 
 VPS pulls repository
 
-Docker image builds on server
+Docker image builds on VPS
 
-docker compose up -d runs
+docker compose up -d inside /srv/tenants/demo_bazar
 
-No manual file editing on server.
+No manual edits on VPS.
 
-6.2 Build Constraints
-
-Must work with Docker Compose
-
-Must support environment-based configuration
-
-Must not assume localhost DB
-
-Must use service name postgres inside Docker network
-
-7. Security Constraints
-
-No database exposed to internet
-
-No debug endpoints in production
-
-No hardcoded secrets
-
-Use environment variables only
-
-Respect Docker isolation
-
-8. Future Expansion Requirements
-
-Architecture must allow:
-
-20+ tenants
-
-Worker container for background jobs
-
-Redis integration later
-
-Billing module
-
-Feature flags per tenant
-
-Plugin/override system
-
-9. Non-Functional Requirements
+10. Non-Functional Requirements
 
 Production-ready
 
-Clean folder structure
+Clean architecture
 
-Clear separation:
+Modular code
 
-infra
+Prepared for 20+ tenants
 
-tenant config
-
-persistent data
-
-Minimal container size
+Scalable
 
 Deterministic builds
 
-10. Expected Output from Claude Code
-
-Claude must generate:
-
-Full Next.js project
-
-Prisma schema (PostgreSQL)
-
-Production Dockerfile
-
-docker-compose template
-
-.env example
-
-Clean project structure
-
-Migration-ready database layer
-
-End of PRD
+END OF PRD
