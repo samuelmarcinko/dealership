@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.tenant.yml
+# Template for demo tenant: demobazar.webshine.sk
+#
+# Deploy location on VPS: /srv/tenants/demo_bazar/docker-compose.yml
+# Usage:  docker compose up -d
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  dealership:
+    image: ghcr.io/YOUR_GITHUB_ORG/dealership:latest
+    # Or build locally:
+    # build:
+    #   context: /srv/tenants/demo_bazar/repo
+    #   dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - TENANT_ID=demo_bazar
+      - TENANT_NAME=Demo Bazar
+      - DATABASE_URL=postgresql://demo_bazar_user:${DB_PASSWORD}@postgres:5432/demo_bazar
+      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_URL=https://demobazar.webshine.sk
+      - UPLOAD_PATH=/app/public/uploads
+      - PORT=3000
+    volumes:
+      # Persistent storage for uploaded vehicle images
+      - /srv/data/demo_bazar/uploads:/app/public/uploads
+    networks:
+      - web
+    # No public ports – Traefik handles ingress
+    expose:
+      - "3000"
+    labels:
+      # ── Traefik routing ────────────────────────────────────────────────────
+      - "traefik.enable=true"
+
+      # HTTP → HTTPS redirect (handled globally by Traefik entrypoint, but kept explicit)
+      - "traefik.http.routers.demobazar-http.rule=Host(`demobazar.webshine.sk`)"
+      - "traefik.http.routers.demobazar-http.entrypoints=web"
+      - "traefik.http.routers.demobazar-http.middlewares=https-redirect"
+
+      # HTTPS router
+      - "traefik.http.routers.demobazar.rule=Host(`demobazar.webshine.sk`)"
+      - "traefik.http.routers.demobazar.entrypoints=websecure"
+      - "traefik.http.routers.demobazar.tls=true"
+      - "traefik.http.routers.demobazar.tls.certresolver=le"
+
+      # Service definition
+      - "traefik.http.services.demobazar.loadbalancer.server.port=3000"
+
+networks:
+  web:
+    external: true

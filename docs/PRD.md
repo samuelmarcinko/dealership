@@ -1,342 +1,171 @@
-PRODUCT REQUIREMENTS DOCUMENT (PRD)
-Multi-Tenant White-Label SaaS Platform for Car Dealerships
-Demo Tenant: demobazar.webshine.sk
-1. Executive Summary
+# PRODUCT REQUIREMENTS DOCUMENT (PRD)
+## Multi-Tenant White-Label SaaS Platform for Car Dealerships
+### Demo Tenant: demobazar.webshine.sk
+**Last updated:** 2026-02-18
+
+---
+
+## 1. Executive Summary
 
 We are building a modern, production-ready, multi-tenant white-label SaaS web application for car dealerships (autobazár platform).
 
-This system will serve as:
+This system serves as:
+- **Public-facing dealership website** (frontend)
+- **Internal administration system** (backend UI)
+- **Scalable SaaS platform** for multiple independent dealerships
+
+### Core principles
+| Principle | Implementation |
+|-----------|---------------|
+| Multi-tenant | Database-per-tenant, one container per tenant |
+| Infrastructure | Docker + Traefik v2.11, deployed on Hetzner VPS |
+| Tech stack | Next.js 15 + TypeScript + Prisma + PostgreSQL + Tailwind |
+| Deployment | GitHub → VPS pull → `docker compose up -d` |
+
+---
+
+## 2. Infrastructure (Already Deployed – MUST NOT CHANGE)
+
+### 2.1 Server
+- **Provider:** Hetzner Cloud, Ubuntu 24.04 LTS
+- Docker Engine + Compose plugin installed
+- UFW firewall (ports 22, 80, 443 only)
+- Root SSH disabled, Fail2ban enabled
+
+### 2.2 Docker Architecture
+```
+Global network: web (external, shared by all tenants + Traefik + Postgres)
+```
+
+### 2.3 Reverse Proxy: Traefik v2.11
+- Location: `/srv/proxy/traefik`
+- Automatic HTTPS via Let's Encrypt (`certresolver=le`)
+- Dashboard: `https://control.webshine.sk`
+- All app containers: **NO public ports**, listen on port 3000 internally
+
+### 2.4 PostgreSQL
+- Image: `postgres:16`, network: `web`
+- Data: `/srv/data/postgres`
+- Accessible only inside Docker network as hostname `postgres`
+
+---
+
+## 3. Multi-Tenant Architecture
+
+### 3.1 Database Model
+**Strategy:** Database-per-tenant
+
+| Tenant | Database | User |
+|--------|----------|------|
+| demo_bazar | `demo_bazar` | `demo_bazar_user` |
+
+### 3.2 Server File Structure
+```
+/srv/
+  proxy/traefik/           # Traefik config
+  tenants/
+    demo_bazar/            # docker-compose.yml + .env for this tenant
+  data/
+    postgres/              # Postgres data volume
+    demo_bazar/
+      uploads/             # Mounted into container at /app/public/uploads
+```
+
+---
+
+## 4. Application Architecture
+
+### Tech Stack
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript 5 |
+| ORM | Prisma 6 |
+| Database | PostgreSQL 16 |
+| Styling | Tailwind CSS 3 + shadcn/ui-style components |
+| Auth | JWT via `jose`, httpOnly cookies |
+| Image processing | sharp |
+
+### Data Models
+```
+User            – admin/editor accounts
+Vehicle         – full vehicle record with specs
+VehicleImage    – ordered image gallery per vehicle
+TenantSettings  – key/value store (xml_feed_url, sync_interval_minutes)
+```
+
+---
+
+## 5. Public Frontend
+
+| Page | Route | Features |
+|------|-------|---------|
+| Home | `/` | Hero, featured vehicles, why-us, CTA |
+| Vehicles | `/vehicles` | Grid listing, sidebar filters (make, fuel, price, year) |
+| Vehicle detail | `/vehicles/[id]` | Image gallery, specs table, features, contact CTA |
+| About | `/about` | Company story, values |
+| Contact | `/contact` | Contact form (Phase 1: no email send) |
+
+**Design:** Dark slate-900 header/footer, orange-500 accent, mobile-first responsive.
+
+---
+
+## 6. Admin Backend
 
-Public-facing dealership website (frontend)
+| Section | Route | Features |
+|---------|-------|---------|
+| Login | `/admin/login` | Email + password, JWT cookie auth |
+| Dashboard | `/admin` | Stats cards, recent vehicles |
+| Vehicles | `/admin/vehicles` | Table list, CRUD, image upload |
+| Users | `/admin/users` | Table list, CRUD |
+| Import Settings | `/admin/settings` | XML feed URL + sync interval UI |
 
-Internal administration system (backend UI)
+---
 
-Scalable SaaS platform for multiple dealerships
+## 7. Environment Variables
 
-The platform must:
-
-Support multiple independent dealerships (tenants)
-
-Use database-per-tenant architecture
-
-Be deployed via Docker
-
-Use Traefik as reverse proxy
-
-Be hosted on a Hetzner Cloud VPS (Ubuntu 24.04)
-
-Be deployed from GitHub
-
-Follow modern UI/UX standards
-
-Be production-ready and scalable
-
-Demo tenant domain:
-
-https://demobazar.webshine.sk
-
-2. Infrastructure (Already Implemented – MUST BE RESPECTED)
-2.1 Server Environment
-
-Provider: Hetzner Cloud
-
-OS: Ubuntu 24.04 LTS
-
-Docker Engine installed (official repository)
-
-Docker Compose plugin installed
-
-UFW firewall enabled (ports 22, 80, 443 only)
-
-Root SSH disabled
-
-Fail2ban enabled
-
-Automatic security updates enabled
-
-2.2 Docker Architecture
-
-Global Docker network:
-
-docker network create web
-
-
-All containers MUST attach to:
-
-network: web
-
-2.3 Reverse Proxy
-
-Reverse proxy: Traefik v2.11
-Location:
-
-/srv/proxy/traefik
-
-
-Responsibilities:
-
-Route traffic by hostname
-
-Provide automatic HTTPS (Let's Encrypt)
-
-Redirect HTTP → HTTPS
-
-Provide dashboard at:
-
-https://control.webshine.sk
-
-
-App containers must:
-
-NOT expose ports publicly
-
-Be reachable only through Traefik
-
-Listen internally on port 3000
-
-2.4 PostgreSQL
-
-Postgres runs as Docker container:
-
-Image: postgres:16
-
-Network: web
-
-No public port exposed
-
-Data stored in:
-
-/srv/data/postgres
-
-
-Postgres is accessible only inside Docker network.
-
-3. Multi-Tenant Architecture
-3.1 Database Model
-
-Database-per-tenant strategy.
-
-Each tenant has:
-
-Dedicated PostgreSQL database
-
-Dedicated PostgreSQL user
-
-Public privileges revoked
-
-Demo tenant:
-
-Database:
-
-demo_bazar
-
-
-User:
-
-demo_bazar_user
-
-
-Owner:
-
-demo_bazar_user
-
-3.2 Server File Structure
-/srv
-   /proxy
-      /traefik
-      /db
-   /tenants
-      /demo_bazar
-   /data
-      /postgres
-      /demo_bazar
-         /uploads
-         /pdfs
-
-
-Principles:
-
-Containers are stateless
-
-Persistent data stored in /srv/data
-
-Tenant config stored in /srv/tenants/<tenant_slug>
-
-4. Application Type & Architecture
-
-This is a full-stack web application consisting of:
-
-A) Public Frontend (Car Dealership Website)
-B) Admin Backend (Dealership Management System)
-
-Built with:
-
-Next.js (App Router)
-
-TypeScript
-
-Prisma
-
-PostgreSQL
-
-Tailwind CSS
-
-Modern component system (e.g., shadcn/ui)
-
-5. Public Frontend Requirements
-
-The public website must:
-
-Be modern, responsive, mobile-first
-
-Follow professional automotive UI standards
-
-Use clean typography and strong visual hierarchy
-
-Be SEO-friendly
-
-Main navigation:
-
-Home
-
-Vehicles (Offer)
-
-About Us
-
-Contact
-
-Features:
-
-Vehicles listing page
-
-Vehicle detail page
-
-Filtering (basic for now)
-
-Static About page
-
-Static Contact page
-
-Future-ready for branding (logo, colors per tenant).
-
-6. Admin Backend Requirements
-
-Modern dashboard-style UI.
-
-Must include:
-
-Authentication
-
-Email + password login
-
-Admin role (initially single role)
-
-User Management
-
-CRUD users
-
-Role support (future-ready)
-
-Vehicle Management
-
-CRUD vehicles
-
-Upload vehicle images
-
-Status field (available, reserved, sold)
-
-Image gallery
-
-Import Settings (Phase 1 – UI Only)
-
-Section to define XML feed URL (autobazar.eu)
-
-Store feed URL in database
-
-DO NOT implement actual sync yet
-
-Architecture must allow background sync every 30 minutes later
-
-7. Environment Configuration
-
-App must read from environment variables only.
-
-Example:
-
+```bash
 TENANT_ID=demo_bazar
-DATABASE_URL=postgresql://demo_bazar_user:password@postgres:5432/demo_bazar
-UPLOAD_PATH=/app/uploads
-PDF_PATH=/app/pdfs
+TENANT_NAME="Demo Bazar"
+DATABASE_URL=postgresql://demo_bazar_user:PASSWORD@postgres:5432/demo_bazar
+JWT_SECRET=<64-char random string>
+NEXT_PUBLIC_APP_URL=https://demobazar.webshine.sk
 PORT=3000
+NODE_ENV=production
+UPLOAD_PATH=/app/public/uploads
+```
 
+---
 
-No hardcoded DB names.
+## 8. Phase Roadmap
 
-8. Docker Requirements
+### Phase 1 ✅ (this implementation)
+- [x] Next.js 15 + TypeScript + Tailwind + shadcn/ui-style components
+- [x] Prisma schema: User, Vehicle, VehicleImage, TenantSettings
+- [x] Public frontend: Home, Vehicles, Vehicle detail, About, Contact
+- [x] Admin: Login, Dashboard, User CRUD, Vehicle CRUD + image upload
+- [x] Import Settings UI (URL stored, no sync yet)
+- [x] Multi-stage Dockerfile with standalone output
+- [x] docker-compose.tenant.yml with Traefik labels
+- [x] JWT auth with httpOnly cookies
+- [x] DB migrations via `prisma migrate deploy` at container startup
 
-Must generate:
+### Phase 2 (upcoming)
+- [ ] XML feed parser (autobazar.eu format)
+- [ ] Background sync worker (cron every N minutes)
+- [ ] Vehicle deduplication by `externalId`
+- [ ] Email notifications (Resend / Nodemailer)
+- [ ] Contact form email delivery
+- [ ] Tenant branding (logo, colors per tenant via TenantSettings)
+- [ ] CI/CD pipeline (GitHub Actions → VPS deploy)
+- [ ] PDF export for vehicle listings
 
-Dockerfile
+---
 
-Multi-stage build
+## 9. Non-Functional Requirements
 
-Node 20+
-
-Production optimized
-
-Expose 3000
-
-Start in production mode
-
-Tenant docker-compose template
-
-For demo tenant:
-
-Host:
-
-demobazar.webshine.sk
-
-
-Traefik labels must include:
-
-traefik.enable=true
-traefik.http.routers.demobazar.rule=Host(`demobazar.webshine.sk`)
-traefik.http.routers.demobazar.entrypoints=websecure
-traefik.http.routers.demobazar.tls.certresolver=le
-
-
-Must:
-
-Join external network web
-
-Not expose ports
-
-Mount uploads and pdf volumes
-
-9. Deployment Strategy
-
-GitHub repository: dealership
-
-VPS pulls repository
-
-Docker image builds on VPS
-
-docker compose up -d inside /srv/tenants/demo_bazar
-
-No manual edits on VPS.
-
-10. Non-Functional Requirements
-
-Production-ready
-
-Clean architecture
-
-Modular code
-
-Prepared for 20+ tenants
-
-Scalable
-
-Deterministic builds
-
-END OF PRD
+- Production-ready, clean architecture
+- Modular code, prepared for 20+ tenants
+- Deterministic Docker builds
+- No hardcoded tenant IDs or credentials
+- All secrets via environment variables only
