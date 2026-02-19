@@ -10,6 +10,15 @@ export interface TenantBranding {
   contactAddress?: string
   socialFacebook?: string
   socialInstagram?: string
+  heroBgImage?: string
+  heroBadge?: string
+  heroTitle?: string
+  heroTitleAccent?: string
+  heroSubtitle?: string
+  heroBtn1Text?: string
+  heroBtn1Url?: string
+  heroBtn2Text?: string
+  heroBtn2Url?: string
 }
 
 export async function getTenantSettings(): Promise<Record<string, string>> {
@@ -29,5 +38,14 @@ export async function getTenantBranding(): Promise<TenantBranding> {
     contactAddress: s['contact_address'] || undefined,
     socialFacebook: s['social_facebook'] || undefined,
     socialInstagram: s['social_instagram'] || undefined,
+    heroBgImage: s['hero_bg_image'] || undefined,
+    heroBadge: s['hero_badge'] || undefined,
+    heroTitle: s['hero_title'] || undefined,
+    heroTitleAccent: s['hero_title_accent'] || undefined,
+    heroSubtitle: s['hero_subtitle'] || undefined,
+    heroBtn1Text: s['hero_btn1_text'] || undefined,
+    heroBtn1Url: s['hero_btn1_url'] || undefined,
+    heroBtn2Text: s['hero_btn2_text'] || undefined,
+    heroBtn2Url: s['hero_btn2_url'] || undefined,
   }
 }

@@ -1,12 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
-import { Save } from 'lucide-react'
+import { Save, Upload, X } from 'lucide-react'
 
 interface Props {
   settings: Record<string, string>
@@ -15,6 +16,27 @@ interface Props {
 export default function BrandingForm({ settings }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [logoUrl, setLogoUrl] = useState(settings['logo_url'] ?? '')
+  const [logoUploading, setLogoUploading] = useState(false)
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/upload/branding', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (res.ok) setLogoUrl(json.url)
+      else toast('error', json.error ?? 'Chyba nahrávania')
+    } catch {
+      toast('error', 'Chyba nahrávania')
+    } finally {
+      setLogoUploading(false)
+      e.target.value = ''
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -23,7 +45,7 @@ export default function BrandingForm({ settings }: Props) {
     const fd = new FormData(e.currentTarget)
     const updates = [
       { key: 'business_name', value: fd.get('business_name') as string },
-      { key: 'logo_url', value: fd.get('logo_url') as string },
+      { key: 'logo_url', value: logoUrl },
       { key: 'primary_color', value: fd.get('primary_color') as string },
       { key: 'custom_css', value: fd.get('custom_css') as string },
       { key: 'contact_phone', value: fd.get('contact_phone') as string },
@@ -68,17 +90,33 @@ export default function BrandingForm({ settings }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="logo_url">URL loga</Label>
-        <Input
-          id="logo_url"
-          name="logo_url"
-          type="url"
-          defaultValue={settings['logo_url'] ?? ''}
-          placeholder="https://example.com/logo.png"
-        />
-        <p className="text-xs text-slate-500">
-          Externá URL loga (JPG/PNG/SVG). Odporúčané rozmery: 200×50 px. Nechajte prázdne pre predvolené logo.
-        </p>
+        <Label>Logo</Label>
+        <div className="flex items-center gap-3 flex-wrap">
+          {logoUrl && (
+            <div className="relative h-12 w-32 rounded border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center p-1">
+              <Image src={logoUrl} alt="Logo" fill className="object-contain p-1" sizes="128px" />
+              <button
+                type="button"
+                onClick={() => setLogoUrl('')}
+                className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+          <label className="inline-flex items-center gap-2 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-3 py-2 rounded-md transition-colors">
+            <Upload className="h-4 w-4" />
+            {logoUploading ? 'Nahrávam…' : logoUrl ? 'Zmeniť logo' : 'Nahrať logo'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={handleLogoUpload}
+              disabled={logoUploading}
+            />
+          </label>
+        </div>
+        <p className="text-xs text-slate-500">JPG, PNG, WebP alebo SVG. Odporúčané: 200×50 px. Prázdne = predvolená ikona.</p>
       </div>
 
       <div className="border-t pt-5">

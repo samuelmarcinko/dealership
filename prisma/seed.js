@@ -11,6 +11,14 @@ async function main() {
   const defaultSettings = [
     { key: 'primary_color', value: '#f97316' },
     { key: 'custom_css', value: '' },
+    { key: 'hero_badge', value: 'Profesionálny autobazar' },
+    { key: 'hero_title', value: 'Nájdite vozidlo' },
+    { key: 'hero_title_accent', value: 'svojich snov' },
+    { key: 'hero_subtitle', value: 'Ponúkame starostlivo vybrané ojazdené vozidlá za transparentné ceny. Každé auto prešlo technickou kontrolou a je pripravené na cestu.' },
+    { key: 'hero_btn1_text', value: 'Prezerať vozidlá' },
+    { key: 'hero_btn1_url', value: '/vehicles' },
+    { key: 'hero_btn2_text', value: 'Kontaktujte nás' },
+    { key: 'hero_btn2_url', value: '/contact' },
   ]
   for (const setting of defaultSettings) {
     await prisma.tenantSettings.upsert({

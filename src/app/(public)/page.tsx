@@ -1,9 +1,11 @@
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight, Shield, Award, Headphones, TrendingDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import VehicleCard from '@/components/public/VehicleCard'
 import { prisma } from '@/lib/prisma'
+import { getTenantBranding } from '@/lib/tenant'
 import type { PublicVehicle } from '@/types'
 
 export const revalidate = 60
@@ -46,45 +48,71 @@ const features = [
   {
     icon: Headphones,
     title: 'Podpora zákazníkov',
-    description: 'Náš tím je tu pre vás pred aj po kúpe vozidla. Vždy chęteli poradiť.',
+    description: 'Náš tím je tu pre vás pred aj po kúpe vozidla. Vždy ochotní poradiť.',
   },
 ]
 
 export default async function HomePage() {
-  const vehicles = await getFeaturedVehicles()
+  const [vehicles, branding] = await Promise.all([
+    getFeaturedVehicles(),
+    getTenantBranding(),
+  ])
+
+  const heroBadge = branding.heroBadge ?? 'Profesionálny autobazar'
+  const heroTitle = branding.heroTitle ?? 'Nájdite vozidlo'
+  const heroTitleAccent = branding.heroTitleAccent ?? 'svojich snov'
+  const heroSubtitle = branding.heroSubtitle ?? 'Ponúkame starostlivo vybrané ojazdené vozidlá za transparentné ceny. Každé auto prešlo technickou kontrolou a je pripravené na cestu.'
+  const heroBtn1Text = branding.heroBtn1Text ?? 'Prezerať vozidlá'
+  const heroBtn1Url = branding.heroBtn1Url ?? '/vehicles'
+  const heroBtn2Text = branding.heroBtn2Text ?? 'Kontaktujte nás'
+  const heroBtn2Url = branding.heroBtn2Url ?? '/contact'
 
   return (
     <>
       {/* Hero */}
       <section className="relative bg-slate-900 text-white overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
+        {branding.heroBgImage ? (
+          <Image
+            src={branding.heroBgImage}
+            alt="Hero pozadie"
+            fill
+            className="object-cover opacity-25"
+            priority
+          />
+        ) : (
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
+        )}
         <div className="relative container mx-auto px-4 py-24 md:py-32">
           <div className="max-w-3xl">
-            <p className="text-orange-400 font-semibold text-sm uppercase tracking-widest mb-4">
-              Profesionálny autobazar
+            <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-4">
+              {heroBadge}
             </p>
             <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-6">
-              Nájdite vozidlo<br />
-              <span className="text-orange-400">svojich snov</span>
+              {heroTitle}<br />
+              <span className="text-primary">{heroTitleAccent}</span>
             </h1>
             <p className="text-slate-300 text-lg md:text-xl mb-8 max-w-xl">
-              Ponúkame starostlivo vybrané ojazdené vozidlá za transparentné ceny.
-              Každé auto prešlo technickou kontrolou a je pripravené na cestu.
+              {heroSubtitle}
             </p>
             <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white">
-                <Link href="/vehicles">
-                  Prezerať vozidlá
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white">
+                <Link href={heroBtn1Url}>
+                  {heroBtn1Text}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-slate-900">
-                <Link href="/contact">Kontaktujte nás</Link>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-white/60 text-white bg-transparent hover:bg-white hover:text-slate-900"
+              >
+                <Link href={heroBtn2Url}>{heroBtn2Text}</Link>
               </Button>
             </div>
           </div>
@@ -92,7 +120,7 @@ export default async function HomePage() {
       </section>
 
       {/* Stats bar */}
-      <section className="bg-orange-500 text-white py-6">
+      <section className="bg-primary text-white py-6">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
@@ -103,7 +131,7 @@ export default async function HomePage() {
             ].map((stat) => (
               <div key={stat.label}>
                 <div className="text-2xl md:text-3xl font-extrabold">{stat.value}</div>
-                <div className="text-orange-100 text-sm mt-1">{stat.label}</div>
+                <div className="text-white/75 text-sm mt-1">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -116,14 +144,14 @@ export default async function HomePage() {
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <p className="text-orange-500 font-semibold text-sm uppercase tracking-widest mb-2">
+                <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-2">
                   Aktuálna ponuka
                 </p>
                 <h2 className="text-3xl font-bold text-slate-900">Najnovšie vozidlá</h2>
               </div>
               <Link
                 href="/vehicles"
-                className="hidden md:flex items-center gap-2 text-orange-600 font-medium hover:text-orange-700"
+                className="hidden md:flex items-center gap-2 text-primary font-medium hover:opacity-80 transition-opacity"
               >
                 Zobraziť všetky
                 <ArrowRight className="h-4 w-4" />
@@ -147,7 +175,7 @@ export default async function HomePage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <p className="text-orange-500 font-semibold text-sm uppercase tracking-widest mb-2">
+            <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-2">
               Naše výhody
             </p>
             <h2 className="text-3xl font-bold text-slate-900">Prečo nakupovať u nás?</h2>
@@ -155,8 +183,8 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature) => (
               <div key={feature.title} className="text-center p-6">
-                <div className="flex items-center justify-center w-14 h-14 bg-orange-100 rounded-2xl mx-auto mb-4">
-                  <feature.icon className="h-7 w-7 text-orange-600" />
+                <div className="flex items-center justify-center w-14 h-14 rounded-2xl mx-auto mb-4 bg-primary/10">
+                  <feature.icon className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="font-semibold text-slate-900 text-lg mb-2">{feature.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{feature.description}</p>
@@ -173,7 +201,7 @@ export default async function HomePage() {
           <p className="text-slate-300 mb-8 max-w-xl mx-auto">
             Kontaktujte nás a naši odborníci vám pomôžu nájsť vozidlo presne podľa vašich požiadaviek.
           </p>
-          <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white">
+          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white">
             <Link href="/contact">Napíšte nám</Link>
           </Button>
         </div>

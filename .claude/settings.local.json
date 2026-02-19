@@ -9,7 +9,8 @@
       "Bash(npx tsc:*)",
       "Bash(python3:*)",
       "Bash(findstr:*)",
-      "Bash(npx prisma generate:*)"
+      "Bash(npx prisma generate:*)",
+      "Bash(ls:*)"
     ]
   }
 }

@@ -8,6 +8,7 @@ import {
   Car,
   Users,
   Rss,
+  Settings,
   LogOut,
   Car as CarIcon,
 } from 'lucide-react'
@@ -17,7 +18,8 @@ const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/vehicles', label: 'Vozidlá', icon: Car },
   { href: '/admin/users', label: 'Používatelia', icon: Users },
-  { href: '/admin/settings', label: 'Import nastavenia', icon: Rss },
+  { href: '/admin/settings', label: 'Nastavenia', icon: Settings, exact: true },
+  { href: '/admin/import', label: 'Import', icon: Rss, exact: true },
 ]
 
 interface Props {
