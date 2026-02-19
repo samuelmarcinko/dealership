@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Pencil } from 'lucide-react'
+import { Plus, Pencil, FileInput, UserPen } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -53,13 +53,14 @@ export default async function AdminVehiclesPage() {
                 <TableHead>Najazdené</TableHead>
                 <TableHead>Cena</TableHead>
                 <TableHead>Stav</TableHead>
+                <TableHead>Zdroj</TableHead>
                 <TableHead className="w-[100px]">Akcie</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vehicles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-slate-400">
+                  <TableCell colSpan={9} className="text-center py-8 text-slate-400">
                     Žiadne vozidlá
                   </TableCell>
                 </TableRow>
@@ -99,6 +100,19 @@ export default async function AdminVehiclesPage() {
                       <TableCell className="font-semibold text-slate-900">{formatPrice(vehicle.price)}</TableCell>
                       <TableCell>
                         <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {vehicle.externalId ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                            <FileInput className="h-3.5 w-3.5" />
+                            XML
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                            <UserPen className="h-3.5 w-3.5" />
+                            Manuálne
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

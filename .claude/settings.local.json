@@ -5,7 +5,11 @@
       "Bash(git -C \"C:/Users/samuel.marcinko/OneDrive - ETILOG, s.r.o/Pracovná plocha/webdev/projects/dealership\" add package.json tsconfig.json next.config.ts tailwind.config.ts postcss.config.mjs .env.example .gitignore)",
       "Bash(git -C:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python3:*)",
+      "Bash(findstr:*)",
+      "Bash(npx prisma generate:*)"
     ]
   }
 }
