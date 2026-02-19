@@ -10,7 +10,9 @@
       "Bash(python3:*)",
       "Bash(findstr:*)",
       "Bash(npx prisma generate:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(npx next build:*)"
     ]
   }
 }

@@ -1,12 +1,13 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Shield, Award, Headphones, TrendingDown } from 'lucide-react'
+import { ArrowRight, Shield, Award, Headphones, TrendingDown, Star, Heart, Clock, CheckCircle, Zap, Car, Users, MapPin, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import VehicleCard from '@/components/public/VehicleCard'
 import { prisma } from '@/lib/prisma'
 import { getTenantBranding } from '@/lib/tenant'
 import type { PublicVehicle } from '@/types'
+import type { LucideProps } from 'lucide-react'
 
 export const revalidate = 60
 
@@ -29,28 +30,26 @@ async function getFeaturedVehicles(): Promise<PublicVehicle[]> {
   }))
 }
 
-const features = [
-  {
-    icon: Shield,
-    title: 'Overené vozidlá',
-    description: 'Každé vozidlo prechádza dôkladnou technickou kontrolou pred predajom.',
-  },
-  {
-    icon: Award,
-    title: 'Záruka kvality',
-    description: 'Poskytujeme záruku na všetky predané vozidlá a odborné poradenstvo.',
-  },
-  {
-    icon: TrendingDown,
-    title: 'Férové ceny',
-    description: 'Transparentné ceny bez skrytých poplatkov. Čo vidíte, to zaplatíte.',
-  },
-  {
-    icon: Headphones,
-    title: 'Podpora zákazníkov',
-    description: 'Náš tím je tu pre vás pred aj po kúpe vozidla. Vždy ochotní poradiť.',
-  },
-]
+const ICON_MAP: Record<string, React.ComponentType<LucideProps>> = {
+  shield: Shield,
+  award: Award,
+  trending_down: TrendingDown,
+  headphones: Headphones,
+  star: Star,
+  heart: Heart,
+  clock: Clock,
+  check: CheckCircle,
+  zap: Zap,
+  car: Car,
+  users: Users,
+  map_pin: MapPin,
+  wrench: Wrench,
+}
+
+function iconFromName(name: string | undefined): React.ComponentType<LucideProps> {
+  if (!name) return Shield
+  return ICON_MAP[name] ?? Shield
+}
 
 export default async function HomePage() {
   const [vehicles, branding] = await Promise.all([
@@ -66,6 +65,36 @@ export default async function HomePage() {
   const heroBtn1Url = branding.heroBtn1Url ?? '/vehicles'
   const heroBtn2Text = branding.heroBtn2Text ?? 'Kontaktujte nás'
   const heroBtn2Url = branding.heroBtn2Url ?? '/contact'
+
+  const stats = [
+    { value: branding.stat1Value ?? '500+', label: branding.stat1Label ?? 'Predaných vozidiel' },
+    { value: branding.stat2Value ?? '98%', label: branding.stat2Label ?? 'Spokojných zákazníkov' },
+    { value: branding.stat3Value ?? '10+', label: branding.stat3Label ?? 'Rokov na trhu' },
+    { value: branding.stat4Value ?? '24/7', label: branding.stat4Label ?? 'Online podpora' },
+  ]
+
+  const features = [
+    {
+      Icon: iconFromName(branding.feature1Icon ?? 'shield'),
+      title: branding.feature1Title ?? 'Overené vozidlá',
+      description: branding.feature1Desc ?? 'Každé vozidlo prechádza dôkladnou technickou kontrolou pred predajom.',
+    },
+    {
+      Icon: iconFromName(branding.feature2Icon ?? 'award'),
+      title: branding.feature2Title ?? 'Záruka kvality',
+      description: branding.feature2Desc ?? 'Poskytujeme záruku na všetky predané vozidlá a odborné poradenstvo.',
+    },
+    {
+      Icon: iconFromName(branding.feature3Icon ?? 'trending_down'),
+      title: branding.feature3Title ?? 'Férové ceny',
+      description: branding.feature3Desc ?? 'Transparentné ceny bez skrytých poplatkov. Čo vidíte, to zaplatíte.',
+    },
+    {
+      Icon: iconFromName(branding.feature4Icon ?? 'headphones'),
+      title: branding.feature4Title ?? 'Podpora zákazníkov',
+      description: branding.feature4Desc ?? 'Náš tím je tu pre vás pred aj po kúpe vozidla. Vždy ochotní poradiť.',
+    },
+  ]
 
   return (
     <>
@@ -123,12 +152,7 @@ export default async function HomePage() {
       <section className="bg-primary text-white py-6">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {[
-              { value: '500+', label: 'Predaných vozidiel' },
-              { value: '98%', label: 'Spokojných zákazníkov' },
-              { value: '10+', label: 'Rokov na trhu' },
-              { value: '24/7', label: 'Online podpora' },
-            ].map((stat) => (
+            {stats.map((stat) => (
               <div key={stat.label}>
                 <div className="text-2xl md:text-3xl font-extrabold">{stat.value}</div>
                 <div className="text-white/75 text-sm mt-1">{stat.label}</div>
@@ -184,7 +208,7 @@ export default async function HomePage() {
             {features.map((feature) => (
               <div key={feature.title} className="text-center p-6">
                 <div className="flex items-center justify-center w-14 h-14 rounded-2xl mx-auto mb-4 bg-primary/10">
-                  <feature.icon className="h-7 w-7 text-primary" />
+                  <feature.Icon className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="font-semibold text-slate-900 text-lg mb-2">{feature.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{feature.description}</p>

@@ -53,6 +53,7 @@ export default function BrandingForm({ settings }: Props) {
       { key: 'contact_address', value: fd.get('contact_address') as string },
       { key: 'social_facebook', value: fd.get('social_facebook') as string },
       { key: 'social_instagram', value: fd.get('social_instagram') as string },
+      { key: 'footer_tagline', value: fd.get('footer_tagline') as string },
     ]
 
     try {
@@ -209,6 +210,21 @@ export default function BrandingForm({ settings }: Props) {
               placeholder="https://instagram.com/autobazar"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="border-t pt-5">
+        <h3 className="font-medium text-slate-900 mb-4">Päta stránky</h3>
+        <div className="space-y-2">
+          <Label htmlFor="footer_tagline">Tagline v päte</Label>
+          <Textarea
+            id="footer_tagline"
+            name="footer_tagline"
+            rows={2}
+            defaultValue={settings['footer_tagline'] ?? ''}
+            placeholder="Váš spoľahlivý partner pri kúpe ojazdených vozidiel. Férové ceny, overené vozidlá, profesionálny prístup."
+          />
+          <p className="text-xs text-slate-500">Krátky text zobrazený v päte pod názvom firmy.</p>
         </div>
       </div>
 
