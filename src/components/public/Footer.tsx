@@ -1,8 +1,18 @@
 import React from 'react'
 import Link from 'next/link'
-import { Car, Phone, Mail, MapPin } from 'lucide-react'
+import { Car, Phone, Mail, MapPin, Facebook, Instagram } from 'lucide-react'
+import type { TenantBranding } from '@/lib/tenant'
 
-export default function Footer() {
+interface Props {
+  branding?: TenantBranding
+}
+
+export default function Footer({ branding }: Props) {
+  const name = branding?.businessName ?? 'AutoBazar'
+  const phone = branding?.contactPhone ?? '+421 900 000 000'
+  const email = branding?.contactEmail ?? 'info@autobazar.sk'
+  const address = branding?.contactAddress ?? 'Hlavná 1, 010 01 Žilina'
+
   return (
     <footer className="bg-slate-900 text-slate-300">
       <div className="container mx-auto px-4 py-12">
@@ -13,12 +23,39 @@ export default function Footer() {
               <div className="flex items-center justify-center w-8 h-8 bg-orange-500 rounded">
                 <Car className="h-5 w-5 text-white" />
               </div>
-              <span>Auto<span className="text-orange-500">Bazar</span></span>
+              <span>{name}</span>
             </Link>
             <p className="text-sm leading-relaxed text-slate-400">
               Váš spoľahlivý partner pri kúpe ojazdených vozidiel.
               Férové ceny, overené vozidlá, profesionálny prístup.
             </p>
+            {/* Social */}
+            {(branding?.socialFacebook || branding?.socialInstagram) && (
+              <div className="flex gap-3 mt-4">
+                {branding.socialFacebook && (
+                  <a
+                    href={branding.socialFacebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 bg-slate-800 hover:bg-orange-500 rounded-lg flex items-center justify-center transition-colors"
+                    aria-label="Facebook"
+                  >
+                    <Facebook className="h-4 w-4" />
+                  </a>
+                )}
+                {branding.socialInstagram && (
+                  <a
+                    href={branding.socialInstagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 bg-slate-800 hover:bg-orange-500 rounded-lg flex items-center justify-center transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <Instagram className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Quick links */}
@@ -32,10 +69,7 @@ export default function Footer() {
                 { href: '/contact', label: 'Kontakt' },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="hover:text-orange-400 transition-colors"
-                  >
+                  <Link href={link.href} className="hover:text-orange-400 transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -49,22 +83,26 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-orange-400 shrink-0" />
-                <span>+421 900 000 000</span>
+                <a href={`tel:${phone.replace(/\s/g, '')}`} className="hover:text-orange-400 transition-colors">
+                  {phone}
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-orange-400 shrink-0" />
-                <span>info@autobazar.sk</span>
+                <a href={`mailto:${email}`} className="hover:text-orange-400 transition-colors">
+                  {email}
+                </a>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
-                <span>Hlavná 1, 010 01 Žilina</span>
+                <span className="whitespace-pre-line">{address}</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-slate-800 mt-8 pt-6 text-center text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} AutoBazar. Všetky práva vyhradené.</p>
+          <p>© {new Date().getFullYear()} {name}. Všetky práva vyhradené.</p>
         </div>
       </div>
     </footer>

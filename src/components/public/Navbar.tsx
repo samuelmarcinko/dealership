@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Car } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { TenantBranding } from '@/lib/tenant'
 
 const navLinks = [
   { href: '/', label: 'Domov' },
@@ -13,9 +15,15 @@ const navLinks = [
   { href: '/contact', label: 'Kontakt' },
 ]
 
-export default function Navbar() {
+interface Props {
+  branding?: TenantBranding
+}
+
+export default function Navbar({ branding }: Props) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+
+  const name = branding?.businessName ?? 'AutoBazar'
 
   return (
     <header className="sticky top-0 z-50 bg-slate-900 shadow-lg">
@@ -23,10 +31,20 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 text-white font-bold text-xl">
-            <div className="flex items-center justify-center w-8 h-8 bg-orange-500 rounded">
-              <Car className="h-5 w-5 text-white" />
-            </div>
-            <span>Auto<span className="text-orange-500">Bazar</span></span>
+            {branding?.logoUrl ? (
+              <Image
+                src={branding.logoUrl}
+                alt={name}
+                width={32}
+                height={32}
+                className="rounded object-contain"
+              />
+            ) : (
+              <div className="flex items-center justify-center w-8 h-8 bg-orange-500 rounded">
+                <Car className="h-5 w-5 text-white" />
+              </div>
+            )}
+            <span>{name}</span>
           </Link>
 
           {/* Desktop nav */}
