@@ -69,10 +69,20 @@ NODE_ENV=production
 NEXT_PUBLIC_APP_URL=https://demobazar.webshine.sk
 PORT=3000
 UPLOAD_PATH=/app/public/uploads
+
+# Email (optional – leave blank to disable)
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=noreply@example.com
+SMTP_PASS=CHANGE_ME
+SMTP_FROM=Demo Bazar <noreply@example.com>
+CONTACT_EMAIL=info@example.com
 EOF
 ```
 
 > ⚠️ Replace `CHOOSE_A_STRONG_PASSWORD` and regenerate `JWT_SECRET` with `openssl rand -base64 64`.
+> Email variables are optional. When `SMTP_HOST` is not set, contact form submissions are logged to stdout instead of sending emails.
 
 ### 4. Place docker-compose.yml
 
@@ -176,6 +186,47 @@ Migrations run automatically on each container start.
    - Traefik `Host()` rule to the new domain
 5. Create `/srv/data/<tenant_slug>/uploads/` directory
 6. `docker compose up -d`
+
+---
+
+## CI/CD Pipeline (GitHub Actions)
+
+The repository includes `.github/workflows/deploy.yml` which automatically:
+
+1. **Builds** a Docker image and pushes it to GitHub Container Registry (GHCR) on every push to `main`
+2. **Deploys** to the VPS via SSH after a successful build
+
+### Required GitHub Secrets
+
+Configure these in **Settings → Secrets and variables → Actions** in your GitHub repository:
+
+| Secret | Description |
+|--------|-------------|
+| `VPS_HOST` | VPS IP address or hostname |
+| `VPS_USER` | SSH user (e.g. `deploy`) |
+| `VPS_SSH_KEY` | Private SSH key (content of `~/.ssh/id_rsa`) |
+| `VPS_PORT` | SSH port (default `22`, optional) |
+
+### VPS Prerequisites for CI/CD
+
+The deploy script runs `docker compose pull && docker compose up -d --force-recreate` in `/srv/tenants/demo_bazar`. Ensure:
+
+1. The SSH user has permission to run Docker commands (member of `docker` group)
+2. `/srv/tenants/demo_bazar/docker-compose.yml` already exists with the correct image reference pointing to GHCR
+3. The `.env` file exists at `/srv/tenants/demo_bazar/.env`
+
+```bash
+# Add deploy user to docker group on VPS
+usermod -aG docker deploy
+```
+
+### Package visibility
+
+The GHCR package is private by default. Either make it public, or add a `CR_PAT` secret and log in before `docker compose pull`:
+
+```bash
+echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+```
 
 ---
 

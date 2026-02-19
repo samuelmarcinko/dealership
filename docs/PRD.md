@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 ## Multi-Tenant White-Label SaaS Platform for Car Dealerships
 ### Demo Tenant: demobazar.webshine.sk
-**Last updated:** 2026-02-18
+**Last updated:** 2026-02-19
 
 ---
 
@@ -104,7 +104,7 @@ TenantSettings  – key/value store (xml_feed_url, sync_interval_minutes)
 | Vehicles | `/vehicles` | Grid listing, sidebar filters (make, fuel, price, year) |
 | Vehicle detail | `/vehicles/[id]` | Image gallery, specs table, features, contact CTA |
 | About | `/about` | Company story, values |
-| Contact | `/contact` | Contact form (Phase 1: no email send) |
+| Contact | `/contact` | Contact form with email delivery (Nodemailer) |
 
 **Design:** Dark slate-900 header/footer, orange-500 accent, mobile-first responsive.
 
@@ -118,7 +118,7 @@ TenantSettings  – key/value store (xml_feed_url, sync_interval_minutes)
 | Dashboard | `/admin` | Stats cards, recent vehicles |
 | Vehicles | `/admin/vehicles` | Table list, CRUD, image upload |
 | Users | `/admin/users` | Table list, CRUD |
-| Import Settings | `/admin/settings` | XML feed URL + sync interval UI |
+| Import Settings | `/admin/settings` | XML feed URL + sync interval + branding + live sync status |
 
 ---
 
@@ -133,6 +133,15 @@ NEXT_PUBLIC_APP_URL=https://demobazar.webshine.sk
 PORT=3000
 NODE_ENV=production
 UPLOAD_PATH=/app/public/uploads
+
+# Email (Phase 2) – leave blank to disable
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=noreply@example.com
+SMTP_PASS=<smtp password>
+SMTP_FROM="Demo Bazar <noreply@example.com>"
+CONTACT_EMAIL=info@example.com
 ```
 
 ---
@@ -150,15 +159,21 @@ UPLOAD_PATH=/app/public/uploads
 - [x] JWT auth with httpOnly cookies
 - [x] DB migrations via `prisma migrate deploy` at container startup
 
-### Phase 2 (upcoming)
-- [ ] XML feed parser (autobazar.eu format)
-- [ ] Background sync worker (cron every N minutes)
-- [ ] Vehicle deduplication by `externalId`
-- [ ] Email notifications (Resend / Nodemailer)
-- [ ] Contact form email delivery
-- [ ] Tenant branding (logo, colors per tenant via TenantSettings)
-- [ ] CI/CD pipeline (GitHub Actions → VPS deploy)
+### Phase 2 ✅
+- [x] XML feed parser (autobazar.eu format, flexible field mapping)
+- [x] Background sync worker (`node-cron`, dynamic interval from DB)
+- [x] Vehicle deduplication by `externalId` (upsert, vanished → SOLD)
+- [x] Email notifications (Nodemailer SMTP, graceful fallback)
+- [x] Contact form email delivery (notification + auto-reply)
+- [x] Tenant branding (businessName, logo, contact info, social links via TenantSettings)
+- [x] CI/CD pipeline (GitHub Actions → GHCR → SSH VPS deploy)
+- [x] Custom 404 page
+
+### Phase 3 (upcoming)
 - [ ] PDF export for vehicle listings
+- [ ] Advanced filtering (colour, body type, features)
+- [ ] Vehicle comparison feature
+- [ ] Enquiry / lead management in admin
 
 ---
 

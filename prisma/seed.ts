@@ -21,16 +21,26 @@ async function main() {
   console.log(`Admin user: ${admin.email}`)
 
   // ── Tenant settings ─────────────────────────────────────────────────────────
-  await prisma.tenantSettings.upsert({
-    where: { key: 'xml_feed_url' },
-    update: {},
-    create: { key: 'xml_feed_url', value: '' },
-  })
-  await prisma.tenantSettings.upsert({
-    where: { key: 'sync_interval_minutes' },
-    update: {},
-    create: { key: 'sync_interval_minutes', value: '30' },
-  })
+  const defaultSettings: { key: string; value: string }[] = [
+    { key: 'xml_feed_url', value: '' },
+    { key: 'sync_interval_minutes', value: '30' },
+    // Branding
+    { key: 'business_name', value: 'Demo Bazar' },
+    { key: 'logo_url', value: '' },
+    { key: 'contact_phone', value: '+421 900 000 000' },
+    { key: 'contact_email', value: 'info@demobazar.sk' },
+    { key: 'contact_address', value: 'Hlavná 1\n010 01 Žilina' },
+    { key: 'social_facebook', value: '' },
+    { key: 'social_instagram', value: '' },
+  ]
+
+  for (const s of defaultSettings) {
+    await prisma.tenantSettings.upsert({
+      where: { key: s.key },
+      update: {},
+      create: s,
+    })
+  }
   console.log('Tenant settings created')
 
   // ── Sample vehicles ─────────────────────────────────────────────────────────
