@@ -24,6 +24,8 @@ export default function BrandingForm({ settings }: Props) {
     const updates = [
       { key: 'business_name', value: fd.get('business_name') as string },
       { key: 'logo_url', value: fd.get('logo_url') as string },
+      { key: 'primary_color', value: fd.get('primary_color') as string },
+      { key: 'custom_css', value: fd.get('custom_css') as string },
       { key: 'contact_phone', value: fd.get('contact_phone') as string },
       { key: 'contact_email', value: fd.get('contact_email') as string },
       { key: 'contact_address', value: fd.get('contact_address') as string },
@@ -77,6 +79,37 @@ export default function BrandingForm({ settings }: Props) {
         <p className="text-xs text-slate-500">
           Externá URL loga (JPG/PNG/SVG). Odporúčané rozmery: 200×50 px. Nechajte prázdne pre predvolené logo.
         </p>
+      </div>
+
+      <div className="border-t pt-5">
+        <h3 className="font-medium text-slate-900 mb-4">Vzhľad</h3>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="primary_color">Primárna farba</Label>
+            <div className="flex items-center gap-3">
+              <input
+                id="primary_color"
+                name="primary_color"
+                type="color"
+                defaultValue={settings['primary_color'] ?? '#f97316'}
+                className="h-10 w-16 cursor-pointer rounded border border-slate-300 p-0.5"
+              />
+              <span className="text-xs text-slate-500">Farba tlačidiel a akcentov na verejnom webe</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="custom_css">Custom CSS</Label>
+            <Textarea
+              id="custom_css"
+              name="custom_css"
+              rows={4}
+              defaultValue={settings['custom_css'] ?? ''}
+              placeholder=".navbar { background: #1a1a2e; }&#10;.footer { background: #0d0d1a; }"
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-slate-500">CSS sa aplikuje na verejný web. Používajte opatrne.</p>
+          </div>
+        </div>
       </div>
 
       <div className="border-t pt-5">

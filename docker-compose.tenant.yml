@@ -8,7 +8,7 @@
 
 services:
   dealership:
-    image: ghcr.io/YOUR_GITHUB_ORG/dealership:latest
+    image: ghcr.io/samuelmarcinko/dealership:latest
     # Or build locally:
     # build:
     #   context: /srv/tenants/demo_bazar/repo

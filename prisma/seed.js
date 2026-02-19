@@ -7,6 +7,19 @@ async function main() {
   const email = "admin@dealership.com";
   const plainPassword = "admin123";
 
+  // Seed default tenant settings
+  const defaultSettings = [
+    { key: 'primary_color', value: '#f97316' },
+    { key: 'custom_css', value: '' },
+  ]
+  for (const setting of defaultSettings) {
+    await prisma.tenantSettings.upsert({
+      where: { key: setting.key },
+      update: {},
+      create: setting,
+    })
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } });
 
   if (!existing) {
