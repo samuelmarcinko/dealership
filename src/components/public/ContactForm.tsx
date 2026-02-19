@@ -5,19 +5,46 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function ContactForm() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setError('')
     setLoading(true)
-    // Phase 1: simulate submission (no email sending yet)
-    await new Promise((r) => setTimeout(r, 800))
-    setSubmitted(true)
-    setLoading(false)
+
+    const fd = new FormData(e.currentTarget)
+    const body = {
+      name: fd.get('name') as string,
+      email: fd.get('email') as string,
+      phone: fd.get('phone') as string || undefined,
+      subject: fd.get('subject') as string || undefined,
+      message: fd.get('message') as string,
+    }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        const json = await res.json()
+        setError(json.error ?? 'Nastala chyba. Skúste znova.')
+        return
+      }
+
+      setSubmitted(true)
+    } catch {
+      setError('Nastala chyba. Skúste znova.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (submitted) {
@@ -36,9 +63,16 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Meno a priezvisko</Label>
+          <Label htmlFor="name">Meno a priezvisko *</Label>
           <Input id="name" name="name" placeholder="Ján Novák" required />
         </div>
         <div className="space-y-2">
@@ -48,7 +82,7 @@ export default function ContactForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email *</Label>
         <Input id="email" name="email" type="email" placeholder="jan.novak@email.sk" required />
       </div>
 
@@ -58,18 +92,24 @@ export default function ContactForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="message">Správa</Label>
+        <Label htmlFor="message">Správa *</Label>
         <Textarea
           id="message"
           name="message"
           placeholder="Napíšte nám vašu správu..."
           rows={5}
           required
+          minLength={5}
         />
       </div>
 
-      <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white" size="lg" disabled={loading}>
-        {loading ? 'Odosielam...' : 'Odoslať správu'}
+      <Button
+        type="submit"
+        className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+        size="lg"
+        disabled={loading}
+      >
+        {loading ? 'Odosielam…' : 'Odoslať správu'}
       </Button>
     </form>
   )
