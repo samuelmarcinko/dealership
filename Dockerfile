@@ -74,5 +74,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run DB migrations then start the app
-CMD prisma migrate deploy && node server.js
+# Sync DB schema then start the app
+CMD prisma db push --skip-generate --accept-data-loss && node server.js
