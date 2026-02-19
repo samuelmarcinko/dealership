@@ -57,9 +57,11 @@ RUN mkdir -p /app/public/uploads/vehicles \
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma schema for migrate deploy at runtime
+# Copy Prisma for runtime (client + CLI + schema)
+# Copy the CLI package explicitly so we never pull a different version via npx
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 USER nextjs
@@ -69,4 +71,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Run DB migrations then start the app
-CMD npx prisma migrate deploy && node server.js
+CMD node node_modules/prisma/build/index.js migrate deploy && node server.js
