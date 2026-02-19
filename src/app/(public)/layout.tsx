@@ -2,6 +2,8 @@ import Navbar from '@/components/public/Navbar'
 import Footer from '@/components/public/Footer'
 import { getTenantBranding } from '@/lib/tenant'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const branding = await getTenantBranding()
 
