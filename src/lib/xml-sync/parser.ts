@@ -201,7 +201,7 @@ function findVehicleArray(root: Record<string, unknown>): Record<string, unknown
     for (const itemKey of itemKeys) {
       if (c[itemKey]) {
         const items = c[itemKey]
-        return Array.isArray(items) ? items : [items]
+        return Array.isArray(items) ? (items as Record<string, unknown>[]) : [items as Record<string, unknown>]
       }
     }
   }

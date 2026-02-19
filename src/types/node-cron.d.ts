@@ -1,0 +1,21 @@
+declare module 'node-cron' {
+  interface ScheduleOptions {
+    scheduled?: boolean
+    timezone?: string
+    runOnInit?: boolean
+  }
+
+  interface ScheduledTask {
+    start(): void
+    stop(): void
+    destroy(): void
+  }
+
+  function schedule(
+    expression: string,
+    func: () => void,
+    options?: ScheduleOptions
+  ): ScheduledTask
+
+  function validate(expression: string): boolean
+}

@@ -19,7 +19,7 @@ export default function UserForm({ user }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [role, setRole] = useState(user?.role ?? 'ADMIN')
+  const [role, setRole] = useState<string>(user?.role ?? 'ADMIN')
 
   const isEdit = !!user
 
