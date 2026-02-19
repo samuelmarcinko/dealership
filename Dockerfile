@@ -57,12 +57,16 @@ RUN mkdir -p /app/public/uploads/vehicles \
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma for runtime (client + CLI + schema)
-# Copy the CLI package explicitly so we never pull a different version via npx
+# Copy Prisma client for the Next.js app at runtime
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+
+# Install the Prisma CLI at the same major version as the project.
+# We do this with npm install (as root, before USER nextjs) so all transitive
+# dependencies (e.g. @prisma/config → effect) are resolved automatically.
+# This avoids manually chasing dependency changes across Prisma patch releases.
+RUN npm install -g prisma@6 --no-update-notifier
 
 USER nextjs
 
@@ -71,4 +75,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Run DB migrations then start the app
-CMD node node_modules/prisma/build/index.js migrate deploy && node server.js
+CMD prisma migrate deploy && node server.js
