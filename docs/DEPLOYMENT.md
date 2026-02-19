@@ -36,7 +36,7 @@ All of these are already deployed:
 Connect to the running Postgres container and create the tenant database and user:
 
 ```bash
-docker exec -it postgres psql -U postgres
+docker exec -it postgres psql -U master -d masterdb
 ```
 
 ```sql
@@ -110,7 +110,7 @@ The container will:
 ### 6. Seed initial data (first run only)
 
 ```bash
-docker compose exec dealership npx tsx prisma/seed.ts
+docker compose exec dealership npm run db:seed
 ```
 
 Default credentials: `admin@dealership.com` / `admin123`
@@ -251,5 +251,6 @@ curl https://control.webshine.sk/api/http/routers | jq '.[] | select(.name | con
 ### Reset and reseed DB
 ```bash
 docker compose exec dealership npx prisma migrate reset --force
-docker compose exec dealership npx tsx prisma/seed.ts
+docker compose exec dealership npm run db:seed
+
 ```

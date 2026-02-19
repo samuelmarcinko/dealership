@@ -17,15 +17,17 @@ services:
     environment:
       - TENANT_ID=demo_bazar
       - TENANT_NAME=Demo Bazar
-      - DATABASE_URL=postgresql://demo_bazar_user:${DB_PASSWORD}@postgres:5432/demo_bazar
+      - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_URL=https://demobazar.webshine.sk
       - UPLOAD_PATH=/app/public/uploads
       - PORT=3000
+      - PDF_PATH=/app/pdfs
     volumes:
       # Persistent storage for uploaded vehicle images
       - /srv/data/demo_bazar/uploads:/app/public/uploads
+      - /srv/data/demo_bazar/pdfs:/app/pdfs
     networks:
       - web
     # No public ports – Traefik handles ingress
@@ -38,7 +40,9 @@ services:
       # HTTP → HTTPS redirect (handled globally by Traefik entrypoint, but kept explicit)
       - "traefik.http.routers.demobazar-http.rule=Host(`demobazar.webshine.sk`)"
       - "traefik.http.routers.demobazar-http.entrypoints=web"
-      - "traefik.http.routers.demobazar-http.middlewares=https-redirect"
+      - "traefik.http.middlewares.demobazar-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.demobazar-http.middlewares=demobazar-https-redirect"
+
 
       # HTTPS router
       - "traefik.http.routers.demobazar.rule=Host(`demobazar.webshine.sk`)"
