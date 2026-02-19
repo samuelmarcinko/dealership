@@ -97,7 +97,7 @@ export default async function VehiclesPage({
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters sidebar */}
           <aside className="w-full lg:w-64 shrink-0">
-            <VehicleFilters makes={makes} currentParams={params} />
+            <VehicleFilters makes={makes} currentParams={params as Record<string, string | undefined>} />
           </aside>
 
           {/* Vehicle grid */}
