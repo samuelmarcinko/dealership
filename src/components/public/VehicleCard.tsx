@@ -15,10 +15,11 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     vehicle.status === 'AVAILABLE' ? 'success' :
     vehicle.status === 'RESERVED' ? 'warning' : 'error'
 
+  const href = `/vehicles/${vehicle.slug ?? vehicle.id}`
+
   return (
-    <Link href={`/vehicles/${vehicle.id}`} className="group block">
-      <article className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md hover:border-orange-200 transition-all duration-200">
-        {/* Image */}
+    <Link href={href} className="group block">
+      <article className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-200">
         <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
           {vehicle.primaryImage ? (
             <Image
@@ -43,16 +44,14 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-4">
-          <h3 className="font-semibold text-slate-900 text-lg leading-tight mb-1 group-hover:text-orange-600 transition-colors">
+          <h3 className="font-semibold text-slate-900 text-lg leading-tight mb-1 group-hover:text-primary transition-colors">
             {vehicle.title}
           </h3>
           {vehicle.variant && (
             <p className="text-sm text-slate-500 mb-3">{vehicle.variant}</p>
           )}
 
-          {/* Specs */}
           <div className="grid grid-cols-2 gap-2 mb-4 text-sm text-slate-600">
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5 text-slate-400" />
@@ -72,9 +71,8 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
             </div>
           </div>
 
-          {/* Price */}
           <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-            <span className="text-2xl font-bold text-orange-600">
+            <span className="text-2xl font-bold text-primary">
               {formatPrice(vehicle.price)}
             </span>
             <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded">

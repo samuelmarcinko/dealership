@@ -40,7 +40,7 @@ export default function Navbar({ branding }: Props) {
                 className="rounded object-contain"
               />
             ) : (
-              <div className="flex items-center justify-center w-8 h-8 bg-orange-500 rounded">
+              <div className="flex items-center justify-center w-8 h-8 bg-primary rounded">
                 <Car className="h-5 w-5 text-white" />
               </div>
             )}
@@ -56,7 +56,7 @@ export default function Navbar({ branding }: Props) {
                 className={cn(
                   'px-4 py-2 rounded-md text-sm font-medium transition-colors',
                   pathname === link.href
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-primary text-white'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800'
                 )}
               >
@@ -88,7 +88,7 @@ export default function Navbar({ branding }: Props) {
                 className={cn(
                   'px-4 py-3 rounded-md text-sm font-medium transition-colors',
                   pathname === link.href
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-primary text-white'
                     : 'text-slate-300 hover:text-white hover:bg-slate-700'
                 )}
               >

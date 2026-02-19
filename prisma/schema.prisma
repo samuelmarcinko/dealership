@@ -84,6 +84,7 @@ model Vehicle {
   seats          Int?
   description    String?          @db.Text
   features       String[]
+  slug           String?          @unique
   status         VehicleStatus    @default(AVAILABLE)
   externalId     String?          @unique
   importedAt     DateTime?

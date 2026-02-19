@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
+import { generateVehicleSlug } from '@/lib/slug'
 import { FuelType, TransmissionType, BodyType, VehicleStatus } from '@prisma/client'
 
 const vehicleSchema = z.object({
@@ -57,7 +58,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const vehicle = await prisma.vehicle.create({ data: parsed.data })
+    const slug = await generateVehicleSlug(parsed.data.make, parsed.data.model, parsed.data.year)
+    const vehicle = await prisma.vehicle.create({ data: { ...parsed.data, slug } })
     return NextResponse.json({ data: vehicle }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/vehicles]', err)

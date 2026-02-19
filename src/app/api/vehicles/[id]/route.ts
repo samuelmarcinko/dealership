@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
+import { generateVehicleSlug } from '@/lib/slug'
 import { FuelType, TransmissionType, BodyType, VehicleStatus } from '@prisma/client'
 
 const updateSchema = z.object({
@@ -51,9 +52,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       )
     }
 
+    // Regenerate slug if make/model/year changed
+    let slugUpdate: { slug?: string } = {}
+    if (parsed.data.make || parsed.data.model || parsed.data.year) {
+      const current = await prisma.vehicle.findUnique({ where: { id }, select: { make: true, model: true, year: true } })
+      if (current) {
+        const make = parsed.data.make ?? current.make
+        const model = parsed.data.model ?? current.model
+        const year = parsed.data.year ?? current.year
+        slugUpdate.slug = await generateVehicleSlug(make, model, year, id)
+      }
+    }
+
     const vehicle = await prisma.vehicle.update({
       where: { id },
-      data: parsed.data,
+      data: { ...parsed.data, ...slugUpdate },
     })
 
     return NextResponse.json({ data: vehicle })

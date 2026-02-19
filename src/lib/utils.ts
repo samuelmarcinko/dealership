@@ -75,8 +75,12 @@ export function vehicleStatusColor(s: string): string {
 export function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
     .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
 }
 
 export function hexToHsl(hex: string): string {

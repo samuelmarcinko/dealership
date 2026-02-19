@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
-import { Upload, X, Star } from 'lucide-react'
+import { Upload, X, Star, GripVertical } from 'lucide-react'
 import type { VehicleWithImages } from '@/types'
 
 interface Props {
@@ -22,8 +22,6 @@ interface LocalImage {
   url: string
   file?: File
   isPrimary: boolean
-  uploading?: boolean
-  toDelete?: boolean
 }
 
 const FUEL_TYPES = [
@@ -59,57 +57,101 @@ const STATUSES = [
   { value: 'SOLD', label: 'Predané' },
 ]
 
+function initImages(vehicle?: VehicleWithImages): LocalImage[] {
+  if (!vehicle) return []
+  return [...vehicle.images]
+    .sort((a, b) => {
+      if (a.isPrimary && !b.isPrimary) return -1
+      if (!a.isPrimary && b.isPrimary) return 1
+      return a.sortOrder - b.sortOrder
+    })
+    .map((img) => ({ id: img.id, url: img.url, isPrimary: img.isPrimary }))
+}
+
 export default function VehicleForm({ vehicle }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
 
-  // Form select states
   const [fuelType, setFuelType] = useState<string>(vehicle?.fuelType ?? 'DIESEL')
   const [transmission, setTransmission] = useState<string>(vehicle?.transmission ?? 'MANUAL')
   const [bodyType, setBodyType] = useState<string>(vehicle?.bodyType ?? '')
   const [status, setStatus] = useState<string>(vehicle?.status ?? 'AVAILABLE')
 
-  // Images state
-  const [images, setImages] = useState<LocalImage[]>(
-    vehicle?.images.map((img) => ({
-      id: img.id,
-      url: img.url,
-      isPrimary: img.isPrimary,
-    })) ?? []
-  )
+  const [images, setImages] = useState<LocalImage[]>(initImages(vehicle))
+  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
+
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   const isEdit = !!vehicle
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
-    const newImages: LocalImage[] = files.map((file) => ({
-      url: URL.createObjectURL(file),
-      file,
-      isPrimary: images.length === 0 && files.indexOf(file) === 0,
-    }))
-    setImages((prev) => [...prev, ...newImages])
+    setImages((prev) => {
+      const hasPrimary = prev.some((img) => img.isPrimary)
+      return [
+        ...prev,
+        ...files.map((file, i) => ({
+          url: URL.createObjectURL(file),
+          file,
+          isPrimary: !hasPrimary && i === 0,
+        })),
+      ]
+    })
     e.target.value = ''
   }
 
   function removeImage(index: number) {
     setImages((prev) => {
-      const updated = [...prev]
-      if (updated[index].id) {
-        // Mark for deletion on server
-        updated[index] = { ...updated[index], toDelete: true }
-      } else {
-        updated.splice(index, 1)
+      const img = prev[index]
+      if (img.id) setDeletedImageIds((ids) => [...ids, img.id!])
+      const updated = prev.filter((_, i) => i !== index)
+      if (img.isPrimary && updated.length > 0) {
+        updated[0] = { ...updated[0], isPrimary: true }
       }
       return updated
     })
   }
 
   function setPrimaryImage(index: number) {
-    setImages((prev) =>
-      prev.map((img, i) => ({ ...img, isPrimary: i === index }))
-    )
+    setImages((prev) => {
+      const updated = prev.map((img, i) => ({ ...img, isPrimary: i === index }))
+      const [primary] = updated.splice(index, 1)
+      return [primary, ...updated]
+    })
+  }
+
+  function handleDragStart(index: number) {
+    setDragIndex(index)
+  }
+
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault()
+    setDragOverIndex(index)
+  }
+
+  function handleDrop(index: number) {
+    if (dragIndex === null || dragIndex === index) {
+      setDragIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+    setImages((prev) => {
+      const updated = [...prev]
+      const [dragged] = updated.splice(dragIndex, 1)
+      updated.splice(index, 0, dragged)
+      // Primary always stays first
+      const primaryIdx = updated.findIndex((img) => img.isPrimary)
+      if (primaryIdx > 0) {
+        const [primary] = updated.splice(primaryIdx, 1)
+        updated.unshift(primary)
+      }
+      return updated
+    })
+    setDragIndex(null)
+    setDragOverIndex(null)
   }
 
   async function uploadImage(file: File): Promise<string> {
@@ -131,7 +173,7 @@ export default function VehicleForm({ vehicle }: Props) {
       title: data.get('title') as string,
       make: data.get('make') as string,
       model: data.get('model') as string,
-      variant: data.get('variant') as string || null,
+      variant: (data.get('variant') as string) || null,
       year: parseInt(data.get('year') as string),
       price: parseFloat(data.get('price') as string),
       mileage: parseInt(data.get('mileage') as string),
@@ -140,10 +182,10 @@ export default function VehicleForm({ vehicle }: Props) {
       bodyType: bodyType || null,
       engineCapacity: data.get('engineCapacity') ? parseInt(data.get('engineCapacity') as string) : null,
       power: data.get('power') ? parseInt(data.get('power') as string) : null,
-      color: data.get('color') as string || null,
+      color: (data.get('color') as string) || null,
       doors: data.get('doors') ? parseInt(data.get('doors') as string) : null,
       seats: data.get('seats') ? parseInt(data.get('seats') as string) : null,
-      description: data.get('description') as string || null,
+      description: (data.get('description') as string) || null,
       features: (data.get('features') as string)
         .split(',')
         .map((f) => f.trim())
@@ -152,7 +194,6 @@ export default function VehicleForm({ vehicle }: Props) {
     }
 
     try {
-      // 1. Create / update vehicle
       const vehicleRes = await fetch(
         isEdit ? `/api/vehicles/${vehicle.id}` : '/api/vehicles',
         {
@@ -171,13 +212,12 @@ export default function VehicleForm({ vehicle }: Props) {
       const { data: savedVehicle } = await vehicleRes.json()
       const vehicleId = savedVehicle.id
 
-      // 2. Upload new images
+      for (const imageId of deletedImageIds) {
+        await fetch(`/api/vehicles/${vehicleId}/images?imageId=${imageId}`, { method: 'DELETE' })
+      }
+
       for (let i = 0; i < images.length; i++) {
         const img = images[i]
-        if (img.toDelete && img.id) {
-          await fetch(`/api/vehicles/${vehicleId}/images?imageId=${img.id}`, { method: 'DELETE' })
-          continue
-        }
         if (img.file) {
           const url = await uploadImage(img.file)
           await fetch(`/api/vehicles/${vehicleId}/images`, {
@@ -186,7 +226,6 @@ export default function VehicleForm({ vehicle }: Props) {
             body: JSON.stringify({ url, isPrimary: img.isPrimary, sortOrder: i }),
           })
         } else if (img.id) {
-          // Update existing image (e.g., isPrimary changed)
           await fetch(`/api/vehicles/${vehicleId}/images`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -206,11 +245,8 @@ export default function VehicleForm({ vehicle }: Props) {
     }
   }
 
-  const visibleImages = images.filter((img) => !img.toDelete)
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Basic info */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Základné informácie</CardTitle>
@@ -220,7 +256,6 @@ export default function VehicleForm({ vehicle }: Props) {
             <Label htmlFor="title">Názov inzerátu *</Label>
             <Input id="title" name="title" defaultValue={vehicle?.title} required placeholder="napr. Volkswagen Golf 2.0 TDI" />
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="make">Značka *</Label>
@@ -235,7 +270,6 @@ export default function VehicleForm({ vehicle }: Props) {
               <Input id="variant" name="variant" defaultValue={vehicle?.variant ?? ''} placeholder="2.0 TDI Highline" />
             </div>
           </div>
-
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="year">Rok výroby *</Label>
@@ -262,7 +296,6 @@ export default function VehicleForm({ vehicle }: Props) {
         </CardContent>
       </Card>
 
-      {/* Technical */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Technické parametre</CardTitle>
@@ -297,7 +330,6 @@ export default function VehicleForm({ vehicle }: Props) {
               </Select>
             </div>
           </div>
-
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="engineCapacity">Objem (cc)</Label>
@@ -316,7 +348,6 @@ export default function VehicleForm({ vehicle }: Props) {
               <Input id="seats" name="seats" type="number" min={1} max={9} defaultValue={vehicle?.seats ?? ''} />
             </div>
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="color">Farba</Label>
             <Input id="color" name="color" defaultValue={vehicle?.color ?? ''} placeholder="napr. Čierna metalíza" />
@@ -324,7 +355,6 @@ export default function VehicleForm({ vehicle }: Props) {
         </CardContent>
       </Card>
 
-      {/* Description & Features */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Popis a výbava</CardTitle>
@@ -332,34 +362,20 @@ export default function VehicleForm({ vehicle }: Props) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="description">Popis vozidla</Label>
-            <Textarea
-              id="description"
-              name="description"
-              rows={4}
-              defaultValue={vehicle?.description ?? ''}
-              placeholder="Detailný popis stavu vozidla, histórie, výbavy..."
-            />
+            <Textarea id="description" name="description" rows={4} defaultValue={vehicle?.description ?? ''} placeholder="Detailný popis stavu vozidla, histórie, výbavy..." />
           </div>
           <div className="space-y-2">
             <Label htmlFor="features">Výbava (oddelené čiarkou)</Label>
-            <Textarea
-              id="features"
-              name="features"
-              rows={2}
-              defaultValue={vehicle?.features.join(', ') ?? ''}
-              placeholder="Navigácia, Kúrené sedenie, LED svetlá, ..."
-            />
+            <Textarea id="features" name="features" rows={2} defaultValue={vehicle?.features.join(', ') ?? ''} placeholder="Navigácia, Kúrené sedenie, LED svetlá, ..." />
           </div>
         </CardContent>
       </Card>
 
-      {/* Images */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Fotografie</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Upload zone */}
           <div
             className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center cursor-pointer hover:border-orange-300 hover:bg-orange-50 transition-colors"
             onClick={() => fileInputRef.current?.click()}
@@ -377,58 +393,73 @@ export default function VehicleForm({ vehicle }: Props) {
             />
           </div>
 
-          {/* Preview grid */}
-          {visibleImages.length > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-              {visibleImages.map((img, index) => (
-                <div key={index} className="relative group">
-                  <div className={`aspect-square rounded-lg overflow-hidden border-2 ${img.isPrimary ? 'border-orange-500' : 'border-transparent'}`}>
-                    <Image
-                      src={img.url}
-                      alt={`Vehicle image ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="120px"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setPrimaryImage(images.findIndex((i) => i === (images.filter((im) => !im.toDelete)[index])))}
-                      className="w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center"
-                      title="Nastaviť ako hlavnú"
-                    >
-                      <Star className="h-3.5 w-3.5 text-white" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeImage(images.findIndex((i) => i === (images.filter((im) => !im.toDelete)[index])))}
-                      className="w-7 h-7 bg-red-500 rounded-full flex items-center justify-center"
-                      title="Odstrániť"
-                    >
-                      <X className="h-3.5 w-3.5 text-white" />
-                    </button>
-                  </div>
-                  {img.isPrimary && (
-                    <div className="absolute top-1 left-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded">
-                      Hlavná
+          {images.length > 0 && (
+            <>
+              <p className="text-xs text-slate-400">Ťahajte fotky pre zmenu poradia. Hlavná fotka je vždy prvá.</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                {images.map((img, index) => (
+                  <div
+                    key={img.id ?? img.url}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={() => handleDrop(index)}
+                    onDragEnd={() => { setDragIndex(null); setDragOverIndex(null) }}
+                    className={`relative group cursor-grab active:cursor-grabbing transition-opacity ${
+                      dragIndex === index ? 'opacity-40' : ''
+                    } ${dragOverIndex === index && dragIndex !== index ? 'ring-2 ring-orange-400 rounded-lg' : ''}`}
+                  >
+                    <div className={`aspect-square rounded-lg overflow-hidden border-2 ${img.isPrimary ? 'border-orange-500' : 'border-transparent'}`}>
+                      <Image
+                        src={img.url}
+                        alt={`Vehicle image ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="200px"
+                        quality={85}
+                      />
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+
+                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <GripVertical className="h-4 w-4 text-white drop-shadow" />
+                    </div>
+
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-1">
+                      {!img.isPrimary && (
+                        <button
+                          type="button"
+                          onClick={() => setPrimaryImage(index)}
+                          className="w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center"
+                          title="Nastaviť ako hlavnú"
+                        >
+                          <Star className="h-3.5 w-3.5 text-white" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="w-7 h-7 bg-red-500 rounded-full flex items-center justify-center"
+                        title="Odstrániť"
+                      >
+                        <X className="h-3.5 w-3.5 text-white" />
+                      </button>
+                    </div>
+
+                    {img.isPrimary && (
+                      <div className="absolute top-1 left-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded">
+                        Hlavná
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
-      {/* Actions */}
       <div className="flex gap-3">
-        <Button
-          type="submit"
-          className="bg-orange-500 hover:bg-orange-600 text-white"
-          size="lg"
-          disabled={loading}
-        >
+        <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white" size="lg" disabled={loading}>
           {loading ? 'Ukladám...' : isEdit ? 'Aktualizovať vozidlo' : 'Pridať vozidlo'}
         </Button>
         <Button type="button" variant="outline" size="lg" onClick={() => router.back()}>

@@ -6,7 +6,7 @@ export type VehicleWithImages = Vehicle & {
 
 export type PublicVehicle = Pick<
   Vehicle,
-  'id' | 'title' | 'make' | 'model' | 'variant' | 'year' | 'price' | 'mileage' | 'fuelType' | 'transmission' | 'bodyType' | 'status'
+  'id' | 'slug' | 'title' | 'make' | 'model' | 'variant' | 'year' | 'price' | 'mileage' | 'fuelType' | 'transmission' | 'bodyType' | 'status'
 > & {
   primaryImage: VehicleImage | null
 }
