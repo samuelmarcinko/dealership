@@ -22,6 +22,9 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Ensure public/ exists (git may not track it if it contains only gitignored files)
+RUN mkdir -p /app/public
+
 # Generate Prisma client (does NOT require DB connection)
 RUN npx prisma generate
 
