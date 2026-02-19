@@ -66,10 +66,10 @@ export default function VehicleForm({ vehicle }: Props) {
   const [loading, setLoading] = useState(false)
 
   // Form select states
-  const [fuelType, setFuelType] = useState(vehicle?.fuelType ?? 'DIESEL')
-  const [transmission, setTransmission] = useState(vehicle?.transmission ?? 'MANUAL')
-  const [bodyType, setBodyType] = useState(vehicle?.bodyType ?? '')
-  const [status, setStatus] = useState(vehicle?.status ?? 'AVAILABLE')
+  const [fuelType, setFuelType] = useState<string>(vehicle?.fuelType ?? 'DIESEL')
+  const [transmission, setTransmission] = useState<string>(vehicle?.transmission ?? 'MANUAL')
+  const [bodyType, setBodyType] = useState<string>(vehicle?.bodyType ?? '')
+  const [status, setStatus] = useState<string>(vehicle?.status ?? 'AVAILABLE')
 
   // Images state
   const [images, setImages] = useState<LocalImage[]>(
