@@ -2,12 +2,10 @@ import { prisma } from '@/lib/prisma'
 import { slugify } from '@/lib/utils'
 
 export async function generateVehicleSlug(
-  make: string,
-  model: string,
-  year: number,
+  title: string,
   excludeId?: string
 ): Promise<string> {
-  const base = slugify(`${make} ${model} ${year}`)
+  const base = slugify(title)
   let slug = base
   let counter = 2
 

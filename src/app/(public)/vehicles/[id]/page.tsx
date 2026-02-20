@@ -48,7 +48,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     { icon: Gauge, label: 'Najazdené', value: formatMileage(vehicle.mileage) },
     { icon: Fuel, label: 'Palivo', value: fuelTypeLabel(vehicle.fuelType) },
     { icon: Settings, label: 'Prevodovka', value: transmissionLabel(vehicle.transmission) },
-    ...(vehicle.power ? [{ icon: Zap, label: 'Výkon', value: `${vehicle.power} hp` }] : []),
+    ...(vehicle.power ? [{ icon: Zap, label: 'Výkon', value: `${vehicle.power} kW` }] : []),
     ...(vehicle.engineCapacity ? [{ icon: Activity, label: 'Objem motora', value: `${vehicle.engineCapacity} cc` }] : []),
     ...(vehicle.color ? [{ icon: Palette, label: 'Farba', value: vehicle.color }] : []),
     ...(vehicle.bodyType ? [{ icon: DoorOpen, label: 'Karoséria', value: bodyTypeLabel(vehicle.bodyType) }] : []),
@@ -68,37 +68,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <VehicleGallery images={vehicle.images} title={vehicle.title} />
-
-            {vehicle.description && (
-              <div className="bg-white rounded-xl border border-slate-100 p-6">
-                <h2 className="font-semibold text-slate-900 text-lg mb-3">Popis vozidla</h2>
-                <p className="text-slate-600 leading-relaxed whitespace-pre-line">
-                  {vehicle.description}
-                </p>
-              </div>
-            )}
-
-            {vehicle.features.length > 0 && (
-              <div className="bg-white rounded-xl border border-slate-100 p-6">
-                <h2 className="font-semibold text-slate-900 text-lg mb-3">Výbava</h2>
-                <div className="flex flex-wrap gap-2">
-                  {vehicle.features.map((feature, i) => (
-                    <span
-                      key={i}
-                      className="bg-primary/10 text-primary text-sm px-3 py-1 rounded-full border border-primary/20"
-                    >
-                      {feature}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-slate-100 p-6 sticky top-20">
+          {/* Info card — first in DOM = first on mobile, positioned to col 3 on desktop */}
+          <div className="space-y-4 lg:col-start-3 lg:row-start-1">
+            <div className="bg-white rounded-xl border border-slate-100 p-6 lg:sticky lg:top-20">
               <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
               <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">{vehicle.title}</h1>
               {vehicle.variant && (
@@ -129,6 +101,36 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                 <Link href="/contact">Kontaktovať predajcu</Link>
               </Button>
             </div>
+          </div>
+
+          {/* Gallery + description — second on mobile, spans cols 1-2 on desktop */}
+          <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 space-y-6">
+            <VehicleGallery images={vehicle.images} title={vehicle.title} />
+
+            {vehicle.description && (
+              <div className="bg-white rounded-xl border border-slate-100 p-6">
+                <h2 className="font-semibold text-slate-900 text-lg mb-3">Popis vozidla</h2>
+                <p className="text-slate-600 leading-relaxed whitespace-pre-line">
+                  {vehicle.description}
+                </p>
+              </div>
+            )}
+
+            {vehicle.features.length > 0 && (
+              <div className="bg-white rounded-xl border border-slate-100 p-6">
+                <h2 className="font-semibold text-slate-900 text-lg mb-3">Výbava</h2>
+                <div className="flex flex-wrap gap-2">
+                  {vehicle.features.map((feature, i) => (
+                    <span
+                      key={i}
+                      className="bg-primary/10 text-primary text-sm px-3 py-1 rounded-full border border-primary/20"
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

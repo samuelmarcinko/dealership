@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import VehicleCard from '@/components/public/VehicleCard'
 import VehicleFilters from '@/components/public/VehicleFilters'
 import type { PublicVehicle } from '@/types'
-import { FuelType, TransmissionType, VehicleStatus } from '@prisma/client'
+import { FuelType, TransmissionType } from '@prisma/client'
 
 export const metadata: Metadata = {
   title: 'Vozidlá',
@@ -17,7 +17,6 @@ interface SearchParams {
   make?: string
   fuelType?: string
   transmission?: string
-  status?: string
   minPrice?: string
   maxPrice?: string
   minYear?: string
@@ -25,7 +24,8 @@ interface SearchParams {
 }
 
 async function getVehicles(params: SearchParams): Promise<{ vehicles: PublicVehicle[]; makes: string[] }> {
-  const where: Record<string, unknown> = {}
+  // Always exclude SOLD vehicles from public listing
+  const where: Record<string, unknown> = { status: { not: 'SOLD' } }
 
   if (params.make) where.make = params.make
   if (params.fuelType && Object.values(FuelType).includes(params.fuelType as FuelType)) {
@@ -33,11 +33,6 @@ async function getVehicles(params: SearchParams): Promise<{ vehicles: PublicVehi
   }
   if (params.transmission && Object.values(TransmissionType).includes(params.transmission as TransmissionType)) {
     where.transmission = params.transmission
-  }
-  if (params.status && Object.values(VehicleStatus).includes(params.status as VehicleStatus)) {
-    where.status = params.status
-  } else {
-    // Default: show all except nothing – show all statuses
   }
 
   const priceFilter: Record<string, number> = {}
@@ -59,6 +54,7 @@ async function getVehicles(params: SearchParams): Promise<{ vehicles: PublicVehi
       },
     }),
     prisma.vehicle.findMany({
+      where: { status: { not: 'SOLD' } },
       select: { make: true },
       distinct: ['make'],
       orderBy: { make: 'asc' },

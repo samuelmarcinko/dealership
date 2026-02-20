@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
-import { Upload, X, Star, GripVertical } from 'lucide-react'
+import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag } from 'lucide-react'
 import type { VehicleWithImages } from '@/types'
 
 interface Props {
@@ -56,6 +56,8 @@ const STATUSES = [
   { value: 'RESERVED', label: 'Rezervované' },
   { value: 'SOLD', label: 'Predané' },
 ]
+
+const CURRENT_YEAR = new Date().getFullYear()
 
 function initImages(vehicle?: VehicleWithImages): LocalImage[] {
   if (!vehicle) return []
@@ -142,7 +144,6 @@ export default function VehicleForm({ vehicle }: Props) {
       const updated = [...prev]
       const [dragged] = updated.splice(dragIndex, 1)
       updated.splice(index, 0, dragged)
-      // Primary always stays first
       const primaryIdx = updated.findIndex((img) => img.isPrimary)
       if (primaryIdx > 0) {
         const [primary] = updated.splice(primaryIdx, 1)
@@ -173,7 +174,7 @@ export default function VehicleForm({ vehicle }: Props) {
       title: data.get('title') as string,
       make: data.get('make') as string,
       model: data.get('model') as string,
-      variant: (data.get('variant') as string) || null,
+      variant: isEdit ? ((data.get('variant') as string) || null) : null,
       year: parseInt(data.get('year') as string),
       price: parseFloat(data.get('price') as string),
       mileage: parseInt(data.get('mileage') as string),
@@ -246,17 +247,34 @@ export default function VehicleForm({ vehicle }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
+
+      {/* ── Základné informácie ── */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Základné informácie</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
+              <Info className="h-4 w-4 text-orange-600" />
+            </span>
+            Základné informácie
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Názov inzerátu *</Label>
-            <Input id="title" name="title" defaultValue={vehicle?.title} required placeholder="napr. Volkswagen Golf 2.0 TDI" />
+            <Input
+              id="title"
+              name="title"
+              defaultValue={vehicle?.title}
+              required
+              placeholder="napr. Volkswagen Golf 2.0 TDI"
+              className="text-base"
+              autoFocus={!isEdit}
+            />
+            <p className="text-xs text-slate-400">URL adresa vozidla sa vygeneruje automaticky z tohto názvu.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <div className={`grid grid-cols-1 gap-4 ${isEdit ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
             <div className="space-y-2">
               <Label htmlFor="make">Značka *</Label>
               <Input id="make" name="make" defaultValue={vehicle?.make} required placeholder="Volkswagen" />
@@ -265,40 +283,59 @@ export default function VehicleForm({ vehicle }: Props) {
               <Label htmlFor="model">Model *</Label>
               <Input id="model" name="model" defaultValue={vehicle?.model} required placeholder="Golf" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="variant">Variant</Label>
-              <Input id="variant" name="variant" defaultValue={vehicle?.variant ?? ''} placeholder="2.0 TDI Highline" />
-            </div>
+            {isEdit && (
+              <div className="space-y-2">
+                <Label htmlFor="variant">Variant</Label>
+                <Input id="variant" name="variant" defaultValue={vehicle?.variant ?? ''} placeholder="2.0 TDI Highline" />
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+          <div className={`grid grid-cols-2 gap-4 ${isEdit ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
             <div className="space-y-2">
               <Label htmlFor="year">Rok výroby *</Label>
-              <Input id="year" name="year" type="number" min={1900} max={2030} defaultValue={vehicle?.year} required />
+              <Input
+                id="year"
+                name="year"
+                type="number"
+                min={1900}
+                max={2030}
+                defaultValue={vehicle?.year ?? CURRENT_YEAR}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Cena (€) *</Label>
-              <Input id="price" name="price" type="number" step="0.01" min={0} defaultValue={vehicle?.price.toString()} required />
+              <Input id="price" name="price" type="number" step="0.01" min={0} defaultValue={vehicle?.price.toString()} required placeholder="0" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="mileage">Najazdené (km) *</Label>
-              <Input id="mileage" name="mileage" type="number" min={0} defaultValue={vehicle?.mileage} required />
+              <Input id="mileage" name="mileage" type="number" min={0} defaultValue={vehicle?.mileage} required placeholder="0" />
             </div>
-            <div className="space-y-2">
-              <Label>Stav</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            {isEdit && (
+              <div className="space-y-2">
+                <Label>Stav</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
+      {/* ── Technické parametre ── */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Technické parametre</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Settings className="h-4 w-4 text-blue-600" />
+            </span>
+            Technické parametre
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -330,59 +367,88 @@ export default function VehicleForm({ vehicle }: Props) {
               </Select>
             </div>
           </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="engineCapacity">Objem (cc)</Label>
-              <Input id="engineCapacity" name="engineCapacity" type="number" min={0} defaultValue={vehicle?.engineCapacity ?? ''} />
+              <Label htmlFor="engineCapacity">Objem motora (cm³)</Label>
+              <Input id="engineCapacity" name="engineCapacity" type="number" min={0} defaultValue={vehicle?.engineCapacity ?? ''} placeholder="1968" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="power">Výkon (hp)</Label>
-              <Input id="power" name="power" type="number" min={0} defaultValue={vehicle?.power ?? ''} />
+              <Label htmlFor="power">Výkon (kW)</Label>
+              <Input id="power" name="power" type="number" min={0} defaultValue={vehicle?.power ?? ''} placeholder="110" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="doors">Počet dverí</Label>
-              <Input id="doors" name="doors" type="number" min={2} max={6} defaultValue={vehicle?.doors ?? ''} />
+              <Input id="doors" name="doors" type="number" min={2} max={6} defaultValue={vehicle?.doors ?? ''} placeholder="5" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="seats">Počet miest</Label>
-              <Input id="seats" name="seats" type="number" min={1} max={9} defaultValue={vehicle?.seats ?? ''} />
+              <Input id="seats" name="seats" type="number" min={1} max={9} defaultValue={vehicle?.seats ?? ''} placeholder="5" />
             </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="color">Farba</Label>
-            <Input id="color" name="color" defaultValue={vehicle?.color ?? ''} placeholder="napr. Čierna metalíza" />
+            <Input id="color" name="color" defaultValue={vehicle?.color ?? ''} placeholder="napr. Čierna metalíza" className="max-w-xs" />
           </div>
         </CardContent>
       </Card>
 
+      {/* ── Popis a výbava ── */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Popis a výbava</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center">
+              <FileText className="h-4 w-4 text-green-600" />
+            </span>
+            Popis a výbava
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="description">Popis vozidla</Label>
-            <Textarea id="description" name="description" rows={4} defaultValue={vehicle?.description ?? ''} placeholder="Detailný popis stavu vozidla, histórie, výbavy..." />
+            <Textarea
+              id="description"
+              name="description"
+              rows={5}
+              defaultValue={vehicle?.description ?? ''}
+              placeholder="Popíšte stav vozidla, históriu servisu, dôvod predaja a iné dôležité informácie..."
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="features">Výbava (oddelené čiarkou)</Label>
-            <Textarea id="features" name="features" rows={2} defaultValue={vehicle?.features.join(', ') ?? ''} placeholder="Navigácia, Kúrené sedenie, LED svetlá, ..." />
+            <Label htmlFor="features">
+              Výbava
+              <span className="text-slate-400 font-normal text-xs ml-1">(oddelené čiarkou)</span>
+            </Label>
+            <Textarea
+              id="features"
+              name="features"
+              rows={3}
+              defaultValue={vehicle?.features.join(', ') ?? ''}
+              placeholder="Navigácia, Kúrené sedenie, LED svetlá, Parkovacia kamera, ..."
+            />
           </div>
         </CardContent>
       </Card>
 
+      {/* ── Fotografie ── */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Fotografie</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
+              <ImageIcon className="h-4 w-4 text-purple-600" />
+            </span>
+            Fotografie
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div
-            className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center cursor-pointer hover:border-orange-300 hover:bg-orange-50 transition-colors"
+            className="border-2 border-dashed border-slate-200 rounded-xl p-10 text-center cursor-pointer hover:border-orange-300 hover:bg-orange-50/50 transition-colors"
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-            <p className="text-slate-500 text-sm">Kliknite pre nahranie fotografií</p>
-            <p className="text-slate-400 text-xs mt-1">JPG, PNG, WebP – max 10 MB</p>
+            <Upload className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-600 font-medium text-sm">Kliknite pre nahratie fotografií</p>
+            <p className="text-slate-400 text-xs mt-1">JPG, PNG, WebP — max 10 MB na fotografiu</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -395,7 +461,9 @@ export default function VehicleForm({ vehicle }: Props) {
 
           {images.length > 0 && (
             <>
-              <p className="text-xs text-slate-400">Ťahajte fotky pre zmenu poradia. Hlavná fotka je vždy prvá.</p>
+              <p className="text-xs text-slate-400">
+                Ťahajte fotky pre zmenu poradia. Prvá fotka (s hviezdičkou) sa zobrazuje ako hlavná.
+              </p>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                 {images.map((img, index) => (
                   <div
@@ -446,7 +514,7 @@ export default function VehicleForm({ vehicle }: Props) {
                     </div>
 
                     {img.isPrimary && (
-                      <div className="absolute top-1 left-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded">
+                      <div className="absolute top-1 left-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
                         Hlavná
                       </div>
                     )}
@@ -458,13 +526,27 @@ export default function VehicleForm({ vehicle }: Props) {
         </CardContent>
       </Card>
 
-      <div className="flex gap-3">
-        <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white" size="lg" disabled={loading}>
-          {loading ? 'Ukladám...' : isEdit ? 'Aktualizovať vozidlo' : 'Pridať vozidlo'}
+      {/* ── Sticky action bar ── */}
+      <div className="sticky bottom-0 bg-white border-t border-slate-200 -mx-6 px-6 py-4 flex items-center gap-3 z-10">
+        <Button
+          type="submit"
+          className="bg-orange-500 hover:bg-orange-600 text-white"
+          size="lg"
+          disabled={loading}
+        >
+          {loading
+            ? (isEdit ? 'Ukladám...' : 'Pridávam...')
+            : (isEdit ? 'Uložiť zmeny' : 'Pridať vozidlo')}
         </Button>
         <Button type="button" variant="outline" size="lg" onClick={() => router.back()}>
           Zrušiť
         </Button>
+        {!isEdit && (
+          <span className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
+            <Tag className="h-3.5 w-3.5" />
+            Stav: Dostupné (predvolené)
+          </span>
+        )}
       </div>
     </form>
   )

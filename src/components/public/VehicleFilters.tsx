@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { fuelTypeLabel, transmissionLabel } from '@/lib/utils'
-import { SlidersHorizontal, X } from 'lucide-react'
+import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 
 interface Props {
   makes: string[]
@@ -26,6 +26,7 @@ const TRANSMISSIONS = ['MANUAL', 'AUTOMATIC', 'SEMI_AUTOMATIC']
 export default function VehicleFilters({ makes, currentParams }: Props) {
   const router = useRouter()
   const pathname = usePathname()
+  const [isOpen, setIsOpen] = useState(false)
 
   function buildUrl(updates: Record<string, string | undefined>) {
     const params = new URLSearchParams()
@@ -46,24 +47,8 @@ export default function VehicleFilters({ makes, currentParams }: Props) {
 
   const hasFilters = Object.values(currentParams).some(Boolean)
 
-  return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 font-semibold text-slate-900">
-          <SlidersHorizontal className="h-4 w-4 text-orange-500" />
-          Filtre
-        </div>
-        {hasFilters && (
-          <button
-            onClick={clearAll}
-            className="text-xs text-slate-500 hover:text-red-500 flex items-center gap-1"
-          >
-            <X className="h-3 w-3" />
-            Zrušiť
-          </button>
-        )}
-      </div>
-
+  const filterContent = (
+    <div className="space-y-5">
       {/* Make */}
       <div className="space-y-2">
         <Label>Značka</Label>
@@ -168,6 +153,49 @@ export default function VehicleFilters({ makes, currentParams }: Props) {
           Zrušiť všetky filtre
         </Button>
       )}
+    </div>
+  )
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      {/* Header — mobile: clickable toggle, desktop: static */}
+      <div className="flex items-center justify-between p-5">
+        <div className="flex items-center gap-2 font-semibold text-slate-900">
+          <SlidersHorizontal className="h-4 w-4 text-primary" />
+          Filtre
+          {hasFilters && (
+            <span className="inline-flex items-center justify-center w-5 h-5 bg-primary text-white text-xs rounded-full">
+              {Object.values(currentParams).filter(Boolean).length}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {hasFilters && (
+            <button
+              onClick={clearAll}
+              className="text-xs text-slate-500 hover:text-red-500 flex items-center gap-1"
+            >
+              <X className="h-3 w-3" />
+              Zrušiť
+            </button>
+          )}
+          {/* Chevron only on mobile */}
+          <button
+            className="lg:hidden p-1 text-slate-400 hover:text-slate-600"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Zobraziť filtre"
+          >
+            <ChevronDown
+              className={`h-5 w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Filter content — always visible on lg, collapsible on mobile */}
+      <div className={`px-5 pb-5 ${isOpen ? 'block' : 'hidden'} lg:block`}>
+        {filterContent}
+      </div>
     </div>
   )
 }

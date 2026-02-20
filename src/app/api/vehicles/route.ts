@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const slug = await generateVehicleSlug(parsed.data.make, parsed.data.model, parsed.data.year)
+    const slug = await generateVehicleSlug(parsed.data.title)
     const vehicle = await prisma.vehicle.create({ data: { ...parsed.data, slug } })
     return NextResponse.json({ data: vehicle }, { status: 201 })
   } catch (err) {

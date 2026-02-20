@@ -52,16 +52,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       )
     }
 
-    // Regenerate slug if make/model/year changed
+    // Regenerate slug if title changed
     let slugUpdate: { slug?: string } = {}
-    if (parsed.data.make || parsed.data.model || parsed.data.year) {
-      const current = await prisma.vehicle.findUnique({ where: { id }, select: { make: true, model: true, year: true } })
-      if (current) {
-        const make = parsed.data.make ?? current.make
-        const model = parsed.data.model ?? current.model
-        const year = parsed.data.year ?? current.year
-        slugUpdate.slug = await generateVehicleSlug(make, model, year, id)
-      }
+    if (parsed.data.title) {
+      slugUpdate.slug = await generateVehicleSlug(parsed.data.title, id)
     }
 
     const vehicle = await prisma.vehicle.update({
