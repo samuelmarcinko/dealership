@@ -129,7 +129,7 @@ export default async function VehiclesPage({
           <div className="flex-1">
             {vehicles.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-slate-500 text-lg">Žiadne vozidlá nevyhovujú vašim filtrám.</p>
+                <p className="text-slate-500 text-lg">Pre vaše filtrovacie kritériá sme nenašli žiadne vozidlá v ponuke.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">

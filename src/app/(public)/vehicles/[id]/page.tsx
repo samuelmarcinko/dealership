@@ -57,9 +57,6 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   ]
 
   const hasSalePrice = vehicle.salePrice != null && Number(vehicle.salePrice) > 0
-  const discountPct = hasSalePrice
-    ? Math.round((1 - Number(vehicle.salePrice) / Number(vehicle.price)) * 100)
-    : 0
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -104,7 +101,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                       {formatPrice(vehicle.salePrice!)}
                     </p>
                     <span className="inline-flex items-center bg-red-100 text-red-700 text-sm font-bold px-2.5 py-1 rounded-lg">
-                      -{discountPct}%
+                      ZĽAVNENÁ CENA
                     </span>
                   </div>
                   <p className="text-slate-400 line-through text-lg mt-1">

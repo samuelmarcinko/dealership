@@ -145,8 +145,8 @@ function DualRange({ min, max, step, valueMin, valueMax, onChangeMin, onChangeMa
           onChange={(e) => onChangeMin(Math.min(+e.target.value, valueMax - step))}
           onMouseUp={onCommit}
           onTouchEnd={onCommit}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          style={{ zIndex: valueMin > max - (max - min) * 0.1 ? 5 : 3 }}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
+          style={{ zIndex: 3 }}
         />
         <input
           type="range" min={min} max={max} step={step}
@@ -154,8 +154,8 @@ function DualRange({ min, max, step, valueMin, valueMax, onChangeMin, onChangeMa
           onChange={(e) => onChangeMax(Math.max(+e.target.value, valueMin + step))}
           onMouseUp={onCommit}
           onTouchEnd={onCommit}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          style={{ zIndex: 4 }}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
+          style={{ zIndex: 3 }}
         />
       </div>
     </div>

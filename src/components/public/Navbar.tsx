@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Car, Phone } from 'lucide-react'
+import { Menu, X, Car, Phone, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TenantBranding } from '@/lib/tenant'
 
@@ -152,8 +152,8 @@ export default function Navbar({ branding, customNavLinks = [] }: Props) {
             <span className={logoTextClass}>{name}</span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-0.5 flex-1">
+          {/* Desktop nav — centered */}
+          <nav className="hidden md:flex flex-1 items-center justify-center gap-0.5">
             {allLinks.map((link) => (
               <Link key={link.href} href={link.href} className={desktopLinkClass(link)}>
                 {link.label}
@@ -161,9 +161,9 @@ export default function Navbar({ branding, customNavLinks = [] }: Props) {
             ))}
           </nav>
 
-          {/* Right side: phone */}
-          {branding?.contactPhone && (
-            <div className="hidden md:flex items-center shrink-0 ml-auto">
+          {/* Right side: phone + email */}
+          <div className="hidden md:flex items-center gap-4 shrink-0">
+            {branding?.contactPhone && (
               <a
                 href={`tel:${branding.contactPhone.replace(/\s/g, '')}`}
                 className={phoneClass}
@@ -173,8 +173,19 @@ export default function Navbar({ branding, customNavLinks = [] }: Props) {
                 </div>
                 <span>{branding.contactPhone}</span>
               </a>
-            </div>
-          )}
+            )}
+            {branding?.contactEmail && (
+              <a
+                href={`mailto:${branding.contactEmail}`}
+                className={phoneClass}
+              >
+                <div className={phoneIconClass}>
+                  <Mail className="h-3.5 w-3.5" />
+                </div>
+                <span>{branding.contactEmail}</span>
+              </a>
+            )}
+          </div>
 
           {/* Mobile menu toggle */}
           <button
@@ -208,6 +219,15 @@ export default function Navbar({ branding, customNavLinks = [] }: Props) {
               >
                 <Phone className="h-4 w-4" />
                 {branding.contactPhone}
+              </a>
+            )}
+            {branding?.contactEmail && (
+              <a
+                href={`mailto:${branding.contactEmail}`}
+                className={mobilePhoneClass}
+              >
+                <Mail className="h-4 w-4" />
+                {branding.contactEmail}
               </a>
             )}
           </nav>

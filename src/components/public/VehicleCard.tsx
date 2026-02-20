@@ -77,7 +77,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
                 <div className="flex items-center gap-1.5">
                   <span className="text-2xl font-bold text-red-600">{formatPrice(vehicle.salePrice)}</span>
                   <span className="text-xs bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded">
-                    ZĽAVA
+                    ZĽAVNENÁ CENA
                   </span>
                 </div>
                 <span className="text-sm line-through text-slate-400">{formatPrice(vehicle.price)}</span>
