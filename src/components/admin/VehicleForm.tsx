@@ -170,13 +170,24 @@ export default function VehicleForm({ vehicle }: Props) {
 
     const data = new FormData(e.currentTarget)
 
+    const priceVal = parseFloat(data.get('price') as string)
+    const salePriceRaw = (data.get('salePrice') as string).trim()
+    const salePriceVal = salePriceRaw ? parseFloat(salePriceRaw) : null
+
+    if (salePriceVal !== null && salePriceVal >= priceVal) {
+      toast('error', 'Zľavnená cena musí byť nižšia ako inzerovaná cena')
+      setLoading(false)
+      return
+    }
+
     const body = {
       title: data.get('title') as string,
       make: data.get('make') as string,
       model: data.get('model') as string,
       variant: isEdit ? ((data.get('variant') as string) || null) : null,
       year: parseInt(data.get('year') as string),
-      price: parseFloat(data.get('price') as string),
+      price: priceVal,
+      salePrice: salePriceVal,
       mileage: parseInt(data.get('mileage') as string),
       fuelType,
       transmission,
@@ -291,7 +302,7 @@ export default function VehicleForm({ vehicle }: Props) {
             )}
           </div>
 
-          <div className={`grid grid-cols-2 gap-4 ${isEdit ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="year">Rok výroby *</Label>
               <Input
@@ -305,12 +316,31 @@ export default function VehicleForm({ vehicle }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Cena (€) *</Label>
+              <Label htmlFor="price">Inzerovaná cena (€) *</Label>
               <Input id="price" name="price" type="number" step="0.01" min={0} defaultValue={vehicle?.price.toString()} required placeholder="0" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="mileage">Najazdené (km) *</Label>
               <Input id="mileage" name="mileage" type="number" min={0} defaultValue={vehicle?.mileage} required placeholder="0" />
+            </div>
+          </div>
+
+          <div className={`grid grid-cols-1 gap-4 ${isEdit ? 'sm:grid-cols-2' : ''}`}>
+            <div className="space-y-2">
+              <Label htmlFor="salePrice">
+                Zľavnená cena (€)
+                <span className="text-slate-400 font-normal text-xs ml-1">— nepovinné</span>
+              </Label>
+              <Input
+                id="salePrice"
+                name="salePrice"
+                type="number"
+                step="0.01"
+                min={0}
+                defaultValue={vehicle?.salePrice?.toString() ?? ''}
+                placeholder="Nechajte prázdne ak nie je zľava"
+              />
+              <p className="text-xs text-slate-400">Ak vyplníte, musí byť nižšia ako inzerovaná cena. Na webe sa zobrazí ako zľava s preškrtnutou pôvodnou cenou.</p>
             </div>
             {isEdit && (
               <div className="space-y-2">

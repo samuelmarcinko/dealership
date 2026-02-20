@@ -72,9 +72,19 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
           </div>
 
           <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-            <span className="text-2xl font-bold text-primary">
-              {formatPrice(vehicle.price)}
-            </span>
+            {vehicle.salePrice ? (
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-2xl font-bold text-red-600">{formatPrice(vehicle.salePrice)}</span>
+                  <span className="text-xs bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded">
+                    ZĽAVA
+                  </span>
+                </div>
+                <span className="text-sm line-through text-slate-400">{formatPrice(vehicle.price)}</span>
+              </div>
+            ) : (
+              <span className="text-2xl font-bold text-primary">{formatPrice(vehicle.price)}</span>
+            )}
             <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded">
               {vehicle.bodyType ? vehicle.bodyType.charAt(0) + vehicle.bodyType.slice(1).toLowerCase() : ''}
             </span>

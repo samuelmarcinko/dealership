@@ -56,6 +56,11 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     ...(vehicle.seats ? [{ icon: Users, label: 'Počet miest', value: String(vehicle.seats) }] : []),
   ]
 
+  const hasSalePrice = vehicle.salePrice != null && Number(vehicle.salePrice) > 0
+  const discountPct = hasSalePrice
+    ? Math.round((1 - Number(vehicle.salePrice) / Number(vehicle.price)) * 100)
+    : 0
+
   return (
     <div className="bg-slate-50 min-h-screen">
       <div className="container mx-auto px-4 py-8">
@@ -67,18 +72,50 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           Späť na ponuku
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Info card — first in DOM = first on mobile, positioned to col 3 on desktop */}
-          <div className="space-y-4 lg:col-start-3 lg:row-start-1">
+        {/*
+          Mobile order (flex-col): gallery → info card → description → features
+          Desktop order (3-col grid):
+            col 1-2 row 1: gallery
+            col 3  rows 1+: info card (sticky)
+            col 1-2 row 2: description
+            col 1-2 row 3: features
+        */}
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
+
+          {/* 1. Gallery — first on mobile, col 1-2 row 1 on desktop */}
+          <div className="lg:col-span-2">
+            <VehicleGallery images={vehicle.images} title={vehicle.title} />
+          </div>
+
+          {/* 2. Info card — second on mobile, col 3 spanning all rows on desktop */}
+          <div className="lg:col-start-3 lg:row-start-1 lg:row-span-full">
             <div className="bg-white rounded-xl border border-slate-100 p-6 lg:sticky lg:top-20">
               <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
               <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">{vehicle.title}</h1>
               {vehicle.variant && (
-                <p className="text-slate-500 text-sm mb-4">{vehicle.variant}</p>
+                <p className="text-slate-500 text-sm mb-3">{vehicle.variant}</p>
               )}
-              <p className="text-4xl font-extrabold text-primary mb-6">
-                {formatPrice(vehicle.price)}
-              </p>
+
+              {/* Price — with or without discount */}
+              {hasSalePrice ? (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-4xl font-extrabold text-red-600">
+                      {formatPrice(vehicle.salePrice!)}
+                    </p>
+                    <span className="inline-flex items-center bg-red-100 text-red-700 text-sm font-bold px-2.5 py-1 rounded-lg">
+                      -{discountPct}%
+                    </span>
+                  </div>
+                  <p className="text-slate-400 line-through text-lg mt-1">
+                    {formatPrice(vehicle.price)}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-4xl font-extrabold text-primary mb-6">
+                  {formatPrice(vehicle.price)}
+                </p>
+              )}
 
               <div className="grid grid-cols-1 gap-3 mb-6">
                 {specs.map((spec) => (
@@ -103,35 +140,32 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          {/* Gallery + description — second on mobile, spans cols 1-2 on desktop */}
-          <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 space-y-6">
-            <VehicleGallery images={vehicle.images} title={vehicle.title} />
+          {/* 3. Description — third on mobile, col 1-2 row 2 on desktop */}
+          {vehicle.description && (
+            <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6">
+              <h2 className="font-semibold text-slate-900 text-lg mb-3">Popis vozidla</h2>
+              <p className="text-slate-600 leading-relaxed whitespace-pre-line">
+                {vehicle.description}
+              </p>
+            </div>
+          )}
 
-            {vehicle.description && (
-              <div className="bg-white rounded-xl border border-slate-100 p-6">
-                <h2 className="font-semibold text-slate-900 text-lg mb-3">Popis vozidla</h2>
-                <p className="text-slate-600 leading-relaxed whitespace-pre-line">
-                  {vehicle.description}
-                </p>
+          {/* 4. Features — fourth on mobile, col 1-2 row 3 on desktop */}
+          {vehicle.features.length > 0 && (
+            <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6">
+              <h2 className="font-semibold text-slate-900 text-lg mb-3">Výbava</h2>
+              <div className="flex flex-wrap gap-2">
+                {vehicle.features.map((feature, i) => (
+                  <span
+                    key={i}
+                    className="bg-primary/10 text-primary text-sm px-3 py-1 rounded-full border border-primary/20"
+                  >
+                    {feature}
+                  </span>
+                ))}
               </div>
-            )}
-
-            {vehicle.features.length > 0 && (
-              <div className="bg-white rounded-xl border border-slate-100 p-6">
-                <h2 className="font-semibold text-slate-900 text-lg mb-3">Výbava</h2>
-                <div className="flex flex-wrap gap-2">
-                  {vehicle.features.map((feature, i) => (
-                    <span
-                      key={i}
-                      className="bg-primary/10 text-primary text-sm px-3 py-1 rounded-full border border-primary/20"
-                    >
-                      {feature}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

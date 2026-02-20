@@ -12,6 +12,7 @@ const vehicleSchema = z.object({
   variant: z.string().max(100).nullable().optional(),
   year: z.number().int().min(1900).max(2030),
   price: z.number().positive(),
+  salePrice: z.number().positive().nullable().optional(),
   mileage: z.number().int().min(0),
   fuelType: z.nativeEnum(FuelType),
   transmission: z.nativeEnum(TransmissionType),

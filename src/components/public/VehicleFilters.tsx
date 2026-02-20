@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -12,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { fuelTypeLabel, transmissionLabel } from '@/lib/utils'
+import { fuelTypeLabel, transmissionLabel, formatPrice } from '@/lib/utils'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 
 interface Props {
@@ -22,11 +21,102 @@ interface Props {
 
 const FUEL_TYPES = ['PETROL', 'DIESEL', 'ELECTRIC', 'HYBRID', 'LPG', 'CNG']
 const TRANSMISSIONS = ['MANUAL', 'AUTOMATIC', 'SEMI_AUTOMATIC']
+const PRICE_MIN = 0
+const PRICE_MAX = 200000
+const PRICE_STEP = 500
+const YEAR_MIN = 1990
+const YEAR_MAX = new Date().getFullYear()
 
+// ── Dual range slider component ──────────────────────────────────────────────
+interface DualRangeProps {
+  min: number
+  max: number
+  step: number
+  valueMin: number
+  valueMax: number
+  onChangeMin: (v: number) => void
+  onChangeMax: (v: number) => void
+  onCommit: () => void
+  formatFn: (v: number) => string
+  labelMin?: string
+  labelMax?: string
+}
+
+function DualRange({
+  min, max, step,
+  valueMin, valueMax,
+  onChangeMin, onChangeMax, onCommit,
+  formatFn,
+}: DualRangeProps) {
+  const minPct = ((valueMin - min) / (max - min)) * 100
+  const maxPct = ((valueMax - min) / (max - min)) * 100
+
+  return (
+    <div className="space-y-2">
+      {/* Value labels */}
+      <div className="flex justify-between text-xs font-medium text-slate-700">
+        <span>{valueMin <= min ? 'Akékoľvek' : formatFn(valueMin)}</span>
+        <span>{valueMax >= max ? 'Max' : formatFn(valueMax)}</span>
+      </div>
+
+      {/* Slider track */}
+      <div className="relative h-5 flex items-center">
+        {/* Background track */}
+        <div className="absolute w-full h-1.5 rounded-full bg-slate-200 pointer-events-none" />
+        {/* Active range fill */}
+        <div
+          className="absolute h-1.5 rounded-full bg-primary pointer-events-none"
+          style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }}
+        />
+        {/* Visual thumb min */}
+        <div
+          className="absolute w-4 h-4 rounded-full bg-white border-2 border-primary shadow pointer-events-none -translate-x-1/2"
+          style={{ left: `${minPct}%` }}
+        />
+        {/* Visual thumb max */}
+        <div
+          className="absolute w-4 h-4 rounded-full bg-white border-2 border-primary shadow pointer-events-none -translate-x-1/2"
+          style={{ left: `${maxPct}%` }}
+        />
+
+        {/* Min range input (transparent, interactive) */}
+        <input
+          type="range"
+          min={min} max={max} step={step}
+          value={valueMin}
+          onChange={(e) => onChangeMin(Math.min(+e.target.value, valueMax - step))}
+          onMouseUp={onCommit}
+          onTouchEnd={onCommit}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          style={{ zIndex: valueMin > max - (max - min) * 0.1 ? 5 : 3 }}
+        />
+        {/* Max range input (transparent, interactive) */}
+        <input
+          type="range"
+          min={min} max={max} step={step}
+          value={valueMax}
+          onChange={(e) => onChangeMax(Math.max(+e.target.value, valueMin + step))}
+          onMouseUp={onCommit}
+          onTouchEnd={onCommit}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          style={{ zIndex: 4 }}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function VehicleFilters({ makes, currentParams }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+
+  // Slider local state (updates live while dragging, commits to URL on release)
+  const [priceMin, setPriceMin] = useState(parseInt(currentParams.minPrice ?? String(PRICE_MIN)))
+  const [priceMax, setPriceMax] = useState(parseInt(currentParams.maxPrice ?? String(PRICE_MAX)))
+  const [yearMin, setYearMin] = useState(parseInt(currentParams.minYear ?? String(YEAR_MIN)))
+  const [yearMax, setYearMax] = useState(parseInt(currentParams.maxYear ?? String(YEAR_MAX)))
 
   function buildUrl(updates: Record<string, string | undefined>) {
     const params = new URLSearchParams()
@@ -34,21 +124,43 @@ export default function VehicleFilters({ makes, currentParams }: Props) {
     Object.entries(merged).forEach(([k, v]) => {
       if (v) params.set(k, v)
     })
-    return `${pathname}?${params.toString()}`
+    const qs = params.toString()
+    return qs ? `${pathname}?${qs}` : pathname
   }
 
   function updateFilter(key: string, value: string | undefined) {
     router.push(buildUrl({ [key]: value }))
   }
 
+  const commitPriceRange = useCallback(() => {
+    router.push(buildUrl({
+      minPrice: priceMin > PRICE_MIN ? String(priceMin) : undefined,
+      maxPrice: priceMax < PRICE_MAX ? String(priceMax) : undefined,
+    }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceMin, priceMax])
+
+  const commitYearRange = useCallback(() => {
+    router.push(buildUrl({
+      minYear: yearMin > YEAR_MIN ? String(yearMin) : undefined,
+      maxYear: yearMax < YEAR_MAX ? String(yearMax) : undefined,
+    }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yearMin, yearMax])
+
   function clearAll() {
+    setPriceMin(PRICE_MIN)
+    setPriceMax(PRICE_MAX)
+    setYearMin(YEAR_MIN)
+    setYearMax(YEAR_MAX)
     router.push(pathname)
   }
 
   const hasFilters = Object.values(currentParams).some(Boolean)
+  const activeFilterCount = Object.values(currentParams).filter(Boolean).length
 
   const filterContent = (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Make */}
       <div className="space-y-2">
         <Label>Značka</Label>
@@ -106,46 +218,30 @@ export default function VehicleFilters({ makes, currentParams }: Props) {
         </Select>
       </div>
 
-      {/* Price range */}
+      {/* Price range slider */}
       <div className="space-y-2">
         <Label>Cena (€)</Label>
-        <div className="flex gap-2">
-          <Input
-            type="number"
-            placeholder="Od"
-            defaultValue={currentParams.minPrice ?? ''}
-            onBlur={(e) => updateFilter('minPrice', e.target.value || undefined)}
-            className="text-sm"
-          />
-          <Input
-            type="number"
-            placeholder="Do"
-            defaultValue={currentParams.maxPrice ?? ''}
-            onBlur={(e) => updateFilter('maxPrice', e.target.value || undefined)}
-            className="text-sm"
-          />
-        </div>
+        <DualRange
+          min={PRICE_MIN} max={PRICE_MAX} step={PRICE_STEP}
+          valueMin={priceMin} valueMax={priceMax}
+          onChangeMin={setPriceMin}
+          onChangeMax={setPriceMax}
+          onCommit={commitPriceRange}
+          formatFn={(v) => formatPrice(v)}
+        />
       </div>
 
-      {/* Year range */}
+      {/* Year range slider */}
       <div className="space-y-2">
         <Label>Rok výroby</Label>
-        <div className="flex gap-2">
-          <Input
-            type="number"
-            placeholder="Od"
-            defaultValue={currentParams.minYear ?? ''}
-            onBlur={(e) => updateFilter('minYear', e.target.value || undefined)}
-            className="text-sm"
-          />
-          <Input
-            type="number"
-            placeholder="Do"
-            defaultValue={currentParams.maxYear ?? ''}
-            onBlur={(e) => updateFilter('maxYear', e.target.value || undefined)}
-            className="text-sm"
-          />
-        </div>
+        <DualRange
+          min={YEAR_MIN} max={YEAR_MAX} step={1}
+          valueMin={yearMin} valueMax={yearMax}
+          onChangeMin={setYearMin}
+          onChangeMax={setYearMax}
+          onCommit={commitYearRange}
+          formatFn={(v) => String(v)}
+        />
       </div>
 
       {hasFilters && (
@@ -158,14 +254,14 @@ export default function VehicleFilters({ makes, currentParams }: Props) {
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      {/* Header — mobile: clickable toggle, desktop: static */}
+      {/* Header */}
       <div className="flex items-center justify-between p-5">
         <div className="flex items-center gap-2 font-semibold text-slate-900">
           <SlidersHorizontal className="h-4 w-4 text-primary" />
           Filtre
           {hasFilters && (
             <span className="inline-flex items-center justify-center w-5 h-5 bg-primary text-white text-xs rounded-full">
-              {Object.values(currentParams).filter(Boolean).length}
+              {activeFilterCount}
             </span>
           )}
         </div>
@@ -179,7 +275,6 @@ export default function VehicleFilters({ makes, currentParams }: Props) {
               Zrušiť
             </button>
           )}
-          {/* Chevron only on mobile */}
           <button
             className="lg:hidden p-1 text-slate-400 hover:text-slate-600"
             onClick={() => setIsOpen(!isOpen)}
@@ -192,7 +287,7 @@ export default function VehicleFilters({ makes, currentParams }: Props) {
         </div>
       </div>
 
-      {/* Filter content — always visible on lg, collapsible on mobile */}
+      {/* Filter content — collapsible on mobile, always open on lg */}
       <div className={`px-5 pb-5 ${isOpen ? 'block' : 'hidden'} lg:block`}>
         {filterContent}
       </div>

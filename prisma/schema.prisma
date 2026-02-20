@@ -101,6 +101,7 @@ model Vehicle {
   variant        String?
   year           Int
   price          Decimal          @db.Decimal(12, 2)
+  salePrice      Decimal?         @db.Decimal(12, 2)
   mileage        Int
   fuelType       FuelType
   transmission   TransmissionType
