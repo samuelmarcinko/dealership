@@ -14,25 +14,39 @@ export const metadata: Metadata = {
 export const revalidate = 30
 
 interface SearchParams {
-  make?: string
-  fuelType?: string
-  transmission?: string
+  make?: string        // comma-separated, e.g. "BMW,Audi"
+  fuelType?: string    // comma-separated
+  transmission?: string // comma-separated
   minPrice?: string
   maxPrice?: string
   minYear?: string
   maxYear?: string
 }
 
-async function getVehicles(params: SearchParams): Promise<{ vehicles: PublicVehicle[]; makes: string[] }> {
-  // Always exclude SOLD vehicles from public listing
-  const where: Record<string, unknown> = { status: { not: 'SOLD' } }
+async function getVehicles(params: SearchParams): Promise<{
+  vehicles: PublicVehicle[]
+  makes: string[]
+  yearDbMin: number
+  yearDbMax: number
+}> {
+  const NON_SOLD = { status: { not: 'SOLD' as const } }
+  const where: Record<string, unknown> = { ...NON_SOLD }
 
-  if (params.make) where.make = params.make
-  if (params.fuelType && Object.values(FuelType).includes(params.fuelType as FuelType)) {
-    where.fuelType = params.fuelType
+  // Multiselect: comma-separated values
+  if (params.make) {
+    const vals = params.make.split(',').filter(Boolean)
+    if (vals.length === 1) where.make = vals[0]
+    else if (vals.length > 1) where.make = { in: vals }
   }
-  if (params.transmission && Object.values(TransmissionType).includes(params.transmission as TransmissionType)) {
-    where.transmission = params.transmission
+  if (params.fuelType) {
+    const vals = params.fuelType.split(',').filter((f) => Object.values(FuelType).includes(f as FuelType)) as FuelType[]
+    if (vals.length === 1) where.fuelType = vals[0]
+    else if (vals.length > 1) where.fuelType = { in: vals }
+  }
+  if (params.transmission) {
+    const vals = params.transmission.split(',').filter((t) => Object.values(TransmissionType).includes(t as TransmissionType)) as TransmissionType[]
+    if (vals.length === 1) where.transmission = vals[0]
+    else if (vals.length > 1) where.transmission = { in: vals }
   }
 
   const priceFilter: Record<string, number> = {}
@@ -45,19 +59,22 @@ async function getVehicles(params: SearchParams): Promise<{ vehicles: PublicVehi
   if (params.maxYear) yearFilter.lte = parseInt(params.maxYear)
   if (Object.keys(yearFilter).length) where.year = yearFilter
 
-  const [raw, makesRaw] = await Promise.all([
+  const [raw, makesRaw, yearStats] = await Promise.all([
     prisma.vehicle.findMany({
       where,
       orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
-      include: {
-        images: { where: { isPrimary: true }, take: 1 },
-      },
+      include: { images: { where: { isPrimary: true }, take: 1 } },
     }),
     prisma.vehicle.findMany({
-      where: { status: { not: 'SOLD' } },
+      where: NON_SOLD,
       select: { make: true },
       distinct: ['make'],
       orderBy: { make: 'asc' },
+    }),
+    prisma.vehicle.aggregate({
+      where: NON_SOLD,
+      _min: { year: true },
+      _max: { year: true },
     }),
   ])
 
@@ -66,7 +83,14 @@ async function getVehicles(params: SearchParams): Promise<{ vehicles: PublicVehi
     primaryImage: v.images[0] ?? null,
   }))
 
-  return { vehicles, makes: makesRaw.map((m) => m.make) }
+  const currentYear = new Date().getFullYear()
+
+  return {
+    vehicles,
+    makes: makesRaw.map((m) => m.make),
+    yearDbMin: yearStats._min.year ?? 1990,
+    yearDbMax: yearStats._max.year ?? currentYear,
+  }
 }
 
 export default async function VehiclesPage({
@@ -75,7 +99,7 @@ export default async function VehiclesPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const { vehicles, makes } = await getVehicles(params)
+  const { vehicles, makes, yearDbMin, yearDbMax } = await getVehicles(params)
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -93,7 +117,12 @@ export default async function VehiclesPage({
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters sidebar */}
           <aside className="w-full lg:w-64 shrink-0">
-            <VehicleFilters makes={makes} currentParams={params as Record<string, string | undefined>} />
+            <VehicleFilters
+              makes={makes}
+              currentParams={params as Record<string, string | undefined>}
+              yearDbMin={yearDbMin}
+              yearDbMax={yearDbMax}
+            />
           </aside>
 
           {/* Vehicle grid */}
