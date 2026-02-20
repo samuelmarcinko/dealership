@@ -12,12 +12,16 @@ import {
   LogOut,
   Car as CarIcon,
   FileText,
+  UserCheck,
+  Archive,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { href: '/admin/vehicles', label: 'Vozidlá', icon: Car },
+  { href: '/admin/customers', label: 'Zákazníci', icon: UserCheck },
+  { href: '/admin/vehicles', label: 'Ponuka vozidiel', icon: Car },
+  { href: '/admin/sold', label: 'Predané vozidlá', icon: Archive, exact: true },
   { href: '/admin/users', label: 'Používatelia', icon: Users },
   { href: '/admin/pages', label: 'Stránky', icon: FileText },
   { href: '/admin/settings', label: 'Nastavenia', icon: Settings, exact: true },

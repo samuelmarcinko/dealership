@@ -13,10 +13,11 @@ import { prisma } from '@/lib/prisma'
 import DeleteVehicleButton from '@/components/admin/DeleteVehicleButton'
 import { formatPrice, formatMileage, vehicleStatusLabel, fuelTypeLabel } from '@/lib/utils'
 
-export const metadata: Metadata = { title: 'Vozidlá' }
+export const metadata: Metadata = { title: 'Ponuka vozidiel' }
 
 export default async function AdminVehiclesPage() {
   const vehicles = await prisma.vehicle.findMany({
+    where: { status: { in: ['AVAILABLE', 'RESERVED'] } },
     orderBy: { createdAt: 'desc' },
     include: {
       images: { where: { isPrimary: true }, take: 1 },
@@ -27,8 +28,8 @@ export default async function AdminVehiclesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Vozidlá</h1>
-          <p className="text-slate-500 text-sm mt-1">{vehicles.length} vozidiel celkom</p>
+          <h1 className="text-2xl font-bold text-slate-900">Ponuka vozidiel</h1>
+          <p className="text-slate-500 text-sm mt-1">{vehicles.length} vozidiel v aktuálnej ponuke</p>
         </div>
         <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white">
           <Link href="/admin/vehicles/new">
@@ -40,7 +41,7 @@ export default async function AdminVehiclesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Zoznam vozidiel</CardTitle>
+          <CardTitle className="text-base font-semibold">Aktuálna ponuka</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -61,14 +62,13 @@ export default async function AdminVehiclesPage() {
               {vehicles.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-8 text-slate-400">
-                    Žiadne vozidlá
+                    Žiadne vozidlá v ponuke
                   </TableCell>
                 </TableRow>
               ) : (
                 vehicles.map((vehicle) => {
                   const statusVariant =
-                    vehicle.status === 'AVAILABLE' ? 'success' :
-                    vehicle.status === 'RESERVED' ? 'warning' : 'error'
+                    vehicle.status === 'AVAILABLE' ? 'success' : 'warning'
                   return (
                     <TableRow key={vehicle.id}>
                       <TableCell>
@@ -104,13 +104,11 @@ export default async function AdminVehiclesPage() {
                       <TableCell>
                         {vehicle.externalId ? (
                           <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-                            <FileInput className="h-3.5 w-3.5" />
-                            XML
+                            <FileInput className="h-3.5 w-3.5" />XML
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-                            <UserPen className="h-3.5 w-3.5" />
-                            Manuálne
+                            <UserPen className="h-3.5 w-3.5" />Manuálne
                           </span>
                         )}
                       </TableCell>

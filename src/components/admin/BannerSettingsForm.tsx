@@ -15,24 +15,25 @@ export default function BannerSettingsForm({ settings }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [enabled, setEnabled] = useState(settings['banner_enabled'] === 'true')
+  const [text, setText] = useState(settings['banner_text'] ?? '')
+  const [url, setUrl] = useState(settings['banner_url'] ?? '')
+  const [bgColor, setBgColor] = useState(settings['banner_bg_color'] ?? 'bg-primary')
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const fd = new FormData(e.currentTarget)
-
-    const updates = [
-      { key: 'banner_enabled', value: enabled ? 'true' : 'false' },
-      { key: 'banner_text', value: fd.get('banner_text') as string },
-      { key: 'banner_url', value: fd.get('banner_url') as string },
-      { key: 'banner_bg_color', value: fd.get('banner_bg_color') as string },
-    ]
-
     try {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: updates }),
+        body: JSON.stringify({
+          settings: [
+            { key: 'banner_enabled', value: enabled ? 'true' : 'false' },
+            { key: 'banner_text', value: text },
+            { key: 'banner_url', value: url },
+            { key: 'banner_bg_color', value: bgColor },
+          ],
+        }),
       })
       if (!res.ok) {
         const json = await res.json()
@@ -49,7 +50,6 @@ export default function BannerSettingsForm({ settings }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Toggle */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -66,54 +66,46 @@ export default function BannerSettingsForm({ settings }: Props) {
             }`}
           />
         </button>
-        <Label className="cursor-pointer" onClick={() => setEnabled(!enabled)}>
+        <Label className="cursor-pointer select-none" onClick={() => setEnabled(!enabled)}>
           {enabled ? 'Banner zapnutý' : 'Banner vypnutý'}
         </Label>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="banner_text">Text bannera</Label>
-        <Input
-          id="banner_text"
-          name="banner_text"
-          defaultValue={settings['banner_text'] ?? ''}
-          placeholder="🔥 Špeciálna akcia — zľava 10 % na všetky vozidlá tento víkend!"
-          disabled={!enabled}
-        />
+      <div className={`space-y-4 transition-opacity ${!enabled ? 'opacity-50' : ''}`}>
+        <div className="space-y-2">
+          <Label htmlFor="banner_text">Text bannera</Label>
+          <Input
+            id="banner_text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="🔥 Špeciálna akcia — zľava 10 % na všetky vozidlá tento víkend!"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="banner_url">Odkaz (voliteľný)</Label>
+          <Input
+            id="banner_url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://..."
+          />
+          <p className="text-xs text-slate-400">Ak je vyplnené, text bannera bude klikateľný.</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="banner_bg_color">CSS trieda pozadia</Label>
+          <Input
+            id="banner_bg_color"
+            value={bgColor}
+            onChange={(e) => setBgColor(e.target.value)}
+            placeholder="bg-primary"
+          />
+          <p className="text-xs text-slate-400">
+            Napr. <code>bg-primary</code>, <code>bg-slate-900</code>, <code>bg-green-600</code>.
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="banner_url">Odkaz (voliteľný)</Label>
-        <Input
-          id="banner_url"
-          name="banner_url"
-          type="url"
-          defaultValue={settings['banner_url'] ?? ''}
-          placeholder="https://..."
-          disabled={!enabled}
-        />
-        <p className="text-xs text-slate-400">Ak je vyplnené, text bannera bude klikateľný.</p>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="banner_bg_color">CSS trieda pozadia</Label>
-        <Input
-          id="banner_bg_color"
-          name="banner_bg_color"
-          defaultValue={settings['banner_bg_color'] ?? 'bg-primary'}
-          placeholder="bg-primary"
-          disabled={!enabled}
-        />
-        <p className="text-xs text-slate-400">
-          Tailwind trieda, napr. <code>bg-primary</code>, <code>bg-slate-900</code>, <code>bg-green-600</code>.
-        </p>
-      </div>
-
-      <Button
-        type="submit"
-        className="bg-orange-500 hover:bg-orange-600 text-white"
-        disabled={loading}
-      >
+      <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={loading}>
         <Save className="h-4 w-4 mr-2" />
         {loading ? 'Ukladám…' : 'Uložiť banner'}
       </Button>

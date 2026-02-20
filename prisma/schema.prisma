@@ -49,6 +49,11 @@ enum BodyType {
   OTHER
 }
 
+enum CustomerType {
+  PERSON
+  COMPANY
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,6 +68,29 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Customer {
+  id          String       @id @default(cuid())
+  type        CustomerType @default(PERSON)
+  // Fyzická osoba
+  firstName   String?
+  lastName    String?
+  // Firma / Živnostník
+  companyName String?
+  ico         String?
+  dic         String?
+  icDph       String?
+  // Spoločné
+  phone       String?
+  email       String?
+  address     String?      @db.Text
+  note        String?      @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  vehicles    Vehicle[]
+
+  @@map("customers")
 }
 
 model Vehicle {
@@ -88,6 +116,12 @@ model Vehicle {
   status         VehicleStatus    @default(AVAILABLE)
   externalId     String?          @unique
   importedAt     DateTime?
+  // Predaj
+  soldAt         DateTime?
+  soldPrice      Decimal?         @db.Decimal(12, 2)
+  soldNote       String?          @db.Text
+  buyer          Customer?        @relation(fields: [buyerId], references: [id])
+  buyerId        String?
   images         VehicleImage[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
