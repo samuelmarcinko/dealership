@@ -23,8 +23,8 @@ export function ColumnCanvas({ children }: ColumnCanvasProps) {
       }`}
     >
       {children}
-      {!children && (
-        <div className="flex-1 flex items-center justify-center text-slate-400 text-sm py-4">
+      {React.Children.count(children) === 0 && (
+        <div className="flex-1 flex items-center justify-center text-slate-400 text-sm py-4 select-none">
           Sem presuňte blok
         </div>
       )}

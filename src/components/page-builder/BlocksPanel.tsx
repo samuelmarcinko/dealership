@@ -33,8 +33,9 @@ export function BlocksPanel() {
     {
       label: 'Sekcia',
       icon: <Columns className="h-5 w-5" />,
+      // Section is NOT a canvas itself — ColumnCanvas children inside it are the drop targets
       create: () => (
-        <Element is={Section} canvas columns={1} gap="md" padding="md" bgColor="" />
+        <Element is={Section} columns={1} gap="md" padding="md" bgColor="" />
       ),
     },
     {

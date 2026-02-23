@@ -2,9 +2,10 @@
 
 import React from 'react'
 import { useEditor } from '@craftjs/core'
+import { Trash2 } from 'lucide-react'
 
 export function SettingsPanel() {
-  const { selected, settings } = useEditor((state) => {
+  const { actions, selected, settings } = useEditor((state, query) => {
     const selectedId = [...state.events.selected][0]
     if (!selectedId) return { selected: null, settings: null }
     const node = state.nodes[selectedId]
@@ -13,6 +14,7 @@ export function SettingsPanel() {
       selected: {
         id: selectedId,
         name: node.data.displayName ?? node.data.name,
+        isDeletable: query.node(selectedId).isDeletable(),
       },
       settings: node.related?.settings ?? null,
     }
@@ -20,10 +22,20 @@ export function SettingsPanel() {
 
   return (
     <aside className="w-72 bg-white border-l border-slate-200 flex flex-col overflow-hidden flex-shrink-0">
-      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
           {selected ? `Nastavenia: ${selected.name}` : 'Nastavenia bloku'}
         </h2>
+        {selected?.isDeletable && (
+          <button
+            type="button"
+            title="Vymazať blok (Del)"
+            onClick={() => actions.delete(selected.id)}
+            className="p-1 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">

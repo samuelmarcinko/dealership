@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import { Editor, Frame, Element, useEditor } from '@craftjs/core'
+import { Editor, Frame, Element, useEditor, useNode } from '@craftjs/core'
 import { Section } from './blocks/Section'
 import { ColumnCanvas } from './blocks/ColumnCanvas'
 import { TextBlock } from './blocks/TextBlock'
@@ -19,7 +19,15 @@ import { useToast } from '@/components/ui/toast'
 
 // Root canvas container — wraps all top-level nodes
 function RootContainer({ children }: { children?: React.ReactNode }) {
-  return <div className="min-h-full w-full">{children}</div>
+  const { connectors: { connect } } = useNode()
+  return (
+    <div
+      ref={(ref) => { if (ref) connect(ref) }}
+      className="min-h-[400px] w-full"
+    >
+      {children}
+    </div>
+  )
 }
 RootContainer.craft = { displayName: 'Root', isCanvas: true }
 
@@ -98,7 +106,7 @@ function BuilderLayout({ pageData, initialFrameData }: BuilderLayoutProps) {
             <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
               <Frame data={initialFrameData}>
                 <Element is={RootContainer} canvas>
-                  <Section columns={1} gap="md" padding="md" bgColor="" />
+                  <Element is={Section} columns={1} gap="md" padding="md" bgColor="" />
                 </Element>
               </Frame>
             </div>
