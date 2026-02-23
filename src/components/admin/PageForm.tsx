@@ -99,8 +99,8 @@ export default function PageForm({ initialData }: Props) {
         return
       }
       toast('success', 'Stránka vytvorená')
-      // Hard redirect — avoids 404 race condition between router.push + router.refresh
-      window.location.assign(`/admin/pages/${json.id}`)
+      // API returns { data: page } — hard redirect avoids router.push + refresh race condition
+      window.location.assign(`/admin/pages/${json.data?.id}`)
     } catch {
       toast('error', 'Nastala chyba')
     } finally {

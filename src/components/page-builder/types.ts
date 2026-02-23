@@ -62,6 +62,92 @@ export interface SectionProps {
   padding?: 'none' | 'sm' | 'md' | 'lg'
 }
 
+// ---- New block types ----
+
+export interface HeadingProps {
+  text?: string
+  tag?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  fontSize?: 'text-lg' | 'text-xl' | 'text-2xl' | 'text-3xl' | 'text-4xl' | 'text-5xl'
+  fontWeight?: 'font-normal' | 'font-medium' | 'font-semibold' | 'font-bold' | 'font-extrabold'
+  align?: 'left' | 'center' | 'right'
+  color?: string
+  italic?: boolean
+  uppercase?: boolean
+  paddingTop?: number
+  paddingBottom?: number
+}
+
+export interface SpacerProps {
+  height?: number
+}
+
+export interface AlertProps {
+  type?: 'info' | 'success' | 'warning' | 'error'
+  title?: string
+  message?: string
+  showIcon?: boolean
+}
+
+export interface CardProps {
+  mode?: 'icon' | 'image'
+  icon?: string
+  imageUrl?: string
+  title?: string
+  text?: string
+  align?: 'left' | 'center'
+  showButton?: boolean
+  buttonText?: string
+  buttonHref?: string
+  buttonVariant?: 'primary' | 'outline'
+  bgColor?: string
+  borderColor?: string
+  shadow?: 'none' | 'sm' | 'md' | 'lg'
+  borderRadius?: 'none' | 'md' | 'lg' | 'xl' | '2xl'
+  padding?: 'sm' | 'md' | 'lg'
+}
+
+export interface TestimonialProps {
+  quote?: string
+  authorName?: string
+  authorTitle?: string
+  authorImage?: string
+  rating?: number
+  style?: 'card' | 'minimal' | 'quote'
+  bgColor?: string
+  textColor?: string
+}
+
+export interface VideoProps {
+  url?: string
+  aspectRatio?: '16/9' | '4/3' | '1/1'
+  caption?: string
+  showCaption?: boolean
+}
+
+export interface IconListItem {
+  icon: string
+  text: string
+  link?: string
+}
+
+export interface IconListProps {
+  items?: IconListItem[]
+  iconColor?: string
+  iconSize?: 'sm' | 'md' | 'lg'
+  spacing?: 'sm' | 'md' | 'lg'
+  dividers?: boolean
+}
+
+export interface NumberHighlightProps {
+  number?: string
+  label?: string
+  prefix?: string
+  suffix?: string
+  color?: string
+  align?: 'left' | 'center' | 'right'
+  numberSize?: 'text-4xl' | 'text-5xl' | 'text-6xl'
+}
+
 export interface PageData {
   id?: string
   slug: string

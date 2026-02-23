@@ -6,6 +6,14 @@ import { ButtonBlockPublic } from './blocks/ButtonBlock.public'
 import { HeroBlockPublic } from './blocks/HeroBlock.public'
 import { IconBoxPublic } from './blocks/IconBox.public'
 import { SectionPublic } from './blocks/Section.public'
+import { HeadingPublic } from './blocks/Heading.public'
+import { SpacerPublic } from './blocks/Spacer.public'
+import { AlertPublic } from './blocks/Alert.public'
+import { CardPublic } from './blocks/Card.public'
+import { TestimonialPublic } from './blocks/Testimonial.public'
+import { VideoPublic } from './blocks/Video.public'
+import { IconListPublic } from './blocks/IconList.public'
+import { NumberHighlightPublic } from './blocks/NumberHighlight.public'
 import type {
   CraftState,
   CraftNode,
@@ -16,6 +24,14 @@ import type {
   HeroBlockProps,
   IconBoxProps,
   SectionProps,
+  HeadingProps,
+  SpacerProps,
+  AlertProps,
+  CardProps,
+  TestimonialProps,
+  VideoProps,
+  IconListProps,
+  NumberHighlightProps,
 } from './types'
 
 function renderNodeList(nodeIds: string[], nodes: CraftState): React.ReactNode {
@@ -92,6 +108,30 @@ function renderNode(nodeId: string, nodes: CraftState): React.ReactNode {
 
     case 'Divider':
       return <DividerPublic key={nodeId} {...(props as DividerProps)} />
+
+    case 'Heading':
+      return <HeadingPublic key={nodeId} {...(props as HeadingProps)} />
+
+    case 'Spacer':
+      return <SpacerPublic key={nodeId} {...(props as SpacerProps)} />
+
+    case 'Alert':
+      return <AlertPublic key={nodeId} {...(props as AlertProps)} />
+
+    case 'Card':
+      return <CardPublic key={nodeId} {...(props as CardProps)} />
+
+    case 'Testimonial':
+      return <TestimonialPublic key={nodeId} {...(props as TestimonialProps)} />
+
+    case 'Video':
+      return <VideoPublic key={nodeId} {...(props as VideoProps)} />
+
+    case 'IconList':
+      return <IconListPublic key={nodeId} {...(props as IconListProps)} />
+
+    case 'NumberHighlight':
+      return <NumberHighlightPublic key={nodeId} {...(props as NumberHighlightProps)} />
 
     default:
       return null

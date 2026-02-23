@@ -10,6 +10,14 @@ import { ButtonBlock } from './blocks/ButtonBlock'
 import { HeroBlock } from './blocks/HeroBlock'
 import { IconBox } from './blocks/IconBox'
 import { Divider } from './blocks/Divider'
+import { Heading } from './blocks/Heading'
+import { Spacer } from './blocks/Spacer'
+import { Alert } from './blocks/Alert'
+import { Card } from './blocks/Card'
+import { Testimonial } from './blocks/Testimonial'
+import { Video } from './blocks/Video'
+import { IconList } from './blocks/IconList'
+import { NumberHighlight } from './blocks/NumberHighlight'
 import { BlocksPanel } from './BlocksPanel'
 import { SettingsPanel } from './SettingsPanel'
 import { BuilderToolbar } from './BuilderToolbar'
@@ -219,6 +227,14 @@ export function PageBuilder({ initialData }: PageBuilderProps) {
         HeroBlock,
         IconBox,
         Divider,
+        Heading,
+        Spacer,
+        Alert,
+        Card,
+        Testimonial,
+        Video,
+        IconList,
+        NumberHighlight,
       }}
     >
       <BuilderLayout pageData={initialData} initialFrameData={frameData} />
