@@ -18,7 +18,9 @@ export default function NewPagePage() {
           Späť na stránky
         </Link>
         <h1 className="text-2xl font-bold text-slate-900">Nová stránka</h1>
-        <p className="text-slate-500 text-sm mt-1">Vytvorte novú vlastnú stránku s WYSIWYG editorom.</p>
+        <p className="text-slate-500 text-sm mt-1">
+          Vytvorte novú stránku. Po vytvorení budete presmerovaný do vizuálneho editora.
+        </p>
       </div>
 
       <PageForm />

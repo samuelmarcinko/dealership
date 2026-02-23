@@ -13,7 +13,10 @@
       "Bash(ls:*)",
       "Bash(npm install:*)",
       "Bash(npx next build:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(npm info:*)"
     ]
   }
 }

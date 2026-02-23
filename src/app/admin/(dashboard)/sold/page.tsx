@@ -85,8 +85,8 @@ export default async function SoldVehiclesPage({
       {/* Filters */}
       <Card>
         <CardContent className="pt-4 pb-4">
-          <form className="flex flex-wrap gap-3 items-end">
-            <div className="space-y-1">
+          <form className="flex flex-wrap gap-x-6 gap-y-3 items-end">
+            <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-slate-600">Značka</label>
               <select
                 name="make"
@@ -99,7 +99,7 @@ export default async function SoldVehiclesPage({
                 ))}
               </select>
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-slate-600">Od dátumu</label>
               <input
                 type="date"
@@ -108,7 +108,7 @@ export default async function SoldVehiclesPage({
                 className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-slate-600">Do dátumu</label>
               <input
                 type="date"

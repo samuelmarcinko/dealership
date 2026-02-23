@@ -1,8 +1,6 @@
 import React from 'react'
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import PageForm from '@/components/admin/PageForm'
 
@@ -14,19 +12,8 @@ export default async function EditPagePage({ params }: { params: Promise<{ id: s
   if (!page) notFound()
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div>
-        <Link
-          href="/admin/pages"
-          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Späť na stránky
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Upraviť stránku</h1>
-        <p className="text-slate-500 text-sm mt-1">/{page.slug}</p>
-      </div>
-
+    // -m-6 cancels the p-6 from layout, h-full fills the flex-1 main area
+    <div className="h-full flex flex-col -m-6">
       <PageForm
         initialData={{
           id: page.id,
