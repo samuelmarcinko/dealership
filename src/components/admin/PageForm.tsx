@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/toast'
-import { Save, Loader2, ChevronDown, ChevronUp, PanelRight } from 'lucide-react'
+import { Save, Loader2, ChevronDown, ChevronUp, PanelRight, Search } from 'lucide-react'
 import { slugify } from '@/lib/utils'
 import type { PageData } from '@/components/page-builder/types'
 
@@ -46,6 +46,9 @@ export default function PageForm({ initialData }: Props) {
   const [showInNav, setShowInNav] = useState(initialData?.showInNav ?? false)
   const [navOrder, setNavOrder] = useState(initialData?.navOrder ?? 0)
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!initialData?.id)
+  const [seoTitle, setSeoTitle] = useState((initialData as { seoTitle?: string })?.seoTitle ?? '')
+  const [seoDescription, setSeoDescription] = useState((initialData as { seoDescription?: string })?.seoDescription ?? '')
+  const [ogImage, setOgImage] = useState((initialData as { ogImage?: string })?.ogImage ?? '')
 
   useEffect(() => {
     if (!slugManuallyEdited && title) {
@@ -60,7 +63,7 @@ export default function PageForm({ initialData }: Props) {
       const res = await fetch(`/api/pages/${initialData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, title, isPublished, showInNav, navOrder }),
+        body: JSON.stringify({ slug, title, isPublished, showInNav, navOrder, seoTitle: seoTitle || null, seoDescription: seoDescription || null, ogImage: ogImage || null }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -139,6 +142,12 @@ export default function PageForm({ initialData }: Props) {
           setShowInNav={setShowInNav}
           navOrder={navOrder}
           setNavOrder={setNavOrder}
+          seoTitle={seoTitle}
+          setSeoTitle={setSeoTitle}
+          seoDescription={seoDescription}
+          setSeoDescription={setSeoDescription}
+          ogImage={ogImage}
+          setOgImage={setOgImage}
         />
         <div className="flex items-center gap-3">
           <Button
@@ -206,6 +215,12 @@ export default function PageForm({ initialData }: Props) {
               setShowInNav={setShowInNav}
               navOrder={navOrder}
               setNavOrder={setNavOrder}
+              seoTitle={seoTitle}
+              setSeoTitle={setSeoTitle}
+              seoDescription={seoDescription}
+              setSeoDescription={setSeoDescription}
+              ogImage={ogImage}
+              setOgImage={setOgImage}
             />
             <div className="flex items-center gap-3">
               <Button
@@ -266,6 +281,12 @@ interface MetaFieldsProps {
   setShowInNav: (v: boolean) => void
   navOrder: number
   setNavOrder: (v: number) => void
+  seoTitle: string
+  setSeoTitle: (v: string) => void
+  seoDescription: string
+  setSeoDescription: (v: string) => void
+  ogImage: string
+  setOgImage: (v: string) => void
 }
 
 function MetaFields({
@@ -280,6 +301,12 @@ function MetaFields({
   setShowInNav,
   navOrder,
   setNavOrder,
+  seoTitle,
+  setSeoTitle,
+  seoDescription,
+  setSeoDescription,
+  ogImage,
+  setOgImage,
 }: MetaFieldsProps) {
   return (
     <div className="space-y-4">
@@ -370,6 +397,58 @@ function MetaFields({
             />
           </div>
         )}
+      </div>
+
+      {/* SEO */}
+      <div className="border-t border-slate-200 pt-4 space-y-3">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <Search className="h-3.5 w-3.5" />
+          SEO &amp; Zdieľanie
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="seoTitle" className="text-sm">
+              SEO nadpis
+              <span className="text-slate-400 font-normal ml-1">(pre vyhľadávače)</span>
+            </Label>
+            <Input
+              id="seoTitle"
+              value={seoTitle}
+              onChange={(e) => setSeoTitle(e.target.value)}
+              placeholder={title || 'Nezadaný — použije sa názov stránky'}
+              maxLength={200}
+            />
+            <p className="text-xs text-slate-400">{seoTitle.length}/200 znakov. Ideálne 50–60 znakov.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ogImage" className="text-sm">
+              OG obrázok
+              <span className="text-slate-400 font-normal ml-1">(URL pre sociálne siete)</span>
+            </Label>
+            <Input
+              id="ogImage"
+              value={ogImage}
+              onChange={(e) => setOgImage(e.target.value)}
+              placeholder="https://…/obrazok.jpg"
+            />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="seoDescription" className="text-sm">
+            Meta popis
+            <span className="text-slate-400 font-normal ml-1">(pre vyhľadávače a sociálne siete)</span>
+          </Label>
+          <textarea
+            id="seoDescription"
+            value={seoDescription}
+            onChange={(e) => setSeoDescription(e.target.value)}
+            placeholder="Krátky popis stránky pre vyhľadávače (160 znakov)…"
+            maxLength={500}
+            rows={2}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+          />
+          <p className="text-xs text-slate-400">{seoDescription.length}/500 znakov. Ideálne 120–160 znakov.</p>
+        </div>
       </div>
     </div>
   )

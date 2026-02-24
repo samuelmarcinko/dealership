@@ -43,7 +43,7 @@ export default function VehicleGallery({ images, title }: Props) {
 
   if (images.length === 0) {
     return (
-      <div className="aspect-[16/9] bg-slate-200 rounded-xl flex items-center justify-center">
+      <div className="aspect-[16/9] lg:aspect-[4/3] bg-slate-200 rounded-xl flex items-center justify-center">
         <span className="text-slate-400 text-sm">Žiadne fotografie</span>
       </div>
     )
@@ -53,7 +53,7 @@ export default function VehicleGallery({ images, title }: Props) {
     <div className="space-y-3">
       {/* Main image */}
       <div
-        className="relative aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden cursor-zoom-in group"
+        className="relative aspect-[16/9] lg:aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden cursor-zoom-in group"
         onClick={() => openLightbox(activeIndex)}
       >
         <Image

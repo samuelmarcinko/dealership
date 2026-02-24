@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity } from 'lucide-react'
+import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity, Hash } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -54,6 +54,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     ...(vehicle.bodyType ? [{ icon: DoorOpen, label: 'Karoséria', value: bodyTypeLabel(vehicle.bodyType) }] : []),
     ...(vehicle.doors ? [{ icon: DoorOpen, label: 'Počet dverí', value: String(vehicle.doors) }] : []),
     ...(vehicle.seats ? [{ icon: Users, label: 'Počet miest', value: String(vehicle.seats) }] : []),
+    ...(vehicle.vin ? [{ icon: Hash, label: 'VIN', value: vehicle.vin }] : []),
   ]
 
   const hasSalePrice = vehicle.salePrice != null && Number(vehicle.salePrice) > 0

@@ -6,10 +6,11 @@ import BrandingForm from '@/components/admin/BrandingForm'
 import HeroSettingsForm from '@/components/admin/HeroSettingsForm'
 import AppearanceSettingsForm from '@/components/admin/AppearanceSettingsForm'
 import HomepageSettingsForm from '@/components/admin/HomepageSettingsForm'
+import HomepageSeoSettingsForm from '@/components/admin/HomepageSeoSettingsForm'
 import AboutSettingsForm from '@/components/admin/AboutSettingsForm'
 import ContactSettingsForm from '@/components/admin/ContactSettingsForm'
 import BannerSettingsForm from '@/components/admin/BannerSettingsForm'
-import { Palette, ImageIcon, Sliders, LayoutGrid, Info, Phone, Megaphone } from 'lucide-react'
+import { Palette, ImageIcon, Sliders, LayoutGrid, Info, Phone, Megaphone, Search } from 'lucide-react'
 
 export const metadata: Metadata = { title: 'Nastavenia' }
 
@@ -116,6 +117,22 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ContactSettingsForm settings={settings} />
+        </CardContent>
+      </Card>
+
+      {/* Homepage SEO */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-orange-500" />
+            <CardTitle className="text-base font-semibold">SEO — Domovská stránka</CardTitle>
+          </div>
+          <CardDescription>
+            SEO nadpis, meta popis a OG obrázok pre domovskú stránku (Google, Facebook, Twitter…).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <HomepageSeoSettingsForm settings={settings} />
         </CardContent>
       </Card>
 

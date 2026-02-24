@@ -16,7 +16,9 @@
       "Bash(echo:*)",
       "Bash(cat:*)",
       "Bash(find:*)",
-      "Bash(npm info:*)"
+      "Bash(npm info:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(DATABASE_URL=\"postgresql://user:pass@localhost:5432/db\" npx prisma generate:*)"
     ]
   }
 }

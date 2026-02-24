@@ -23,6 +23,9 @@ export default async function EditPagePage({ params }: { params: Promise<{ id: s
           isPublished: page.isPublished,
           showInNav: page.showInNav,
           navOrder: page.navOrder,
+          seoTitle: page.seoTitle ?? undefined,
+          seoDescription: page.seoDescription ?? undefined,
+          ogImage: page.ogImage ?? undefined,
         }}
       />
     </div>

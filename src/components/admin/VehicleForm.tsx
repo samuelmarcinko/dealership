@@ -202,6 +202,7 @@ export default function VehicleForm({ vehicle }: Props) {
         .split(',')
         .map((f) => f.trim())
         .filter(Boolean),
+      vin: (data.get('vin') as string) || null,
       status,
     }
 
@@ -417,9 +418,25 @@ export default function VehicleForm({ vehicle }: Props) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="color">Farba</Label>
-            <Input id="color" name="color" defaultValue={vehicle?.color ?? ''} placeholder="napr. Čierna metalíza" className="max-w-xs" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="color">Farba</Label>
+              <Input id="color" name="color" defaultValue={vehicle?.color ?? ''} placeholder="napr. Čierna metalíza" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vin">
+                VIN číslo
+                <span className="text-slate-400 font-normal text-xs ml-1">— nepovinné</span>
+              </Label>
+              <Input
+                id="vin"
+                name="vin"
+                defaultValue={vehicle?.vin ?? ''}
+                placeholder="napr. WV2ZZZ2FZP1234567"
+                maxLength={17}
+                className="uppercase"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

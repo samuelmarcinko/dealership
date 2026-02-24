@@ -5,11 +5,35 @@ import { ArrowRight, Shield, Award, Headphones, TrendingDown, Star, Heart, Clock
 import { Button } from '@/components/ui/button'
 import VehicleCard from '@/components/public/VehicleCard'
 import { prisma } from '@/lib/prisma'
-import { getTenantBranding } from '@/lib/tenant'
+import { getTenantBranding, getTenantSettings } from '@/lib/tenant'
 import type { PublicVehicle } from '@/types'
 import type { LucideProps } from 'lucide-react'
+import type { Metadata } from 'next'
 
 export const revalidate = 60
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getTenantSettings()
+  const seoTitle = settings['homepage_seo_title'] || settings['business_name'] || 'AutoBazar'
+  const seoDescription = settings['homepage_seo_description'] || undefined
+  const ogImageUrl = settings['homepage_seo_og_image'] || undefined
+
+  return {
+    title: seoTitle,
+    description: seoDescription,
+    openGraph: {
+      title: seoTitle,
+      description: seoDescription,
+      ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seoTitle,
+      description: seoDescription,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
+    },
+  }
+}
 
 async function getFeaturedVehicles(): Promise<PublicVehicle[]> {
   const vehicles = await prisma.vehicle.findMany({

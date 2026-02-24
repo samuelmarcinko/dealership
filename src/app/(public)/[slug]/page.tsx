@@ -12,10 +12,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const page = await prisma.customPage.findUnique({
     where: { slug, isPublished: true },
-    select: { title: true },
+    select: { title: true, seoTitle: true, seoDescription: true, ogImage: true },
   })
   if (!page) return {}
-  return { title: page.title }
+
+  const metaTitle = page.seoTitle || page.title
+  const metaDescription = page.seoDescription ?? undefined
+  const ogImageUrl = page.ogImage ?? undefined
+
+  return {
+    title: metaTitle,
+    description: metaDescription,
+    openGraph: {
+      title: metaTitle,
+      description: metaDescription,
+      ...(ogImageUrl ? { images: [{ url: ogImageUrl }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: metaTitle,
+      description: metaDescription,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
+    },
+  }
 }
 
 export default async function CustomPageView({ params }: Props) {

@@ -156,6 +156,9 @@ export interface PageData {
   isPublished: boolean
   showInNav: boolean
   navOrder: number
+  seoTitle?: string
+  seoDescription?: string
+  ogImage?: string
 }
 
 export function isCraftJson(content: string): boolean {

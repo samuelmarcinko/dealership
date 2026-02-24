@@ -17,6 +17,9 @@ const updateSchema = z.object({
   isPublished: z.boolean().optional(),
   showInNav: z.boolean().optional(),
   navOrder: z.number().int().optional(),
+  seoTitle: z.string().max(200).nullable().optional(),
+  seoDescription: z.string().max(500).nullable().optional(),
+  ogImage: z.string().max(500).nullable().optional(),
 })
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
