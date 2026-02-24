@@ -47,13 +47,21 @@ export async function POST(req: NextRequest) {
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
     const safeName = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`
 
-    const uploadDir = path.join(getUploadDir(), 'vehicles')
+    // Optional per-vehicle slug subfolder (prevents path traversal via sanitization)
+    const rawSlug = new URL(req.url).searchParams.get('slug') ?? ''
+    const safeSlug = rawSlug.replace(/[^a-z0-9-]/g, '').slice(0, 100)
+
+    const uploadDir = safeSlug
+      ? path.join(getUploadDir(), 'vehicles', safeSlug)
+      : path.join(getUploadDir(), 'vehicles')
     await mkdir(uploadDir, { recursive: true })
 
     const filePath = path.join(uploadDir, safeName)
     await writeFile(filePath, buffer)
 
-    const url = `/uploads/vehicles/${safeName}`
+    const url = safeSlug
+      ? `/uploads/vehicles/${safeSlug}/${safeName}`
+      : `/uploads/vehicles/${safeName}`
     return NextResponse.json({ url })
   } catch (err) {
     console.error('[POST /api/upload]', err)

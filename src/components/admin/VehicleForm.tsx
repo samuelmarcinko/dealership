@@ -155,10 +155,11 @@ export default function VehicleForm({ vehicle }: Props) {
     setDragOverIndex(null)
   }
 
-  async function uploadImage(file: File): Promise<string> {
+  async function uploadImage(file: File, slug?: string | null): Promise<string> {
     const fd = new FormData()
     fd.append('file', file)
-    const res = await fetch('/api/upload', { method: 'POST', body: fd })
+    const endpoint = slug ? `/api/upload?slug=${encodeURIComponent(slug)}` : '/api/upload'
+    const res = await fetch(endpoint, { method: 'POST', body: fd })
     if (!res.ok) throw new Error('Upload failed')
     const data = await res.json()
     return data.url as string
@@ -224,6 +225,7 @@ export default function VehicleForm({ vehicle }: Props) {
 
       const { data: savedVehicle } = await vehicleRes.json()
       const vehicleId = savedVehicle.id
+      const vehicleSlug: string | null = savedVehicle.slug ?? null
 
       for (const imageId of deletedImageIds) {
         await fetch(`/api/vehicles/${vehicleId}/images?imageId=${imageId}`, { method: 'DELETE' })
@@ -232,7 +234,7 @@ export default function VehicleForm({ vehicle }: Props) {
       for (let i = 0; i < images.length; i++) {
         const img = images[i]
         if (img.file) {
-          const url = await uploadImage(img.file)
+          const url = await uploadImage(img.file, vehicleSlug)
           await fetch(`/api/vehicles/${vehicleId}/images`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

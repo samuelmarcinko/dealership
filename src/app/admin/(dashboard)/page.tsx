@@ -90,12 +90,8 @@ export default async function DashboardPage() {
                 const statusVariant =
                   v.status === 'AVAILABLE' ? 'success' :
                   v.status === 'RESERVED' ? 'warning' : 'error'
-                return (
-                  <Link
-                    key={v.id}
-                    href={`/admin/vehicles/${v.id}`}
-                    className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 transition-colors"
-                  >
+                const inner = (
+                  <>
                     <div>
                       <p className="font-medium text-slate-900 text-sm">{v.title}</p>
                       <p className="text-slate-400 text-xs">{v.year} · {v.make}</p>
@@ -104,6 +100,25 @@ export default async function DashboardPage() {
                       <Badge variant={statusVariant}>{vehicleStatusLabel(v.status)}</Badge>
                       <span className="font-semibold text-slate-900 text-sm">{formatPrice(v.price)}</span>
                     </div>
+                  </>
+                )
+                if (v.status === 'SOLD') {
+                  return (
+                    <div
+                      key={v.id}
+                      className="flex items-center justify-between px-6 py-3.5 opacity-60 cursor-default"
+                    >
+                      {inner}
+                    </div>
+                  )
+                }
+                return (
+                  <Link
+                    key={v.id}
+                    href={`/admin/vehicles/${v.id}`}
+                    className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 transition-colors"
+                  >
+                    {inner}
                   </Link>
                 )
               })

@@ -45,3 +45,14 @@
     text-wrap: balance;
   }
 }
+
+@keyframes hero-fade-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-hero-1 { animation: hero-fade-up 0.7s ease both; }
+.animate-hero-2 { animation: hero-fade-up 0.7s ease 0.12s both; }
+.animate-hero-3 { animation: hero-fade-up 0.7s ease 0.24s both; }
+.animate-hero-4 { animation: hero-fade-up 0.7s ease 0.36s both; }
+.animate-hero-5 { animation: hero-fade-up 0.7s ease 0.48s both; }
