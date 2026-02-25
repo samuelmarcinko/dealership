@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatPrice, fuelTypeLabel } from '@/lib/utils'
 import { customerDisplayName } from '@/lib/customer'
 import { TrendingUp, Car, Euro, Calendar, User, Building2 } from 'lucide-react'
+import RestoreVehicleButton from '@/components/admin/RestoreVehicleButton'
 
 export const metadata: Metadata = { title: 'Predané vozidlá' }
 
@@ -160,6 +161,7 @@ export default async function SoldVehiclesPage({
                     <th className="text-left px-4 py-3 font-medium">Predajná cena</th>
                     <th className="text-left px-4 py-3 font-medium">Dátum predaja</th>
                     <th className="text-left px-4 py-3 font-medium">Predané — zákazník</th>
+                    <th className="px-4 py-3 font-medium"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -226,6 +228,9 @@ export default async function SoldVehiclesPage({
                           ) : (
                             <span className="text-slate-400 text-sm">—</span>
                           )}
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <RestoreVehicleButton vehicleId={v.id} vehicleTitle={v.title} />
                         </td>
                       </tr>
                     )

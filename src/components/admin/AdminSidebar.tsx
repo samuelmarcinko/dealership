@@ -15,13 +15,29 @@ import {
   UserCheck,
   Archive,
   ScrollText,
+  Boxes,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const navItems = [
+interface NavItem {
+  href: string
+  label: string
+  icon: React.ElementType
+  exact?: boolean
+  children?: { href: string; label: string; icon: React.ElementType }[]
+}
+
+const navItems: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/customers', label: 'Zákazníci', icon: UserCheck },
-  { href: '/admin/vehicles', label: 'Ponuka vozidiel', icon: Car },
+  {
+    href: '/admin/vehicles',
+    label: 'Ponuka vozidiel',
+    icon: Car,
+    children: [
+      { href: '/admin/vehicles/equipment', label: 'Výbava vozidiel', icon: Boxes },
+    ],
+  },
   { href: '/admin/sold', label: 'Predané vozidlá', icon: Archive, exact: true },
   { href: '/admin/documents', label: 'Šablóny zmlúv', icon: ScrollText },
   { href: '/admin/users', label: 'Používatelia', icon: Users },
@@ -64,21 +80,41 @@ export default function AdminSidebar({ userName, userEmail }: Props) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-0.5">
         {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-              isActive(item.href, item.exact)
-                ? 'bg-orange-500 text-white'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+          <div key={item.href}>
+            <Link
+              href={item.href}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                isActive(item.href, item.exact)
+                  ? 'bg-orange-500 text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              )}
+            >
+              <item.icon className="h-4 w-4 shrink-0" />
+              {item.label}
+            </Link>
+            {item.children && isActive(item.href) && (
+              <div className="ml-4 mt-0.5 space-y-0.5 pl-3 border-l border-slate-700">
+                {item.children.map((child) => (
+                  <Link
+                    key={child.href}
+                    href={child.href}
+                    className={cn(
+                      'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors',
+                      pathname === child.href
+                        ? 'bg-orange-500/90 text-white'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    )}
+                  >
+                    <child.icon className="h-3.5 w-3.5 shrink-0" />
+                    {child.label}
+                  </Link>
+                ))}
+              </div>
             )}
-          >
-            <item.icon className="h-4 w-4 shrink-0" />
-            {item.label}
-          </Link>
+          </div>
         ))}
       </nav>
 

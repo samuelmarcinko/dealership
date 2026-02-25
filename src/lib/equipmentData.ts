@@ -1,0 +1,196 @@
+export type EquipmentCategory = 'SAFETY' | 'COMFORT' | 'MULTIMEDIA' | 'EXTERIOR' | 'OTHER' | 'EV'
+
+export const CATEGORY_META: Record<EquipmentCategory, { label: string; field: string }> = {
+  SAFETY:     { label: 'Bezpečnosť',         field: 'safetyFeatures' },
+  COMFORT:    { label: 'Komfort',            field: 'comfortFeatures' },
+  MULTIMEDIA: { label: 'Multimédiá',         field: 'multimediaFeatures' },
+  EXTERIOR:   { label: 'Exteriér',           field: 'exteriorFeatures' },
+  OTHER:      { label: 'Ďalšia výbava',      field: 'otherFeatures' },
+  EV:         { label: 'EV / Hybrid',        field: 'evFeatures' },
+}
+
+export const CATEGORY_ORDER: EquipmentCategory[] = ['SAFETY', 'COMFORT', 'MULTIMEDIA', 'EXTERIOR', 'OTHER', 'EV']
+
+interface SeedItem { category: EquipmentCategory; subcategory: string; name: string }
+
+export const SEED_EQUIPMENT: SeedItem[] = [
+  // ─── SAFETY ───────────────────────────────────────────────────────────────
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Airbag vodiča' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Airbag spolujazdca' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Bočné airbagy' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Hlavové airbagy (airbagové clony)' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Kolenný airbag' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Airbag medzi sedadlami' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Deaktivácia airbagu spolujazdca' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Isofix' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'TopTether' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Predpínače pásov' },
+  { category: 'SAFETY', subcategory: 'Airbagy a pasívna bezpečnosť', name: 'Výškovo nastaviteľné bezpečnostné pásy' },
+
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'ABS' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'ESP' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'ASR (kontrola trakcie)' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'EDS (elektronická uzávierka diferenciálu)' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'BAS (brzdový asistent)' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'EBD / EBV' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'MSR (regulácia brzdného momentu motora)' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'Hill Hold Control (asistent rozjazdu do kopca)' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'Automatická parkovacia brzda' },
+  { category: 'SAFETY', subcategory: 'Stabilita a brzdy', name: 'AutoHold' },
+
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Adaptívny tempomat (ACC)' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Obmedzovač rýchlosti' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Asistent jazdného pruhu (Lane Assist)' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Aktívny asistent jazdného pruhu (Lane Keeping Assist)' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Varovanie pred opustením jazdného pruhu' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Asistent zmeny jazdného pruhu' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Kontrola mŕtveho uhla (Blind Spot)' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Rear Cross Traffic Alert' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Front Assist' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Automatické núdzové brzdenie (AEB)' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Varovanie pred kolíziou' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Rozpoznávanie chodcov' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Rozpoznávanie cyklistov' },
+  { category: 'SAFETY', subcategory: 'Asistenčné systémy vodiča (ADAS)', name: 'Asistent vyhýbacieho manévru' },
+
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: 'Parkovacie senzory vpredu' },
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: 'Parkovacie senzory vzadu' },
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: 'Parkovacia kamera' },
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: '360° kamera' },
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: 'Nočné videnie' },
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: 'Head-Up Display (HUD)' },
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: 'Asistent diaľkových svetiel' },
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: 'Adaptívne svetlomety' },
+  { category: 'SAFETY', subcategory: 'Viditeľnosť a monitoring', name: 'Natáčacie svetlá' },
+
+  { category: 'SAFETY', subcategory: 'Ostatné bezpečnostné systémy', name: 'Sledovanie únavy vodiča' },
+  { category: 'SAFETY', subcategory: 'Ostatné bezpečnostné systémy', name: 'Systém tiesňového volania eCall' },
+  { category: 'SAFETY', subcategory: 'Ostatné bezpečnostné systémy', name: 'Monitor tlaku pneumatík (TPMS)' },
+  { category: 'SAFETY', subcategory: 'Ostatné bezpečnostné systémy', name: 'Alarm' },
+  { category: 'SAFETY', subcategory: 'Ostatné bezpečnostné systémy', name: 'Imobilizér' },
+  { category: 'SAFETY', subcategory: 'Ostatné bezpečnostné systémy', name: 'Centrálne zamykanie s SAFE funkciou' },
+  { category: 'SAFETY', subcategory: 'Ostatné bezpečnostné systémy', name: 'Automatické zamykanie počas jazdy' },
+  { category: 'SAFETY', subcategory: 'Ostatné bezpečnostné systémy', name: 'Detská poistka' },
+
+  // ─── COMFORT ──────────────────────────────────────────────────────────────
+  { category: 'COMFORT', subcategory: 'Klimatizácia a kúrenie', name: 'Manuálna klimatizácia' },
+  { category: 'COMFORT', subcategory: 'Klimatizácia a kúrenie', name: 'Automatická klimatizácia' },
+  { category: 'COMFORT', subcategory: 'Klimatizácia a kúrenie', name: 'Dvojzónová klimatizácia' },
+  { category: 'COMFORT', subcategory: 'Klimatizácia a kúrenie', name: 'Trojzónová klimatizácia' },
+  { category: 'COMFORT', subcategory: 'Klimatizácia a kúrenie', name: 'Štvorzónová klimatizácia' },
+  { category: 'COMFORT', subcategory: 'Klimatizácia a kúrenie', name: 'Nezávislé kúrenie (Webasto)' },
+  { category: 'COMFORT', subcategory: 'Klimatizácia a kúrenie', name: 'Vyhrievané čelné sklo' },
+  { category: 'COMFORT', subcategory: 'Klimatizácia a kúrenie', name: 'Vyhrievané zadné sklo' },
+
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Vyhrievané predné sedadlá' },
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Vyhrievané zadné sedadlá' },
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Odvetrávané sedadlá' },
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Elektricky nastaviteľné sedadlá' },
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Pamäť sedadiel' },
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Masážne sedadlá' },
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Bedrová opierka' },
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Športové sedadlá' },
+  { category: 'COMFORT', subcategory: 'Sedadlá', name: 'Anatomické sedadlá' },
+
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Bezkľúčové odomykanie (Keyless Entry)' },
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Bezkľúčové štartovanie (Keyless Start)' },
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Diaľkové centrálne zamykanie' },
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Elektrické ovládanie kufra' },
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Bezdotykové otváranie kufra (gesture)' },
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Elektrické okná predné' },
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Elektrické okná zadné' },
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Elektricky nastaviteľné zrkadlá' },
+  { category: 'COMFORT', subcategory: 'Ovládanie a vstup', name: 'Elektricky sklopné zrkadlá' },
+
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Posilňovač riadenia' },
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Nastaviteľný volant výškovo' },
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Nastaviteľný volant pozdĺžne' },
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Multifunkčný volant' },
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Vyhrievaný volant' },
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Radenie pod volantom (pádla)' },
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Tempomat' },
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Adaptívny podvozok' },
+  { category: 'COMFORT', subcategory: 'Riadenie a jazda', name: 'Vzduchový podvozok' },
+
+  { category: 'COMFORT', subcategory: 'Interiér komfort', name: 'Lakťová opierka vpredu' },
+  { category: 'COMFORT', subcategory: 'Interiér komfort', name: 'Lakťová opierka vzadu' },
+  { category: 'COMFORT', subcategory: 'Interiér komfort', name: 'Držiaky nápojov' },
+  { category: 'COMFORT', subcategory: 'Interiér komfort', name: 'Ambientné osvetlenie' },
+  { category: 'COMFORT', subcategory: 'Interiér komfort', name: 'Tónované sklá' },
+  { category: 'COMFORT', subcategory: 'Interiér komfort', name: 'Elektrická roleta' },
+  { category: 'COMFORT', subcategory: 'Interiér komfort', name: 'Slnečné clony' },
+
+  // ─── MULTIMEDIA ───────────────────────────────────────────────────────────
+  { category: 'MULTIMEDIA', subcategory: 'Rádio / audio', name: 'Rádio' },
+  { category: 'MULTIMEDIA', subcategory: 'Rádio / audio', name: 'DAB rádio' },
+  { category: 'MULTIMEDIA', subcategory: 'Rádio / audio', name: 'Prémiový audio systém (BOSE / Harman Kardon / atď.)' },
+  { category: 'MULTIMEDIA', subcategory: 'Rádio / audio', name: 'Zadné displeje' },
+
+  { category: 'MULTIMEDIA', subcategory: 'Infotainment', name: 'Navigačný systém' },
+  { category: 'MULTIMEDIA', subcategory: 'Infotainment', name: 'Dotykový displej' },
+  { category: 'MULTIMEDIA', subcategory: 'Infotainment', name: 'Virtuálny kokpit' },
+  { category: 'MULTIMEDIA', subcategory: 'Infotainment', name: 'Digitálny prístrojový panel' },
+  { category: 'MULTIMEDIA', subcategory: 'Infotainment', name: 'Hlasové ovládanie' },
+  { category: 'MULTIMEDIA', subcategory: 'Infotainment', name: 'Head-Up Display (HUD)' },
+
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'Bluetooth' },
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'Bluetooth handsfree' },
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'USB' },
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'AUX' },
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'Apple CarPlay' },
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'Android Auto' },
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'MirrorLink' },
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'WLAN hotspot' },
+  { category: 'MULTIMEDIA', subcategory: 'Pripojenie', name: 'Bezdrôtové nabíjanie telefónu' },
+
+  // ─── EXTERIOR ─────────────────────────────────────────────────────────────
+  { category: 'EXTERIOR', subcategory: 'Svetlá', name: 'LED svetlomety' },
+  { category: 'EXTERIOR', subcategory: 'Svetlá', name: 'LED denné svietenie' },
+  { category: 'EXTERIOR', subcategory: 'Svetlá', name: 'Matrix LED svetlá' },
+  { category: 'EXTERIOR', subcategory: 'Svetlá', name: 'Laser svetlá' },
+  { category: 'EXTERIOR', subcategory: 'Svetlá', name: 'Xenónové svetlá' },
+  { category: 'EXTERIOR', subcategory: 'Svetlá', name: 'Bi-Xenón' },
+  { category: 'EXTERIOR', subcategory: 'Svetlá', name: 'Hmlovky' },
+  { category: 'EXTERIOR', subcategory: 'Svetlá', name: 'Adaptívne svetlá' },
+
+  { category: 'EXTERIOR', subcategory: 'Karoséria', name: 'Panoramatická strecha' },
+  { category: 'EXTERIOR', subcategory: 'Karoséria', name: 'Strešné okno' },
+  { category: 'EXTERIOR', subcategory: 'Karoséria', name: 'Elektrický šíber' },
+  { category: 'EXTERIOR', subcategory: 'Karoséria', name: 'Strešné lyžiny' },
+  { category: 'EXTERIOR', subcategory: 'Karoséria', name: 'Elektrické posuvné dvere' },
+  { category: 'EXTERIOR', subcategory: 'Karoséria', name: 'Soft-close dvere' },
+
+  { category: 'EXTERIOR', subcategory: 'Kolesá', name: 'Hliníkové disky' },
+  { category: 'EXTERIOR', subcategory: 'Kolesá', name: 'Oceľové disky' },
+  { category: 'EXTERIOR', subcategory: 'Kolesá', name: 'Rezervné koleso' },
+  { category: 'EXTERIOR', subcategory: 'Kolesá', name: 'Dojazdové koleso' },
+  { category: 'EXTERIOR', subcategory: 'Kolesá', name: 'Run-flat pneumatiky' },
+
+  // ─── OTHER ────────────────────────────────────────────────────────────────
+  { category: 'OTHER', subcategory: 'Praktické veci', name: 'Ťažné zariadenie' },
+  { category: 'OTHER', subcategory: 'Praktické veci', name: 'Elektricky sklápateľné sedadlá' },
+  { category: 'OTHER', subcategory: 'Praktické veci', name: 'Deliaca sieť' },
+  { category: 'OTHER', subcategory: 'Praktické veci', name: 'Roletka kufra' },
+  { category: 'OTHER', subcategory: 'Praktické veci', name: 'Homelink (ovládanie brány/garáže)' },
+
+  { category: 'OTHER', subcategory: 'Jazdné systémy', name: 'Start-Stop systém' },
+  { category: 'OTHER', subcategory: 'Jazdné systémy', name: 'Jazdné režimy (Sport/Eco/Comfort)' },
+  { category: 'OTHER', subcategory: 'Jazdné systémy', name: 'Uzávierka diferenciálu' },
+  { category: 'OTHER', subcategory: 'Jazdné systémy', name: 'Pohon 4x4' },
+  { category: 'OTHER', subcategory: 'Jazdné systémy', name: 'Redukcia (offroad)' },
+
+  { category: 'OTHER', subcategory: 'Parkovanie', name: 'Parkovací asistent' },
+  { category: 'OTHER', subcategory: 'Parkovanie', name: 'Automatické parkovanie' },
+  { category: 'OTHER', subcategory: 'Parkovanie', name: 'Bezdotykové otváranie kufra' },
+
+  // ─── EV ───────────────────────────────────────────────────────────────────
+  { category: 'EV', subcategory: 'Nabíjanie', name: 'Nabíjací kábel' },
+  { category: 'EV', subcategory: 'Nabíjanie', name: 'Nabíjanie AC' },
+  { category: 'EV', subcategory: 'Nabíjanie', name: 'Nabíjanie DC (rýchlonabíjanie)' },
+
+  { category: 'EV', subcategory: 'Efektivita', name: 'Tepelné čerpadlo' },
+  { category: 'EV', subcategory: 'Efektivita', name: 'Rekuperácia' },
+
+  { category: 'EV', subcategory: 'Funkcie', name: 'Predohrev batérie' },
+  { category: 'EV', subcategory: 'Funkcie', name: 'Plánovanie nabíjania' },
+]

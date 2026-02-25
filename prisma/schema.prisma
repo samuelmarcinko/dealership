@@ -113,9 +113,12 @@ model Vehicle {
   seats          Int?
   description     String?          @db.Text
   features        String[]
-  safetyFeatures  String[]         @default([])
-  comfortFeatures String[]         @default([])
-  otherFeatures   String[]         @default([])
+  safetyFeatures      String[]         @default([])
+  comfortFeatures     String[]         @default([])
+  multimediaFeatures  String[]         @default([])
+  exteriorFeatures    String[]         @default([])
+  otherFeatures       String[]         @default([])
+  evFeatures          String[]         @default([])
   vin             String?
   slug           String?          @unique
   status         VehicleStatus    @default(AVAILABLE)
@@ -158,6 +161,18 @@ model DocumentTemplate {
   updatedAt    DateTime @updatedAt
 
   @@map("document_templates")
+}
+
+model EquipmentItem {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // SAFETY | COMFORT | MULTIMEDIA | EXTERIOR | OTHER | EV
+  subcategory String
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("equipment_items")
 }
 
 model TenantSettings {

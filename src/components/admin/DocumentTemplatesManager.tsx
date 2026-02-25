@@ -185,7 +185,7 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
 
       {/* Variables reference */}
       <Card>
-        <CardHeader className="pb-0">
+        <CardHeader className="py-4">
           <button
             type="button"
             className="flex items-center justify-between w-full text-left"

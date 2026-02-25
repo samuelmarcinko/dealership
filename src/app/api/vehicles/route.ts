@@ -26,7 +26,10 @@ const vehicleSchema = z.object({
   features: z.array(z.string()).default([]),
   safetyFeatures: z.array(z.string()).default([]),
   comfortFeatures: z.array(z.string()).default([]),
+  multimediaFeatures: z.array(z.string()).default([]),
+  exteriorFeatures: z.array(z.string()).default([]),
   otherFeatures: z.array(z.string()).default([]),
+  evFeatures: z.array(z.string()).default([]),
   vin: z.string().max(17).nullable().optional(),
   status: z.nativeEnum(VehicleStatus).default('AVAILABLE'),
 })

@@ -10,13 +10,23 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
-import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag, ShieldCheck, Armchair, Wrench } from 'lucide-react'
+import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag } from 'lucide-react'
 import MakeCombobox from '@/components/admin/MakeCombobox'
+import FeatureCheckboxes from '@/components/admin/FeatureCheckboxes'
 import type { VehicleWithImages } from '@/types'
+import type { EquipmentCategory } from '@/lib/equipmentData'
+
+interface EquipmentItem {
+  id: string
+  name: string
+  category: string
+  subcategory: string
+}
 
 interface Props {
   vehicle?: VehicleWithImages
   topMakes?: string[]
+  equipmentItems?: EquipmentItem[]
 }
 
 interface LocalImage {
@@ -72,12 +82,7 @@ function initImages(vehicle?: VehicleWithImages): LocalImage[] {
     .map((img) => ({ id: img.id, url: img.url, isPrimary: img.isPrimary }))
 }
 
-function splitFeatures(v: FormDataEntryValue | null): string[] {
-  if (!v) return []
-  return (v as string).split(',').map((f) => f.trim()).filter(Boolean)
-}
-
-export default function VehicleForm({ vehicle, topMakes = [] }: Props) {
+export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [] }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -88,6 +93,19 @@ export default function VehicleForm({ vehicle, topMakes = [] }: Props) {
   const [transmission, setTransmission] = useState<string>(vehicle?.transmission ?? 'MANUAL')
   const [bodyType, setBodyType] = useState<string>(vehicle?.bodyType ?? '')
   const [status, setStatus] = useState<string>(vehicle?.status ?? 'AVAILABLE')
+
+  const [features, setFeatures] = useState<Record<EquipmentCategory, string[]>>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const v = vehicle as any
+    return {
+      SAFETY:     v?.safetyFeatures ?? [],
+      COMFORT:    v?.comfortFeatures ?? [],
+      MULTIMEDIA: v?.multimediaFeatures ?? [],
+      EXTERIOR:   v?.exteriorFeatures ?? [],
+      OTHER:      [...(v?.otherFeatures ?? []), ...(v?.features ?? [])],
+      EV:         v?.evFeatures ?? [],
+    }
+  })
 
   const [images, setImages] = useState<LocalImage[]>(initImages(vehicle))
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
@@ -193,7 +211,7 @@ export default function VehicleForm({ vehicle, topMakes = [] }: Props) {
       title: data.get('title') as string,
       make,
       model: data.get('model') as string,
-      variant: isEdit ? ((data.get('variant') as string) || null) : null,
+      variant: vehicle?.variant ?? null,
       year: parseInt(data.get('year') as string),
       price: priceVal,
       salePrice: salePriceVal,
@@ -207,10 +225,13 @@ export default function VehicleForm({ vehicle, topMakes = [] }: Props) {
       doors: data.get('doors') ? parseInt(data.get('doors') as string) : null,
       seats: data.get('seats') ? parseInt(data.get('seats') as string) : null,
       description: (data.get('description') as string) || null,
-      features: vehicle?.features ?? [],
-      safetyFeatures: splitFeatures(data.get('safetyFeatures')),
-      comfortFeatures: splitFeatures(data.get('comfortFeatures')),
-      otherFeatures: splitFeatures(data.get('otherFeatures')),
+      features: [],
+      safetyFeatures: features.SAFETY,
+      comfortFeatures: features.COMFORT,
+      multimediaFeatures: features.MULTIMEDIA,
+      exteriorFeatures: features.EXTERIOR,
+      otherFeatures: features.OTHER,
+      evFeatures: features.EV,
       vin: (data.get('vin') as string) || null,
       status,
     }
@@ -296,7 +317,7 @@ export default function VehicleForm({ vehicle, topMakes = [] }: Props) {
             <p className="text-xs text-slate-400">URL adresa vozidla sa vygeneruje automaticky z tohto názvu.</p>
           </div>
 
-          <div className={`grid grid-cols-1 gap-4 ${isEdit ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Značka *</Label>
               <MakeCombobox value={make} onChange={setMake} topMakes={topMakes} />
@@ -305,12 +326,6 @@ export default function VehicleForm({ vehicle, topMakes = [] }: Props) {
               <Label htmlFor="model">Model *</Label>
               <Input id="model" name="model" defaultValue={vehicle?.model} required placeholder="Golf" />
             </div>
-            {isEdit && (
-              <div className="space-y-2">
-                <Label htmlFor="variant">Variant</Label>
-                <Input id="variant" name="variant" defaultValue={vehicle?.variant ?? ''} placeholder="2.0 TDI Highline" />
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -472,49 +487,13 @@ export default function VehicleForm({ vehicle, topMakes = [] }: Props) {
               placeholder="Popíšte stav vozidla, históriu servisu, dôvod predaja a iné dôležité informácie..."
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2 rounded-lg border border-blue-100 bg-blue-50/40 p-3">
-              <Label className="flex items-center gap-1.5 text-blue-700">
-                <ShieldCheck className="h-4 w-4" />
-                Bezpečnosť
-                <span className="text-slate-400 font-normal text-xs">(čiarkou)</span>
-              </Label>
-              <Textarea
-                name="safetyFeatures"
-                rows={3}
-                defaultValue={vehicle?.safetyFeatures?.join(', ') ?? ''}
-                placeholder="ABS, ESP, Airbag, ..."
-                className="bg-white"
-              />
-            </div>
-            <div className="space-y-2 rounded-lg border border-green-100 bg-green-50/40 p-3">
-              <Label className="flex items-center gap-1.5 text-green-700">
-                <Armchair className="h-4 w-4" />
-                Komfort
-                <span className="text-slate-400 font-normal text-xs">(čiarkou)</span>
-              </Label>
-              <Textarea
-                name="comfortFeatures"
-                rows={3}
-                defaultValue={vehicle?.comfortFeatures?.join(', ') ?? ''}
-                placeholder="Navigácia, Kúrené sedenie, ..."
-                className="bg-white"
-              />
-            </div>
-            <div className="space-y-2 rounded-lg border border-purple-100 bg-purple-50/40 p-3">
-              <Label className="flex items-center gap-1.5 text-purple-700">
-                <Wrench className="h-4 w-4" />
-                Ďalšia výbava
-                <span className="text-slate-400 font-normal text-xs">(čiarkou)</span>
-              </Label>
-              <Textarea
-                name="otherFeatures"
-                rows={3}
-                defaultValue={vehicle?.otherFeatures?.join(', ') ?? ''}
-                placeholder="Ťažné zariadenie, Strešné okno, ..."
-                className="bg-white"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Výbava vozidla</Label>
+            <FeatureCheckboxes
+              items={equipmentItems}
+              value={features}
+              onChange={(cat, names) => setFeatures(prev => ({ ...prev, [cat]: names }))}
+            />
           </div>
         </CardContent>
       </Card>

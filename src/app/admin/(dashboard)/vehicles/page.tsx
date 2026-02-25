@@ -146,7 +146,8 @@ export default async function AdminVehiclesPage({
                 <TableHead>Rok</TableHead>
                 <TableHead>Palivo</TableHead>
                 <TableHead>Najazdené</TableHead>
-                <TableHead>Cena</TableHead>
+                <TableHead>Inzerovaná cena</TableHead>
+                <TableHead>Zľavnená cena</TableHead>
                 <TableHead>Stav</TableHead>
                 <TableHead>Zdroj</TableHead>
                 <TableHead className="w-[100px]">Akcie</TableHead>
@@ -155,7 +156,7 @@ export default async function AdminVehiclesPage({
             <TableBody>
               {vehicles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-slate-400">
+                  <TableCell colSpan={10} className="text-center py-8 text-slate-400">
                     {hasFilter ? 'Žiadne vozidlá nevyhovujú filtrám' : 'Žiadne vozidlá v ponuke'}
                   </TableCell>
                 </TableRow>
@@ -197,6 +198,12 @@ export default async function AdminVehiclesPage({
                       <TableCell className="text-slate-600">{fuelTypeLabel(vehicle.fuelType)}</TableCell>
                       <TableCell className="text-slate-600">{formatMileage(vehicle.mileage)}</TableCell>
                       <TableCell className="font-semibold text-slate-900">{formatPrice(vehicle.price)}</TableCell>
+                      <TableCell>
+                        {vehicle.salePrice
+                          ? <span className="font-semibold text-green-600">{formatPrice(vehicle.salePrice)}</span>
+                          : <span className="text-slate-300">—</span>
+                        }
+                      </TableCell>
                       <TableCell>
                         <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
                       </TableCell>

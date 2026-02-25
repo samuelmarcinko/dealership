@@ -62,7 +62,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
           <CardHeader>
             <div className="flex items-center gap-2">
               <ShoppingBag className="h-4 w-4 text-orange-500" />
-              <CardTitle className="text-base font-semibold">História kúp ({customer.vehicles.length})</CardTitle>
+              <CardTitle className="text-base font-semibold">Kúpna história zákazníka ({customer.vehicles.length})</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">

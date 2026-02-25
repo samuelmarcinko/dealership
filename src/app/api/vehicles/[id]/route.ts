@@ -26,7 +26,10 @@ const updateSchema = z.object({
   features: z.array(z.string()).optional(),
   safetyFeatures: z.array(z.string()).optional(),
   comfortFeatures: z.array(z.string()).optional(),
+  multimediaFeatures: z.array(z.string()).optional(),
+  exteriorFeatures: z.array(z.string()).optional(),
   otherFeatures: z.array(z.string()).optional(),
+  evFeatures: z.array(z.string()).optional(),
   vin: z.string().max(17).nullable().optional(),
   status: z.nativeEnum(VehicleStatus).optional(),
 })

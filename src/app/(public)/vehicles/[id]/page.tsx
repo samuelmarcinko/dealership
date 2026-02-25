@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity, Hash, ShieldCheck, Armchair, Wrench } from 'lucide-react'
+import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity, Hash, ShieldCheck, Armchair, MonitorPlay, Car, Wrench } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
@@ -92,10 +92,18 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   const otherItems = [...(vehicle.otherFeatures ?? []), ...(vehicle.features ?? [])]
 
-  const hasFeatures =
-    (vehicle.safetyFeatures?.length ?? 0) > 0 ||
-    (vehicle.comfortFeatures?.length ?? 0) > 0 ||
-    otherItems.length > 0
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const v = vehicle as any
+  const featureSections = [
+    { icon: ShieldCheck, title: 'Bezpečnosť',   items: v.safetyFeatures ?? [],    color: { bg: 'bg-blue-50/50',   border: 'border-blue-100',   icon: 'text-blue-700',   badge: 'bg-blue-50 text-blue-700 border-blue-200' } },
+    { icon: Armchair,    title: 'Komfort',       items: v.comfortFeatures ?? [],   color: { bg: 'bg-green-50/50',  border: 'border-green-100',  icon: 'text-green-700',  badge: 'bg-green-50 text-green-700 border-green-200' } },
+    { icon: MonitorPlay, title: 'Multimédiá',    items: v.multimediaFeatures ?? [], color: { bg: 'bg-purple-50/50', border: 'border-purple-100', icon: 'text-purple-700', badge: 'bg-purple-50 text-purple-700 border-purple-200' } },
+    { icon: Car,         title: 'Exteriér',      items: v.exteriorFeatures ?? [],  color: { bg: 'bg-slate-50/50',  border: 'border-slate-100',  icon: 'text-slate-700',  badge: 'bg-slate-100 text-slate-700 border-slate-200' } },
+    { icon: Wrench,      title: 'Ďalšia výbava', items: otherItems,                color: { bg: 'bg-orange-50/50', border: 'border-orange-100', icon: 'text-orange-700', badge: 'bg-orange-50 text-orange-700 border-orange-200' } },
+    { icon: Zap,         title: 'EV / Hybrid',   items: v.evFeatures ?? [],        color: { bg: 'bg-teal-50/50',   border: 'border-teal-100',   icon: 'text-teal-700',   badge: 'bg-teal-50 text-teal-700 border-teal-200' } },
+  ].filter(s => s.items.length > 0)
+
+  const hasFeatures = featureSections.length > 0
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -190,39 +198,15 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           {hasFeatures && (
             <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6 space-y-4">
               <h2 className="font-semibold text-slate-900 text-lg">Výbava</h2>
-              <FeatureSection
-                icon={ShieldCheck}
-                title="Bezpečnosť"
-                colorClasses={{
-                  bg: 'bg-blue-50/50',
-                  border: 'border-blue-100',
-                  icon: 'text-blue-700',
-                  badge: 'bg-blue-50 text-blue-700 border-blue-200',
-                }}
-                items={vehicle.safetyFeatures ?? []}
-              />
-              <FeatureSection
-                icon={Armchair}
-                title="Komfort"
-                colorClasses={{
-                  bg: 'bg-green-50/50',
-                  border: 'border-green-100',
-                  icon: 'text-green-700',
-                  badge: 'bg-green-50 text-green-700 border-green-200',
-                }}
-                items={vehicle.comfortFeatures ?? []}
-              />
-              <FeatureSection
-                icon={Wrench}
-                title="Ďalšia výbava"
-                colorClasses={{
-                  bg: 'bg-orange-50/50',
-                  border: 'border-orange-100',
-                  icon: 'text-orange-700',
-                  badge: 'bg-orange-50 text-orange-700 border-orange-200',
-                }}
-                items={otherItems}
-              />
+              {featureSections.map(s => (
+                <FeatureSection
+                  key={s.title}
+                  icon={s.icon}
+                  title={s.title}
+                  colorClasses={s.color}
+                  items={s.items}
+                />
+              ))}
             </div>
           )}
         </div>

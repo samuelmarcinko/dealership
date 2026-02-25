@@ -8,12 +8,18 @@ import VehicleForm from '@/components/admin/VehicleForm'
 export const metadata: Metadata = { title: 'Nové vozidlo' }
 
 export default async function NewVehiclePage() {
-  const topMakesRaw = await prisma.vehicle.groupBy({
-    by: ['make'],
-    _count: { make: true },
-    orderBy: { _count: { make: 'desc' } },
-    take: 8,
-  })
+  const [topMakesRaw, equipmentItems] = await Promise.all([
+    prisma.vehicle.groupBy({
+      by: ['make'],
+      _count: { make: true },
+      orderBy: { _count: { make: 'desc' } },
+      take: 8,
+    }),
+    prisma.equipmentItem.findMany({
+      where: { isActive: true },
+      orderBy: [{ category: 'asc' }, { subcategory: 'asc' }, { sortOrder: 'asc' }, { name: 'asc' }],
+    }),
+  ])
   const topMakes = topMakesRaw.map((m) => m.make)
 
   return (
@@ -25,7 +31,7 @@ export default async function NewVehiclePage() {
         </Link>
         <h1 className="text-2xl font-bold text-slate-900">Pridať vozidlo</h1>
       </div>
-      <VehicleForm topMakes={topMakes} />
+      <VehicleForm topMakes={topMakes} equipmentItems={equipmentItems} />
     </div>
   )
 }
