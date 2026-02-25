@@ -107,12 +107,14 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
       toast('success', `Vozidlo bolo predané — ${customerDisplayName(selected!)}`)
 
       // Load active templates and switch to documents step
+      // NOTE: router.refresh() is intentionally NOT called here — it would cause
+      // the parent to re-render the vehicle as SOLD and unmount this modal.
+      // Refresh happens in handleFinish when the user explicitly closes the modal.
       const tplRes = await fetch('/api/documents/templates')
       const tplJson = await tplRes.json()
       const active = (tplJson.data ?? []).filter((t: Template) => t.isActive)
       setTemplates(active)
       setStep('documents')
-      router.refresh()
     } catch {
       toast('error', 'Nastala chyba')
     } finally {
