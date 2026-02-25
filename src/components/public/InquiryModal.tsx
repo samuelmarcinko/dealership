@@ -12,7 +12,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { useToast } from '@/components/ui/toast'
 
 interface Props {
   vehicleTitle: string
@@ -22,11 +21,12 @@ export default function InquiryModal({ vehicleTitle }: Props) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const { toast } = useToast()
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
+    setError(null)
 
     const data = new FormData(e.currentTarget)
     const body = {
@@ -46,14 +46,13 @@ export default function InquiryModal({ vehicleTitle }: Props) {
 
       if (!res.ok) {
         const json = await res.json()
-        toast('error', json.error ?? 'Nastala chyba pri odosielaní')
+        setError(json.error ?? 'Nastala chyba pri odosielaní')
         return
       }
 
       setSuccess(true)
-      toast('success', 'Správa odoslaná! Ozveme sa vám čoskoro.')
     } catch {
-      toast('error', 'Nastala chyba pri odosielaní')
+      setError('Nastala chyba pri odosielaní. Skúste to znova.')
     } finally {
       setLoading(false)
     }
@@ -61,7 +60,10 @@ export default function InquiryModal({ vehicleTitle }: Props) {
 
   function handleOpenChange(val: boolean) {
     setOpen(val)
-    if (!val) setSuccess(false)
+    if (!val) {
+      setSuccess(false)
+      setError(null)
+    }
   }
 
   return (
@@ -96,6 +98,11 @@ export default function InquiryModal({ vehicleTitle }: Props) {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="inq-name">Meno a priezvisko *</Label>
