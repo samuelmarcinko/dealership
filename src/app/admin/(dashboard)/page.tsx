@@ -1,12 +1,13 @@
 import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Car, Users, CheckCircle, Clock, XCircle, ArrowRight, Plus } from 'lucide-react'
+import Image from 'next/image'
+import { Car, Users, CheckCircle, Clock, XCircle, ArrowRight, Plus, Gauge, Fuel, CalendarDays } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
-import { formatPrice, vehicleStatusLabel } from '@/lib/utils'
+import { formatPrice, formatMileage, fuelTypeLabel, vehicleStatusLabel } from '@/lib/utils'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 
@@ -90,24 +91,57 @@ export default async function DashboardPage() {
                 const statusVariant =
                   v.status === 'AVAILABLE' ? 'success' :
                   v.status === 'RESERVED' ? 'warning' : 'error'
+                const thumb = v.images[0]?.url ?? null
+                const dateAdded = new Intl.DateTimeFormat('sk-SK', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(v.createdAt))
+
                 const inner = (
-                  <>
-                    <div>
-                      <p className="font-medium text-slate-900 text-sm">{v.title}</p>
+                  <div className="flex items-center gap-3 w-full min-w-0">
+                    {/* Thumbnail */}
+                    <div className="shrink-0 w-14 h-10 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                      {thumb ? (
+                        <Image src={thumb} alt={v.title} width={56} height={40} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Car className="h-4 w-4 text-slate-300" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title + make/year */}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-slate-900 text-sm truncate">{v.title}</p>
                       <p className="text-slate-400 text-xs">{v.year} · {v.make}</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant={statusVariant}>{vehicleStatusLabel(v.status)}</Badge>
-                      <span className="font-semibold text-slate-900 text-sm">{formatPrice(v.price)}</span>
+
+                    {/* Mileage */}
+                    <div className="hidden md:flex items-center gap-1 text-slate-500 text-xs shrink-0">
+                      <Gauge className="h-3.5 w-3.5 text-slate-400" />
+                      {formatMileage(v.mileage)}
                     </div>
-                  </>
+
+                    {/* Fuel */}
+                    <div className="hidden lg:flex items-center gap-1 text-slate-500 text-xs shrink-0 w-16">
+                      <Fuel className="h-3.5 w-3.5 text-slate-400" />
+                      {fuelTypeLabel(v.fuelType)}
+                    </div>
+
+                    {/* Date added */}
+                    <div className="hidden lg:flex items-center gap-1 text-slate-400 text-xs shrink-0 w-24">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {dateAdded}
+                    </div>
+
+                    {/* Status + price */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={statusVariant}>{vehicleStatusLabel(v.status)}</Badge>
+                      <span className="font-semibold text-slate-900 text-sm w-24 text-right">{formatPrice(v.price)}</span>
+                    </div>
+                  </div>
                 )
+
                 if (v.status === 'SOLD') {
                   return (
-                    <div
-                      key={v.id}
-                      className="flex items-center justify-between px-6 py-3.5 opacity-60 cursor-default"
-                    >
+                    <div key={v.id} className="flex items-center px-6 py-3 opacity-60 cursor-default">
                       {inner}
                     </div>
                   )
@@ -116,7 +150,7 @@ export default async function DashboardPage() {
                   <Link
                     key={v.id}
                     href={`/admin/vehicles/${v.id}`}
-                    className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 transition-colors"
+                    className="flex items-center px-6 py-3 hover:bg-slate-50 transition-colors"
                   >
                     {inner}
                   </Link>

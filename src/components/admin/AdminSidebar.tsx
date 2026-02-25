@@ -14,6 +14,7 @@ import {
   FileText,
   UserCheck,
   Archive,
+  ScrollText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +23,7 @@ const navItems = [
   { href: '/admin/customers', label: 'Zákazníci', icon: UserCheck },
   { href: '/admin/vehicles', label: 'Ponuka vozidiel', icon: Car },
   { href: '/admin/sold', label: 'Predané vozidlá', icon: Archive, exact: true },
+  { href: '/admin/documents', label: 'Šablóny zmlúv', icon: ScrollText },
   { href: '/admin/users', label: 'Používatelia', icon: Users },
   { href: '/admin/pages', label: 'Stránky', icon: FileText },
   { href: '/admin/settings', label: 'Nastavenia', icon: Settings, exact: true },

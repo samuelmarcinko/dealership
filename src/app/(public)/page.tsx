@@ -204,11 +204,6 @@ export default async function HomePage() {
                 <Link href={heroBtn2Url}>{heroBtn2Text}</Link>
               </Button>
             </div>
-            <p className="animate-hero-5 mt-8 text-slate-400 text-sm flex flex-wrap gap-x-4 gap-y-1">
-              <span>✓ Každé auto overené</span>
-              <span>✓ Transparentné ceny</span>
-              <span>✓ Odborné poradenstvo</span>
-            </p>
           </div>
         </div>
       </section>
@@ -241,12 +236,6 @@ export default async function HomePage() {
           </AnimateIn>
 
           <div className="relative grid grid-cols-1 md:grid-cols-3 gap-0">
-            {/* Desktop dashed connector */}
-            <div
-              className="hidden md:block absolute top-10 left-[calc(33.333%+2rem)] right-[calc(33.333%+2rem)] border-t-2 border-dashed border-slate-200 pointer-events-none"
-              aria-hidden
-            />
-
             {howItWorks.map((step, i) => (
               <AnimateIn key={step.num} from="bottom" delay={i * 150}>
                 <div className="relative text-center px-8 py-6">
@@ -319,13 +308,13 @@ export default async function HomePage() {
           </AnimateIn>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, i) => (
-              <AnimateIn key={feature.title} from="scale" delay={i * 100}>
-                <div className="rounded-2xl border border-slate-200 p-7 text-center hover:shadow-lg hover:border-primary/30 hover:-translate-y-1 transition-all duration-300">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4">
+              <AnimateIn key={feature.title} from="scale" delay={i * 100} className="h-full">
+                <div className="h-full flex flex-col rounded-2xl border border-slate-200 p-7 text-center hover:shadow-lg hover:border-primary/30 hover:-translate-y-1 transition-all duration-300">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 shrink-0">
                     <feature.Icon className="h-7 w-7 text-primary" />
                   </div>
                   <h3 className="font-semibold text-slate-900 text-lg mb-2">{feature.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed">{feature.description}</p>
+                  <p className="text-slate-500 text-sm leading-relaxed flex-1">{feature.description}</p>
                 </div>
               </AnimateIn>
             ))}

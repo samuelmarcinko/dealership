@@ -146,6 +146,20 @@ model VehicleImage {
   @@map("vehicle_images")
 }
 
+model DocumentTemplate {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  originalName String
+  filePath     String
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("document_templates")
+}
+
 model TenantSettings {
   id        String   @id @default(cuid())
   key       String   @unique
