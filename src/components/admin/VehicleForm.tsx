@@ -10,11 +10,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
-import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag } from 'lucide-react'
+import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag, ShieldCheck, Armchair, Wrench } from 'lucide-react'
+import MakeCombobox from '@/components/admin/MakeCombobox'
 import type { VehicleWithImages } from '@/types'
 
 interface Props {
   vehicle?: VehicleWithImages
+  topMakes?: string[]
 }
 
 interface LocalImage {
@@ -70,12 +72,18 @@ function initImages(vehicle?: VehicleWithImages): LocalImage[] {
     .map((img) => ({ id: img.id, url: img.url, isPrimary: img.isPrimary }))
 }
 
-export default function VehicleForm({ vehicle }: Props) {
+function splitFeatures(v: FormDataEntryValue | null): string[] {
+  if (!v) return []
+  return (v as string).split(',').map((f) => f.trim()).filter(Boolean)
+}
+
+export default function VehicleForm({ vehicle, topMakes = [] }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
 
+  const [make, setMake] = useState<string>(vehicle?.make ?? '')
   const [fuelType, setFuelType] = useState<string>(vehicle?.fuelType ?? 'DIESEL')
   const [transmission, setTransmission] = useState<string>(vehicle?.transmission ?? 'MANUAL')
   const [bodyType, setBodyType] = useState<string>(vehicle?.bodyType ?? '')
@@ -183,7 +191,7 @@ export default function VehicleForm({ vehicle }: Props) {
 
     const body = {
       title: data.get('title') as string,
-      make: data.get('make') as string,
+      make,
       model: data.get('model') as string,
       variant: isEdit ? ((data.get('variant') as string) || null) : null,
       year: parseInt(data.get('year') as string),
@@ -199,10 +207,10 @@ export default function VehicleForm({ vehicle }: Props) {
       doors: data.get('doors') ? parseInt(data.get('doors') as string) : null,
       seats: data.get('seats') ? parseInt(data.get('seats') as string) : null,
       description: (data.get('description') as string) || null,
-      features: (data.get('features') as string)
-        .split(',')
-        .map((f) => f.trim())
-        .filter(Boolean),
+      features: vehicle?.features ?? [],
+      safetyFeatures: splitFeatures(data.get('safetyFeatures')),
+      comfortFeatures: splitFeatures(data.get('comfortFeatures')),
+      otherFeatures: splitFeatures(data.get('otherFeatures')),
       vin: (data.get('vin') as string) || null,
       status,
     }
@@ -290,8 +298,8 @@ export default function VehicleForm({ vehicle }: Props) {
 
           <div className={`grid grid-cols-1 gap-4 ${isEdit ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
             <div className="space-y-2">
-              <Label htmlFor="make">Značka *</Label>
-              <Input id="make" name="make" defaultValue={vehicle?.make} required placeholder="Volkswagen" />
+              <Label>Značka *</Label>
+              <MakeCombobox value={make} onChange={setMake} topMakes={topMakes} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="model">Model *</Label>
@@ -464,18 +472,49 @@ export default function VehicleForm({ vehicle }: Props) {
               placeholder="Popíšte stav vozidla, históriu servisu, dôvod predaja a iné dôležité informácie..."
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="features">
-              Výbava
-              <span className="text-slate-400 font-normal text-xs ml-1">(oddelené čiarkou)</span>
-            </Label>
-            <Textarea
-              id="features"
-              name="features"
-              rows={3}
-              defaultValue={vehicle?.features.join(', ') ?? ''}
-              placeholder="Navigácia, Kúrené sedenie, LED svetlá, Parkovacia kamera, ..."
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2 rounded-lg border border-blue-100 bg-blue-50/40 p-3">
+              <Label className="flex items-center gap-1.5 text-blue-700">
+                <ShieldCheck className="h-4 w-4" />
+                Bezpečnosť
+                <span className="text-slate-400 font-normal text-xs">(čiarkou)</span>
+              </Label>
+              <Textarea
+                name="safetyFeatures"
+                rows={3}
+                defaultValue={vehicle?.safetyFeatures?.join(', ') ?? ''}
+                placeholder="ABS, ESP, Airbag, ..."
+                className="bg-white"
+              />
+            </div>
+            <div className="space-y-2 rounded-lg border border-green-100 bg-green-50/40 p-3">
+              <Label className="flex items-center gap-1.5 text-green-700">
+                <Armchair className="h-4 w-4" />
+                Komfort
+                <span className="text-slate-400 font-normal text-xs">(čiarkou)</span>
+              </Label>
+              <Textarea
+                name="comfortFeatures"
+                rows={3}
+                defaultValue={vehicle?.comfortFeatures?.join(', ') ?? ''}
+                placeholder="Navigácia, Kúrené sedenie, ..."
+                className="bg-white"
+              />
+            </div>
+            <div className="space-y-2 rounded-lg border border-purple-100 bg-purple-50/40 p-3">
+              <Label className="flex items-center gap-1.5 text-purple-700">
+                <Wrench className="h-4 w-4" />
+                Ďalšia výbava
+                <span className="text-slate-400 font-normal text-xs">(čiarkou)</span>
+              </Label>
+              <Textarea
+                name="otherFeatures"
+                rows={3}
+                defaultValue={vehicle?.otherFeatures?.join(', ') ?? ''}
+                placeholder="Ťažné zariadenie, Strešné okno, ..."
+                className="bg-white"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -2,11 +2,13 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity, Hash } from 'lucide-react'
+import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity, Hash, ShieldCheck, Armchair, Wrench } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import VehicleGallery from '@/components/public/VehicleGallery'
+import InquiryModal from '@/components/public/InquiryModal'
 import {
   formatPrice,
   formatMileage,
@@ -31,6 +33,35 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title: vehicle.title,
     description: vehicle.description ?? undefined,
   }
+}
+
+interface FeatureSectionProps {
+  icon: LucideIcon
+  title: string
+  colorClasses: { bg: string; border: string; icon: string; badge: string }
+  items: string[]
+}
+
+function FeatureSection({ icon: Icon, title, colorClasses, items }: FeatureSectionProps) {
+  if (items.length === 0) return null
+  return (
+    <div className={`rounded-xl border ${colorClasses.border} ${colorClasses.bg} p-5`}>
+      <h3 className={`font-semibold text-base mb-3 flex items-center gap-2 ${colorClasses.icon}`}>
+        <Icon className="h-4 w-4" />
+        {title}
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        {items.map((feature, i) => (
+          <span
+            key={i}
+            className={`text-sm px-3 py-1 rounded-full border ${colorClasses.badge}`}
+          >
+            {feature}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -58,6 +89,13 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   ]
 
   const hasSalePrice = vehicle.salePrice != null && Number(vehicle.salePrice) > 0
+
+  const otherItems = [...(vehicle.otherFeatures ?? []), ...(vehicle.features ?? [])]
+
+  const hasFeatures =
+    (vehicle.safetyFeatures?.length ?? 0) > 0 ||
+    (vehicle.comfortFeatures?.length ?? 0) > 0 ||
+    otherItems.length > 0
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -128,9 +166,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               </div>
 
               {vehicle.status === 'AVAILABLE' && (
-                <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mb-3" size="lg">
-                  <Link href="/contact">Mám záujem</Link>
-                </Button>
+                <div className="mb-3">
+                  <InquiryModal vehicleTitle={vehicle.title} />
+                </div>
               )}
               <Button asChild variant="outline" className="w-full" size="lg">
                 <Link href="/contact">Kontaktovať predajcu</Link>
@@ -148,20 +186,43 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             </div>
           )}
 
-          {/* 4. Features — fourth on mobile, col 1-2 row 3 on desktop */}
-          {vehicle.features.length > 0 && (
-            <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6">
-              <h2 className="font-semibold text-slate-900 text-lg mb-3">Výbava</h2>
-              <div className="flex flex-wrap gap-2">
-                {vehicle.features.map((feature, i) => (
-                  <span
-                    key={i}
-                    className="bg-primary/10 text-primary text-sm px-3 py-1 rounded-full border border-primary/20"
-                  >
-                    {feature}
-                  </span>
-                ))}
-              </div>
+          {/* 4. Feature sections — fourth on mobile, col 1-2 row 3 on desktop */}
+          {hasFeatures && (
+            <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6 space-y-4">
+              <h2 className="font-semibold text-slate-900 text-lg">Výbava</h2>
+              <FeatureSection
+                icon={ShieldCheck}
+                title="Bezpečnosť"
+                colorClasses={{
+                  bg: 'bg-blue-50/50',
+                  border: 'border-blue-100',
+                  icon: 'text-blue-700',
+                  badge: 'bg-blue-50 text-blue-700 border-blue-200',
+                }}
+                items={vehicle.safetyFeatures ?? []}
+              />
+              <FeatureSection
+                icon={Armchair}
+                title="Komfort"
+                colorClasses={{
+                  bg: 'bg-green-50/50',
+                  border: 'border-green-100',
+                  icon: 'text-green-700',
+                  badge: 'bg-green-50 text-green-700 border-green-200',
+                }}
+                items={vehicle.comfortFeatures ?? []}
+              />
+              <FeatureSection
+                icon={Wrench}
+                title="Ďalšia výbava"
+                colorClasses={{
+                  bg: 'bg-orange-50/50',
+                  border: 'border-orange-100',
+                  icon: 'text-orange-700',
+                  badge: 'bg-orange-50 text-orange-700 border-orange-200',
+                }}
+                items={otherItems}
+              />
             </div>
           )}
         </div>

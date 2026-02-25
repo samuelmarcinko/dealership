@@ -111,9 +111,12 @@ model Vehicle {
   bodyType       BodyType?
   doors          Int?
   seats          Int?
-  description    String?          @db.Text
-  features       String[]
-  vin            String?
+  description     String?          @db.Text
+  features        String[]
+  safetyFeatures  String[]         @default([])
+  comfortFeatures String[]         @default([])
+  otherFeatures   String[]         @default([])
+  vin             String?
   slug           String?          @unique
   status         VehicleStatus    @default(AVAILABLE)
   externalId     String?          @unique

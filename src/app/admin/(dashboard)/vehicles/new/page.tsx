@@ -2,11 +2,20 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
 import VehicleForm from '@/components/admin/VehicleForm'
 
 export const metadata: Metadata = { title: 'Nové vozidlo' }
 
-export default function NewVehiclePage() {
+export default async function NewVehiclePage() {
+  const topMakesRaw = await prisma.vehicle.groupBy({
+    by: ['make'],
+    _count: { make: true },
+    orderBy: { _count: { make: 'desc' } },
+    take: 8,
+  })
+  const topMakes = topMakesRaw.map((m) => m.make)
+
   return (
     <div className="space-y-6">
       <div>
@@ -16,7 +25,7 @@ export default function NewVehiclePage() {
         </Link>
         <h1 className="text-2xl font-bold text-slate-900">Pridať vozidlo</h1>
       </div>
-      <VehicleForm />
+      <VehicleForm topMakes={topMakes} />
     </div>
   )
 }

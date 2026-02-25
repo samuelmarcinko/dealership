@@ -11,13 +11,22 @@ export const metadata: Metadata = { title: 'Upraviť vozidlo' }
 
 export default async function EditVehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const vehicle = await prisma.vehicle.findUnique({
-    where: { id },
-    include: {
-      images: { orderBy: { sortOrder: 'asc' } },
-      buyer: true,
-    },
-  })
+  const [vehicle, topMakesRaw] = await Promise.all([
+    prisma.vehicle.findUnique({
+      where: { id },
+      include: {
+        images: { orderBy: { sortOrder: 'asc' } },
+        buyer: true,
+      },
+    }),
+    prisma.vehicle.groupBy({
+      by: ['make'],
+      _count: { make: true },
+      orderBy: { _count: { make: 'desc' } },
+      take: 8,
+    }),
+  ])
+  const topMakes = topMakesRaw.map((m) => m.make)
 
   if (!vehicle) notFound()
 
@@ -50,7 +59,7 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
         )}
       </div>
 
-      <VehicleForm vehicle={vehicle} />
+      <VehicleForm vehicle={vehicle} topMakes={topMakes} />
     </div>
   )
 }
