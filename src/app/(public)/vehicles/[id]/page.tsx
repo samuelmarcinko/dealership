@@ -144,6 +144,14 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   const hasFeatures = featureSections.length > 0
 
+  // How many rows the left column (col 1-2) occupies on desktop:
+  //   row 1: gallery (always)
+  //   row 2: description (if present)
+  //   row 3: features   (if present)
+  // The info card in col 3 must span exactly these rows so sticky works correctly.
+  // (lg:row-span-full doesn't work on implicit grids — the explicit gridRow inline style is required)
+  const infoCardRowSpan = 1 + (vehicle.description ? 1 : 0) + (hasFeatures ? 1 : 0)
+
   return (
     <div className="bg-slate-50 min-h-screen">
       <VehicleViewTracker id={vehicle.id} />
@@ -172,7 +180,11 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           </div>
 
           {/* 2. Info card — second on mobile, col 3 spanning all rows on desktop */}
-          <div className="lg:col-start-3 lg:row-start-1 lg:row-span-full">
+          {/* gridRow inline style: explicit span required — lg:row-span-full fails on implicit grids */}
+          <div
+            className="lg:col-start-3"
+            style={{ gridRow: `1 / span ${infoCardRowSpan}` }}
+          >
             <div className="bg-white rounded-xl border border-slate-100 p-6 lg:sticky lg:top-20">
               <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
               <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">{vehicle.title}</h1>
