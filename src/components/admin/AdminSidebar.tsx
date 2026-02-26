@@ -16,6 +16,7 @@ import {
   Archive,
   ScrollText,
   Boxes,
+  Images,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   },
   { href: '/admin/sold', label: 'Predané vozidlá', icon: Archive, exact: true },
   { href: '/admin/documents', label: 'Šablóny zmlúv', icon: ScrollText },
+  { href: '/admin/media', label: 'Knižnica médií', icon: Images, exact: true },
   { href: '/admin/users', label: 'Používatelia', icon: Users },
   { href: '/admin/pages', label: 'Stránky', icon: FileText },
   { href: '/admin/settings', label: 'Nastavenia', icon: Settings, exact: true },

@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
 import {
-  FileText, Upload, Trash2, ToggleLeft, ToggleRight, Info, ChevronDown, ChevronUp
+  FileText, Upload, Trash2, ToggleLeft, ToggleRight, Info,
+  ChevronDown, ChevronUp, User, Building2, Users,
 } from 'lucide-react'
 
 interface Template {
@@ -16,6 +17,7 @@ interface Template {
   description: string | null
   originalName: string
   isActive: boolean
+  customerType: string | null   // null | 'PERSON' | 'COMPANY'
   sortOrder: number
   createdAt: string | Date
 }
@@ -47,6 +49,25 @@ const VARIABLES = [
   { group: 'Ostatné', vars: ['{datum_dnes}'] },
 ]
 
+type CustomerType = null | 'PERSON' | 'COMPANY'
+
+const CUSTOMER_TYPE_OPTIONS: { value: CustomerType; label: string; badge: string; icon: React.ElementType }[] = [
+  { value: null,      label: 'Všetci zákazníci', badge: 'bg-slate-100 text-slate-600 border-slate-200',    icon: Users },
+  { value: 'PERSON',  label: 'Fyzická osoba',    badge: 'bg-blue-100 text-blue-700 border-blue-200',       icon: User },
+  { value: 'COMPANY', label: 'Firma / Živnostník', badge: 'bg-purple-100 text-purple-700 border-purple-200', icon: Building2 },
+]
+
+function CustomerTypeBadge({ type }: { type: CustomerType }) {
+  const opt = CUSTOMER_TYPE_OPTIONS.find(o => o.value === type) ?? CUSTOMER_TYPE_OPTIONS[0]
+  const Icon = opt.icon
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${opt.badge}`}>
+      <Icon className="h-3 w-3" />
+      {opt.label}
+    </span>
+  )
+}
+
 export default function DocumentTemplatesManager({ initialTemplates }: Props) {
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -55,6 +76,7 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
   const [uploading, setUploading] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [customerType, setCustomerType] = useState<CustomerType>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [showVars, setShowVars] = useState(false)
 
@@ -67,6 +89,7 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
       fd.append('file', selectedFile)
       fd.append('name', name.trim())
       if (description.trim()) fd.append('description', description.trim())
+      if (customerType) fd.append('customerType', customerType)
 
       const res = await fetch('/api/documents/templates', { method: 'POST', body: fd })
       const json = await res.json()
@@ -75,6 +98,7 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
       setTemplates((prev) => [...prev, json.data])
       setName('')
       setDescription('')
+      setCustomerType(null)
       setSelectedFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       toast('success', 'Šablóna nahraná')
@@ -104,12 +128,24 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
     setTemplates((prev) => prev.map((x) => x.id === t.id ? json.data : x))
   }
 
+  async function updateCustomerType(t: Template, value: CustomerType) {
+    const res = await fetch(`/api/documents/templates/${t.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerType: value }),
+    })
+    if (!res.ok) { toast('error', 'Nastala chyba'); return }
+    const json = await res.json()
+    setTemplates((prev) => prev.map((x) => x.id === t.id ? json.data : x))
+    toast('success', 'Typ zákazníka aktualizovaný')
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Šablóny dokumentov</h1>
         <p className="text-slate-500 text-sm mt-1">
-          Nahrajte .docx šablóny s premennými — pri predaji vozidla sa automaticky doplnia dáta klienta.
+          Nahrajte .docx šablóny s premennými — pri predaji sa automaticky použije zmluva pre daný typ zákazníka.
         </p>
       </div>
 
@@ -137,14 +173,48 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="tpl-desc">Popis <span className="text-slate-400 font-normal text-xs">— nepovinný</span></Label>
+                <Label htmlFor="tpl-desc">
+                  Popis <span className="text-slate-400 font-normal text-xs">— nepovinný</span>
+                </Label>
                 <Input
                   id="tpl-desc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Pre fyzické osoby"
+                  placeholder="Krátky popis šablóny"
                 />
               </div>
+            </div>
+
+            {/* Customer type selector — full-width, visually prominent */}
+            <div className="space-y-1.5">
+              <Label>Pre koho je táto zmluva? *</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {CUSTOMER_TYPE_OPTIONS.map((opt) => {
+                  const Icon = opt.icon
+                  const selected = customerType === opt.value
+                  return (
+                    <button
+                      key={String(opt.value)}
+                      type="button"
+                      onClick={() => setCustomerType(opt.value)}
+                      className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                        selected
+                          ? 'border-orange-500 bg-orange-50 text-orange-800'
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 shrink-0 ${selected ? 'text-orange-600' : 'text-slate-400'}`} />
+                      <span className="leading-tight text-left">{opt.label}</span>
+                      {selected && (
+                        <span className="ml-auto w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-slate-400">
+                „Všetci zákazníci" — zmluva sa použije pre každého kupujúceho, ak neexistuje špecifickejšia zmluva.
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -244,15 +314,45 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
           ) : (
             <div className="divide-y divide-slate-100">
               {templates.map((t) => (
-                <div key={t.id} className="flex items-center gap-4 px-6 py-4">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${t.isActive ? 'bg-green-100' : 'bg-slate-100'}`}>
+                <div key={t.id} className="flex items-start gap-4 px-6 py-4">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${t.isActive ? 'bg-green-100' : 'bg-slate-100'}`}>
                     <FileText className={`h-4 w-4 ${t.isActive ? 'text-green-600' : 'text-slate-400'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`font-medium text-sm truncate ${t.isActive ? 'text-slate-900' : 'text-slate-400'}`}>{t.name}</p>
-                    <p className="text-xs text-slate-400 truncate">{t.originalName}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className={`font-medium text-sm ${t.isActive ? 'text-slate-900' : 'text-slate-400'}`}>{t.name}</p>
+                      <CustomerTypeBadge type={t.customerType as CustomerType} />
+                    </div>
+                    <p className="text-xs text-slate-400 truncate mt-0.5">{t.originalName}</p>
                     {t.description && <p className="text-xs text-slate-400 truncate">{t.description}</p>}
+
+                    {/* Inline customer type change */}
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <span className="text-xs text-slate-400">Pre:</span>
+                      {CUSTOMER_TYPE_OPTIONS.map((opt) => {
+                        const Icon = opt.icon
+                        const current = (t.customerType ?? null) === opt.value
+                        return (
+                          <button
+                            key={String(opt.value)}
+                            type="button"
+                            onClick={() => !current && updateCustomerType(t, opt.value)}
+                            disabled={current}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border transition-colors ${
+                              current
+                                ? opt.badge + ' cursor-default'
+                                : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600 bg-white'
+                            }`}
+                            title={current ? 'Aktuálne nastavenie' : `Zmeniť na: ${opt.label}`}
+                          >
+                            <Icon className="h-3 w-3" />
+                            {opt.label}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
+
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"

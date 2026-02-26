@@ -156,6 +156,7 @@ model DocumentTemplate {
   originalName String
   filePath     String
   isActive     Boolean  @default(true)
+  customerType String?  // null = všetci | 'PERSON' | 'COMPANY'
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -173,6 +174,18 @@ model EquipmentItem {
   createdAt   DateTime @default(now())
 
   @@map("equipment_items")
+}
+
+model MediaFile {
+  id         String   @id @default(cuid())
+  url        String
+  filePath   String
+  filename   String
+  mimeType   String
+  size       Int
+  uploadedAt DateTime @default(now())
+
+  @@map("media_files")
 }
 
 model TenantSettings {

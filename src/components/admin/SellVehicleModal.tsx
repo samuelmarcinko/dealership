@@ -30,6 +30,7 @@ interface Template {
   description: string | null
   originalName: string
   isActive: boolean
+  customerType: string | null
 }
 
 interface Props {
@@ -112,7 +113,9 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
       // Refresh happens in handleFinish when the user explicitly closes the modal.
       const tplRes = await fetch('/api/documents/templates')
       const tplJson = await tplRes.json()
-      const active = (tplJson.data ?? []).filter((t: Template) => t.isActive)
+      const active = (tplJson.data ?? []).filter((t: Template) =>
+        t.isActive && (!t.customerType || t.customerType === selected!.type)
+      )
       setTemplates(active)
       setStep('documents')
     } catch {

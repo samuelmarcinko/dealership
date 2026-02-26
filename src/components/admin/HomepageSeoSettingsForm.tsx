@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/toast'
 import { Save } from 'lucide-react'
+import MediaPickerInput from './MediaPickerInput'
 
 interface Props {
   settings: Record<string, string>
@@ -81,16 +82,11 @@ export default function HomepageSeoSettingsForm({ settings }: Props) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="hp_og_image">
-          OG obrázok (URL)
+        <Label>
+          OG obrázok
           <span className="text-slate-400 font-normal text-xs ml-1">(náhľad pri zdieľaní na sociálnych sieťach)</span>
         </Label>
-        <Input
-          id="hp_og_image"
-          value={ogImage}
-          onChange={(e) => setOgImage(e.target.value)}
-          placeholder="https://…/og-image.jpg (odporúčaná veľkosť 1200×630 px)"
-        />
+        <MediaPickerInput value={ogImage} onChange={setOgImage} />
         <p className="text-xs text-slate-400">Odporúčaná veľkosť: 1200 × 630 px, formát JPG alebo PNG.</p>
       </div>
 

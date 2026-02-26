@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/toast'
 import { Save, Loader2, ChevronDown, ChevronUp, PanelRight, Search } from 'lucide-react'
 import { slugify } from '@/lib/utils'
 import type { PageData } from '@/components/page-builder/types'
+import MediaPickerInput from './MediaPickerInput'
 
 // Dynamic import — SSR disabled (Craft.js requires browser APIs)
 const PageBuilder = dynamic(
@@ -421,16 +422,11 @@ function MetaFields({
             <p className="text-xs text-slate-400">{seoTitle.length}/200 znakov. Ideálne 50–60 znakov.</p>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ogImage" className="text-sm">
+            <Label className="text-sm">
               OG obrázok
-              <span className="text-slate-400 font-normal ml-1">(URL pre sociálne siete)</span>
+              <span className="text-slate-400 font-normal ml-1">(pre sociálne siete)</span>
             </Label>
-            <Input
-              id="ogImage"
-              value={ogImage}
-              onChange={(e) => setOgImage(e.target.value)}
-              placeholder="https://…/obrazok.jpg"
-            />
+            <MediaPickerInput value={ogImage} onChange={setOgImage} />
           </div>
         </div>
         <div className="space-y-1.5">

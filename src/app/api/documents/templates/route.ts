@@ -26,6 +26,8 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file') as File | null
     const name = (formData.get('name') as string | null)?.trim()
     const description = (formData.get('description') as string | null)?.trim() || null
+    const customerTypeRaw = (formData.get('customerType') as string | null)?.trim() || null
+    const customerType = customerTypeRaw === 'PERSON' || customerTypeRaw === 'COMPANY' ? customerTypeRaw : null
 
     if (!file) return NextResponse.json({ error: 'Žiadny súbor' }, { status: 400 })
     if (!name) return NextResponse.json({ error: 'Názov je povinný' }, { status: 400 })
@@ -48,7 +50,7 @@ export async function POST(req: NextRequest) {
     await writeFile(filePath, buffer)
 
     const template = await prisma.documentTemplate.create({
-      data: { name, description, originalName: file.name, filePath },
+      data: { name, description, originalName: file.name, filePath, customerType },
     })
 
     return NextResponse.json({ data: template }, { status: 201 })

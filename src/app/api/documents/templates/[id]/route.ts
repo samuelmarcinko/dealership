@@ -16,6 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(typeof body.isActive === 'boolean' ? { isActive: body.isActive } : {}),
       ...(typeof body.sortOrder === 'number' ? { sortOrder: body.sortOrder } : {}),
       ...(typeof body.name === 'string' ? { name: body.name } : {}),
+      ...('customerType' in body ? { customerType: body.customerType === 'PERSON' || body.customerType === 'COMPANY' ? body.customerType : null } : {}),
     },
   })
   return NextResponse.json({ data: template })
