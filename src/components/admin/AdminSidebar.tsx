@@ -18,6 +18,7 @@ import {
   Boxes,
   Images,
   X,
+  Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -133,6 +134,14 @@ export default function AdminSidebar({ userName, userEmail, onClose }: Props) {
 
       {/* User + Logout */}
       <div className="px-3 py-4 border-t border-slate-800">
+        <Link
+          href="/"
+          target="_blank"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors mb-1"
+        >
+          <Globe className="h-4 w-4" />
+          Prejsť na web
+        </Link>
         <div className="px-3 py-2 mb-2">
           <p className="text-white text-sm font-medium truncate">{userName}</p>
           <p className="text-slate-500 text-xs truncate">{userEmail}</p>

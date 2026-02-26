@@ -11,6 +11,7 @@ import VehicleGallery from '@/components/public/VehicleGallery'
 import VehicleCard from '@/components/public/VehicleCard'
 import InquiryModal from '@/components/public/InquiryModal'
 import VehicleViewTracker from '@/components/public/VehicleViewTracker'
+import CompareButton from '@/components/public/CompareButton'
 import {
   formatPrice,
   formatMileage,
@@ -218,6 +219,17 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   <InquiryModal vehicleTitle={vehicle.title} />
                 </div>
               )}
+              <div className="mb-3">
+                <CompareButton
+                  vehicle={{
+                    id: vehicle.id,
+                    title: vehicle.title,
+                    slug: vehicle.slug,
+                    imageUrl: vehicle.images[0]?.url ?? null,
+                  }}
+                  variant="detail"
+                />
+              </div>
               <Button asChild variant="outline" className="w-full" size="lg">
                 <Link href="/contact">Kontaktovať predajcu</Link>
               </Button>

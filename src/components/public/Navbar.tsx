@@ -4,9 +4,10 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Car, Phone, Mail } from 'lucide-react'
+import { Menu, X, Car, Phone, Mail, GitCompareArrows } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TenantBranding } from '@/lib/tenant'
+import { useCompare } from '@/contexts/CompareContext'
 
 const builtInNavLinks = [
   { href: '/', label: 'Domov', exact: true },
@@ -23,6 +24,11 @@ interface Props {
 export default function Navbar({ branding, customNavLinks = [] }: Props) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const { count: compareCount, vehicles: compareVehicles } = useCompare()
+
+  const compareUrl = compareCount > 0
+    ? `/compare?ids=${compareVehicles.map(v => v.id).join(',')}`
+    : '/compare'
 
   const name = branding?.businessName ?? 'AutoBazar'
   const style = branding?.navbarStyle ?? 'dark'
@@ -161,8 +167,26 @@ export default function Navbar({ branding, customNavLinks = [] }: Props) {
             ))}
           </nav>
 
-          {/* Right side: phone + email */}
+          {/* Right side: compare + phone + email */}
           <div className="hidden md:flex items-center gap-4 shrink-0">
+            {/* Compare indicator */}
+            {compareCount > 0 && (
+              <Link
+                href={compareUrl}
+                className={cn(
+                  'relative flex items-center justify-center w-9 h-9 rounded-lg transition-colors',
+                  style === 'light'
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                )}
+                title={`Porovnanie vozidiel (${compareCount})`}
+              >
+                <GitCompareArrows className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                  {compareCount}
+                </span>
+              </Link>
+            )}
             {branding?.contactPhone && (
               <a
                 href={`tel:${branding.contactPhone.replace(/\s/g, '')}`}
@@ -212,6 +236,24 @@ export default function Navbar({ branding, customNavLinks = [] }: Props) {
                 {link.label}
               </Link>
             ))}
+            {compareCount > 0 && (
+              <Link
+                href={compareUrl}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+                  style === 'light'
+                    ? 'text-orange-600 hover:bg-orange-50'
+                    : 'text-orange-400 hover:bg-white/5'
+                )}
+              >
+                <GitCompareArrows className="h-4 w-4" />
+                Porovnanie vozidiel
+                <span className="ml-auto bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                  {compareCount}
+                </span>
+              </Link>
+            )}
             {branding?.contactPhone && (
               <a
                 href={`tel:${branding.contactPhone.replace(/\s/g, '')}`}

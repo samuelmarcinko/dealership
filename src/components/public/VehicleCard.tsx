@@ -5,6 +5,7 @@ import { Fuel, Gauge, Settings, Calendar } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice, formatMileage, fuelTypeLabel, transmissionLabel, vehicleStatusLabel } from '@/lib/utils'
 import type { PublicVehicle } from '@/types'
+import CompareButton from '@/components/public/CompareButton'
 
 interface VehicleCardProps {
   vehicle: PublicVehicle
@@ -17,6 +18,13 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
 
   const href = `/vehicles/${vehicle.slug ?? vehicle.id}`
 
+  const compareVehicle = {
+    id: vehicle.id,
+    title: vehicle.title,
+    slug: vehicle.slug,
+    imageUrl: vehicle.primaryImage?.url ?? null,
+  }
+
   return (
     <Link href={href} className="group block">
       <article className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-200 flex flex-col h-full">
@@ -26,7 +34,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
               src={vehicle.primaryImage.url}
               alt={vehicle.title}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              className="object-contain group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
@@ -71,23 +79,26 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-3 mt-auto">
-            {vehicle.salePrice ? (
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-2xl font-bold text-red-600">{formatPrice(vehicle.salePrice)}</span>
-                  <span className="text-xs bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded">
-                    ZĽAVNENÁ CENA
-                  </span>
+          <div className="border-t border-slate-100 pt-3 mt-auto flex items-end justify-between gap-2">
+            <div className="min-w-0">
+              {vehicle.salePrice ? (
+                <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-2xl font-bold text-red-600">{formatPrice(vehicle.salePrice)}</span>
+                    <span className="text-xs bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded">
+                      ZĽAVNENÁ CENA
+                    </span>
+                  </div>
+                  <span className="text-sm line-through text-slate-400">{formatPrice(vehicle.price)}</span>
                 </div>
-                <span className="text-sm line-through text-slate-400">{formatPrice(vehicle.price)}</span>
-              </div>
-            ) : (
-              <div>
-                <span className="text-2xl font-bold text-primary">{formatPrice(vehicle.price)}</span>
-                <div className="h-5" />
-              </div>
-            )}
+              ) : (
+                <div>
+                  <span className="text-2xl font-bold text-primary">{formatPrice(vehicle.price)}</span>
+                  <div className="h-5" />
+                </div>
+              )}
+            </div>
+            <CompareButton vehicle={compareVehicle} />
           </div>
         </div>
       </article>

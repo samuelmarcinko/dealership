@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -33,7 +33,7 @@ const PRICE_MIN = 0
 const PRICE_MAX = 200000
 const PRICE_STEP = 500
 
-// ── Multiselect inline checkboxes ────────────────────────────────────────────
+// ── Multiselect inline checkboxes ─────────────────────────────────────────────
 interface MultiSelectFilterProps {
   label: string
   options: { value: string; label: string }[]
@@ -57,10 +57,7 @@ function MultiSelectFilter({ label, options, selected, onToggle, onClear }: Mult
       <div className="flex items-center justify-between">
         <Label>{label}</Label>
         {selected.length > 0 && (
-          <button
-            onClick={onClear}
-            className="text-xs text-slate-400 hover:text-red-500 transition-colors"
-          >
+          <button onClick={onClear} className="text-xs text-slate-400 hover:text-red-500 transition-colors">
             Zrušiť
           </button>
         )}
@@ -74,9 +71,7 @@ function MultiSelectFilter({ label, options, selected, onToggle, onClear }: Mult
         <span className={selected.length === 0 ? 'text-slate-400' : 'text-slate-900 font-medium'}>
           {displayLabel}
         </span>
-        <ChevronDown
-          className={`h-4 w-4 text-slate-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}
-        />
+        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -102,7 +97,8 @@ function MultiSelectFilter({ label, options, selected, onToggle, onClear }: Mult
   )
 }
 
-// ── Dual range slider ─────────────────────────────────────────────────────────
+// ── Custom dual range slider ───────────────────────────────────────────────────
+// onCommit receives the final (min, max) values directly — no async state issues
 interface DualRangeProps {
   min: number
   max: number
@@ -111,70 +107,251 @@ interface DualRangeProps {
   valueMax: number
   onChangeMin: (v: number) => void
   onChangeMax: (v: number) => void
-  onCommit: () => void
+  onCommit: (min: number, max: number) => void
   formatFn: (v: number) => string
 }
 
-function DualRange({ min, max, step, valueMin, valueMax, onChangeMin, onChangeMax, onCommit, formatFn }: DualRangeProps) {
+// Thumb radius in px — visual size is 20px, touch target is 44px
+const THUMB_R = 10
+
+function DualRange({
+  min, max, step,
+  valueMin, valueMax,
+  onChangeMin, onChangeMax, onCommit,
+  formatFn,
+}: DualRangeProps) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const draggingRef = useRef<'min' | 'max' | null>(null)
+  // Keeps the true latest values available inside event listeners
+  const latestRef = useRef({ min: valueMin, max: valueMax })
+  const cleanupRef = useRef<(() => void) | null>(null)
+  const [active, setActive] = useState<'min' | 'max' | null>(null)
+
+  latestRef.current = { min: valueMin, max: valueMax }
+
+  // Cleanup drag listeners on unmount
+  useEffect(() => () => { cleanupRef.current?.() }, [])
+
+  function snapAndClamp(raw: number, lo: number, hi: number): number {
+    const snapped = Math.round((raw - min) / step) * step + min
+    return Math.max(lo, Math.min(hi, snapped))
+  }
+
+  function getValueFromX(clientX: number): number {
+    const track = trackRef.current
+    if (!track) return min
+    const { left, width } = track.getBoundingClientRect()
+    const usable = Math.max(1, width - THUMB_R * 2)
+    const pct = Math.max(0, Math.min(1, (clientX - left - THUMB_R) / usable))
+    return snapAndClamp(min + pct * (max - min), min, max)
+  }
+
+  // Clicking directly on the track (not on a thumb) moves the nearest thumb
+  function handleTrackPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest('[data-thumb]')) return
+    e.preventDefault()
+
+    const val = getValueFromX(e.clientX)
+    const { min: cMin, max: cMax } = latestRef.current
+
+    if (Math.abs(val - cMin) <= Math.abs(val - cMax)) {
+      const v = snapAndClamp(val, min, cMax - step)
+      latestRef.current.min = v
+      onChangeMin(v)
+      onCommit(v, cMax)
+    } else {
+      const v = snapAndClamp(val, cMin + step, max)
+      latestRef.current.max = v
+      onChangeMax(v)
+      onCommit(cMin, v)
+    }
+  }
+
+  // Dragging a thumb — pointer capture via document listeners
+  function startDrag(thumb: 'min' | 'max') {
+    return (e: React.PointerEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      draggingRef.current = thumb
+      setActive(thumb)
+
+      function onMove(me: PointerEvent) {
+        const val = getValueFromX(me.clientX)
+        if (draggingRef.current === 'min') {
+          const v = snapAndClamp(val, min, latestRef.current.max - step)
+          latestRef.current.min = v
+          onChangeMin(v)
+        } else if (draggingRef.current === 'max') {
+          const v = snapAndClamp(val, latestRef.current.min + step, max)
+          latestRef.current.max = v
+          onChangeMax(v)
+        }
+      }
+
+      function onUp() {
+        onCommit(latestRef.current.min, latestRef.current.max)
+        draggingRef.current = null
+        setActive(null)
+        cleanup()
+        cleanupRef.current = null
+      }
+
+      function cleanup() {
+        document.removeEventListener('pointermove', onMove)
+        document.removeEventListener('pointerup', onUp)
+        document.removeEventListener('pointercancel', onUp)
+      }
+
+      cleanupRef.current = cleanup
+      document.addEventListener('pointermove', onMove)
+      document.addEventListener('pointerup', onUp)
+      document.addEventListener('pointercancel', onUp)
+    }
+  }
+
+  // Keyboard accessibility
+  function handleKeyDown(thumb: 'min' | 'max') {
+    return (e: React.KeyboardEvent) => {
+      const inc = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? step : 0
+      const dec = e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? step : 0
+      const delta = inc - dec
+      if (!delta) return
+      e.preventDefault()
+      const { min: cMin, max: cMax } = latestRef.current
+      if (thumb === 'min') {
+        const v = snapAndClamp(cMin + delta, min, cMax - step)
+        latestRef.current.min = v
+        onChangeMin(v)
+        onCommit(v, cMax)
+      } else {
+        const v = snapAndClamp(cMax + delta, cMin + step, max)
+        latestRef.current.max = v
+        onChangeMax(v)
+        onCommit(cMin, v)
+      }
+    }
+  }
+
   const minPct = ((valueMin - min) / (max - min)) * 100
   const maxPct = ((valueMax - min) / (max - min)) * 100
 
+  // CSS left position so the thumb CENTER sits exactly on the track
+  const thumbLeft = (pct: number): React.CSSProperties => ({
+    left: `calc(${THUMB_R}px + (100% - ${THUMB_R * 2}px) * ${(pct / 100).toFixed(6)})`,
+    transform: 'translateX(-50%)',
+    zIndex: active === (pct === minPct ? 'min' : 'max') ? 4 : pct === maxPct ? 3 : 2,
+  })
+
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between text-xs font-medium text-slate-700">
-        <span>{formatFn(valueMin)}</span>
-        <span>{formatFn(valueMax)}</span>
+    <div className="space-y-2.5">
+      {/* Value labels — update live while dragging */}
+      <div className="flex justify-between items-center">
+        <span className="text-sm font-semibold text-slate-800 tabular-nums">
+          {formatFn(valueMin)}
+        </span>
+        <span className="text-sm font-semibold text-slate-800 tabular-nums">
+          {formatFn(valueMax)}
+        </span>
       </div>
-      <div className="relative h-5 flex items-center">
-        <div className="absolute w-full h-1.5 rounded-full bg-slate-200 pointer-events-none" />
+
+      {/* Track area — h-12 (48px) for comfortable touch target */}
+      <div
+        ref={trackRef}
+        role="presentation"
+        className="relative h-12 flex items-center cursor-pointer select-none touch-none"
+        onPointerDown={handleTrackPointerDown}
+      >
+        {/* Background rail */}
         <div
-          className="absolute h-1.5 rounded-full bg-primary pointer-events-none"
-          style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }}
+          className="absolute rounded-full bg-slate-200"
+          style={{ left: THUMB_R, right: THUMB_R, height: 4 }}
         />
+
+        {/* Active fill between thumbs */}
         <div
-          className="absolute w-4 h-4 rounded-full bg-white border-2 border-primary shadow pointer-events-none -translate-x-1/2"
-          style={{ left: `${minPct}%` }}
+          className="absolute rounded-full bg-primary transition-none"
+          style={{
+            left: `calc(${THUMB_R}px + (100% - ${THUMB_R * 2}px) * ${(minPct / 100).toFixed(6)})`,
+            width: `calc((100% - ${THUMB_R * 2}px) * ${((maxPct - minPct) / 100).toFixed(6)})`,
+            height: 4,
+          }}
         />
+
+        {/* Min thumb */}
         <div
-          className="absolute w-4 h-4 rounded-full bg-white border-2 border-primary shadow pointer-events-none -translate-x-1/2"
-          style={{ left: `${maxPct}%` }}
-        />
-        <input
-          type="range" min={min} max={max} step={step}
-          value={valueMin}
-          onChange={(e) => onChangeMin(Math.min(+e.target.value, valueMax - step))}
-          onMouseUp={onCommit}
-          onTouchEnd={onCommit}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
-          style={{ zIndex: 3 }}
-        />
-        <input
-          type="range" min={min} max={max} step={step}
-          value={valueMax}
-          onChange={(e) => onChangeMax(Math.max(+e.target.value, valueMin + step))}
-          onMouseUp={onCommit}
-          onTouchEnd={onCommit}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
-          style={{ zIndex: 3 }}
-        />
+          data-thumb="min"
+          role="slider"
+          aria-valuemin={min}
+          aria-valuemax={valueMax - step}
+          aria-valuenow={valueMin}
+          aria-label="Minimum"
+          tabIndex={0}
+          onPointerDown={startDrag('min')}
+          onKeyDown={handleKeyDown('min')}
+          className="absolute flex items-center justify-center w-11 h-11 cursor-grab active:cursor-grabbing touch-none outline-none focus-visible:outline-none"
+          style={{
+            ...thumbLeft(minPct),
+            zIndex: active === 'min' ? 4 : 2,
+          }}
+        >
+          <div
+            className={[
+              'rounded-full bg-white border-[2.5px] border-primary transition-all duration-100',
+              active === 'min'
+                ? 'w-6 h-6 shadow-[0_0_0_5px_color-mix(in_srgb,var(--primary)_15%,transparent)]'
+                : 'w-5 h-5 shadow-md',
+            ].join(' ')}
+          />
+        </div>
+
+        {/* Max thumb */}
+        <div
+          data-thumb="max"
+          role="slider"
+          aria-valuemin={valueMin + step}
+          aria-valuemax={max}
+          aria-valuenow={valueMax}
+          aria-label="Maximum"
+          tabIndex={0}
+          onPointerDown={startDrag('max')}
+          onKeyDown={handleKeyDown('max')}
+          className="absolute flex items-center justify-center w-11 h-11 cursor-grab active:cursor-grabbing touch-none outline-none focus-visible:outline-none"
+          style={{
+            ...thumbLeft(maxPct),
+            zIndex: active === 'max' ? 4 : 3,
+          }}
+        >
+          <div
+            className={[
+              'rounded-full bg-white border-[2.5px] border-primary transition-all duration-100',
+              active === 'max'
+                ? 'w-6 h-6 shadow-[0_0_0_5px_color-mix(in_srgb,var(--primary)_15%,transparent)]'
+                : 'w-5 h-5 shadow-md',
+            ].join(' ')}
+          />
+        </div>
+      </div>
+
+      {/* Min/max bounds hint */}
+      <div className="flex justify-between text-[11px] text-slate-400">
+        <span>{formatFn(min)}</span>
+        <span>{formatFn(max)}</span>
       </div>
     </div>
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDbMax }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
-  // Slider local state (smooth while dragging, commit on release)
   const [priceMin, setPriceMin] = useState(parseInt(currentParams.minPrice ?? String(PRICE_MIN)))
   const [priceMax, setPriceMax] = useState(parseInt(currentParams.maxPrice ?? String(PRICE_MAX)))
   const [yearMin, setYearMin] = useState(parseInt(currentParams.minYear ?? String(yearDbMin)))
   const [yearMax, setYearMax] = useState(parseInt(currentParams.maxYear ?? String(yearDbMax)))
 
-  // Multiselect selections (derived from URL params)
   const selectedMakes = currentParams.make ? currentParams.make.split(',').filter(Boolean) : []
   const selectedFuels = currentParams.fuelType ? currentParams.fuelType.split(',').filter(Boolean) : []
   const selectedTransmissions = currentParams.transmission ? currentParams.transmission.split(',').filter(Boolean) : []
@@ -187,7 +364,6 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
     return qs ? `${pathname}?${qs}` : pathname
   }
 
-  // scroll: false — keeps scroll position when filtering
   function updateFilter(key: string, value: string | undefined) {
     router.push(buildUrl({ [key]: value }), { scroll: false })
   }
@@ -197,21 +373,20 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
     updateFilter(key, next.length > 0 ? next.join(',') : undefined)
   }
 
-  const commitPriceRange = useCallback(() => {
+  // onCommit receives final values directly — avoids stale closure from useCallback
+  function commitPriceRange(newMin: number, newMax: number) {
     router.push(buildUrl({
-      minPrice: priceMin > PRICE_MIN ? String(priceMin) : undefined,
-      maxPrice: priceMax < PRICE_MAX ? String(priceMax) : undefined,
+      minPrice: newMin > PRICE_MIN ? String(newMin) : undefined,
+      maxPrice: newMax < PRICE_MAX ? String(newMax) : undefined,
     }), { scroll: false })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priceMin, priceMax])
+  }
 
-  const commitYearRange = useCallback(() => {
+  function commitYearRange(newMin: number, newMax: number) {
     router.push(buildUrl({
-      minYear: yearMin > yearDbMin ? String(yearMin) : undefined,
-      maxYear: yearMax < yearDbMax ? String(yearMax) : undefined,
+      minYear: newMin > yearDbMin ? String(newMin) : undefined,
+      maxYear: newMax < yearDbMax ? String(newMax) : undefined,
     }), { scroll: false })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yearMin, yearMax, yearDbMin, yearDbMax])
+  }
 
   function clearAll() {
     setPriceMin(PRICE_MIN)
@@ -223,12 +398,11 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
 
   const hasFilters = Object.values(currentParams).some(Boolean)
   const activeFilterCount = Object.values(currentParams).filter(Boolean).length
-
   const makeOptions = makes.map((m) => ({ value: m, label: m }))
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      {/* Header — entire div clickable on mobile */}
+      {/* Header */}
       <div
         className="flex items-center justify-between p-5 cursor-pointer lg:cursor-default"
         onClick={() => setIsOpen((v) => !v)}
@@ -258,10 +432,9 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
         </div>
       </div>
 
-      {/* Filter content — collapsible on mobile, always open on lg */}
+      {/* Filter content */}
       <div className={`px-5 pb-5 space-y-6 ${isOpen ? 'block' : 'hidden'} lg:block`}>
 
-        {/* Značka */}
         <MultiSelectFilter
           label="Značka"
           options={makeOptions}
@@ -270,7 +443,6 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
           onClear={() => updateFilter('make', undefined)}
         />
 
-        {/* Palivo */}
         <MultiSelectFilter
           label="Palivo"
           options={FUEL_OPTIONS}
@@ -279,7 +451,6 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
           onClear={() => updateFilter('fuelType', undefined)}
         />
 
-        {/* Prevodovka */}
         <MultiSelectFilter
           label="Prevodovka"
           options={TRANSMISSION_OPTIONS}
@@ -289,7 +460,7 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
         />
 
         {/* Cena */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label>Cena (€)</Label>
           <DualRange
             min={PRICE_MIN} max={PRICE_MAX} step={PRICE_STEP}
@@ -302,7 +473,7 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
         </div>
 
         {/* Rok výroby */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Label>Rok výroby</Label>
           <DualRange
             min={yearDbMin} max={yearDbMax} step={1}
