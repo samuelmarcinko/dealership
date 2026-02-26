@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import DeletePageButton from '@/components/admin/DeletePageButton'
-import { Plus, FileText, ExternalLink } from 'lucide-react'
+import { Plus, FileText, ExternalLink, Settings2 } from 'lucide-react'
 
 export const metadata: Metadata = { title: 'Stránky' }
 
@@ -17,8 +17,8 @@ export default async function PagesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Vlastné stránky</h1>
-          <p className="text-slate-500 text-sm mt-1">Vytvárajte ľubovolné podstránky s vlastným obsahom.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Stránky</h1>
+          <p className="text-slate-500 text-sm mt-1">Systémové stránky a vlastné podstránky s editovateľným obsahom.</p>
         </div>
         <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white">
           <Link href="/admin/pages/new">
@@ -28,11 +28,46 @@ export default async function PagesPage() {
         </Button>
       </div>
 
+      {/* Systémové stránky */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Settings2 className="h-5 w-5 text-orange-500" />
+            <CardTitle className="text-base font-semibold">Systémové stránky</CardTitle>
+          </div>
+          <CardDescription>Stránky s predvoleným dizajnom — editujú sa len textové polia.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y divide-slate-100">
+            <div className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
+              <div>
+                <span className="font-medium text-slate-900">O nás</span>
+                <div className="text-sm text-slate-400 mt-0.5">/about</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/about"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-200 hover:bg-slate-100 transition-colors text-slate-500"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/admin/pages/about">Upraviť</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Vlastné stránky */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-orange-500" />
-            <CardTitle className="text-base font-semibold">Všetky stránky</CardTitle>
+            <CardTitle className="text-base font-semibold">Vlastné stránky</CardTitle>
           </div>
           {pages.length === 0 && (
             <CardDescription>Zatiaľ žiadne vlastné stránky. Vytvorte prvú!</CardDescription>

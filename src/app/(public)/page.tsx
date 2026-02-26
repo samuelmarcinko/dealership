@@ -211,7 +211,7 @@ export default async function HomePage() {
       {/* ── Stats bar ── */}
       <section className="bg-primary text-white py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-y-2 md:divide-y-0 md:divide-x-2 divide-white/20 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 md:divide-x-2 divide-white/20 text-center">
             {stats.map((stat, i) => (
               <AnimateIn key={stat.label} delay={i * 100} className="px-6 py-4 md:py-2">
                 <div className="text-3xl md:text-4xl font-extrabold">{stat.value}</div>
