@@ -48,14 +48,13 @@ interface FeatureSectionProps {
 function FeatureSection({ icon: Icon, title, items, isFirst }: FeatureSectionProps) {
   if (items.length === 0) return null
   return (
-    <div className={isFirst ? '' : 'pt-6 border-t border-slate-100'}>
+    <div className={isFirst ? '' : 'mt-6 pt-6 border-t border-slate-100'}>
       {/* Category header */}
       <div className="flex items-center gap-2.5 mb-4">
         <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 shrink-0">
           <Icon className="h-3.5 w-3.5 text-slate-500" />
         </div>
         <h3 className="font-semibold text-slate-800 text-sm">{title}</h3>
-        <span className="ml-auto text-xs text-slate-400 tabular-nums">{items.length}</span>
       </div>
 
       {/* Items — responsive 2-col grid */}
