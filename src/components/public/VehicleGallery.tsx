@@ -88,22 +88,56 @@ export default function VehicleGallery({ images, title }: Props) {
         )}
       </div>
 
-      {/* Thumbnails */}
-      {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {images.map((img, i) => (
-            <button
-              key={img.id}
-              onClick={() => setActiveIndex(i)}
-              className={`relative shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-colors ${
-                i === activeIndex ? 'border-primary' : 'border-transparent opacity-70 hover:opacity-100'
-              }`}
-            >
-              <Image src={img.url} alt={`Thumbnail ${i + 1}`} fill className="object-cover" sizes="80px" />
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Thumbnails — equal-width grid, max 7 per row */}
+      {images.length > 1 && (() => {
+        const MAX = 7
+        const hasMore = images.length > MAX
+        const visible = hasMore ? images.slice(0, MAX) : images
+        const extraCount = images.length - MAX  // how many hidden beyond the 7th slot
+
+        return (
+          <div
+            className="grid gap-1.5"
+            style={{ gridTemplateColumns: `repeat(${visible.length}, minmax(0, 1fr))` }}
+          >
+            {visible.map((img, i) => {
+              const isOverlaySlot = hasMore && i === MAX - 1
+              const isActive = i === activeIndex
+
+              return (
+                <button
+                  key={img.id}
+                  onClick={() => {
+                    setActiveIndex(i)
+                    if (isOverlaySlot) openLightbox(i)
+                  }}
+                  className={[
+                    'relative aspect-[4/3] rounded-lg overflow-hidden transition-all duration-150',
+                    isActive
+                      ? 'ring-2 ring-primary ring-offset-1 opacity-100'
+                      : 'opacity-60 hover:opacity-90',
+                  ].join(' ')}
+                >
+                  <Image
+                    src={img.url}
+                    alt={`Foto ${i + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 13vw, 9vw"
+                  />
+                  {isOverlaySlot && (
+                    <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm sm:text-base leading-none">
+                        +{extraCount + 1}
+                      </span>
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       {/* Lightbox — rendered in a portal-like pattern, z-[200] above navbar */}
       {lightboxOpen && (

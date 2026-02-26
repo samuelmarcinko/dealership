@@ -77,7 +77,7 @@ export default function InquiryModal({ vehicleTitle }: Props) {
       </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Mám záujem o vozidlo</DialogTitle>
             <DialogDescription className="line-clamp-2">{vehicleTitle}</DialogDescription>
@@ -103,10 +103,14 @@ export default function InquiryModal({ vehicleTitle }: Props) {
                   {error}
                 </div>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5 sm:col-span-1">
                   <Label htmlFor="inq-name">Meno a priezvisko *</Label>
                   <Input id="inq-name" name="name" required placeholder="Ján Novák" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="inq-email">E-mail *</Label>
+                  <Input id="inq-email" name="email" type="email" required placeholder="jan@example.sk" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="inq-phone">Telefón</Label>
@@ -114,15 +118,11 @@ export default function InquiryModal({ vehicleTitle }: Props) {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="inq-email">E-mail *</Label>
-                <Input id="inq-email" name="email" type="email" required placeholder="jan@example.sk" />
-              </div>
-              <div className="space-y-1.5">
                 <Label htmlFor="inq-message">Správa *</Label>
                 <Textarea
                   id="inq-message"
                   name="message"
-                  rows={4}
+                  rows={6}
                   required
                   defaultValue={`Dobrý deň,\n\nzaujalo ma vaše vozidlo ${vehicleTitle}. `}
                 />

@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, GitCompareArrows, ExternalLink, Plus, X } from 'lucide-react'
+import { ArrowLeft, GitCompareArrows, ExternalLink, Plus, X, Check, Minus, ShieldCheck, Armchair, MonitorPlay, Car, Wrench, Zap } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -13,6 +13,7 @@ import {
   bodyTypeLabel,
   vehicleStatusLabel,
 } from '@/lib/utils'
+import type { LucideIcon } from 'lucide-react'
 
 export const metadata: Metadata = { title: 'Porovnanie vozidiel' }
 
@@ -39,14 +40,17 @@ function removeOneUrl(ids: string[], removeId: string): string {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SectionHead({ label, colCount }: { label: string; colCount: number }) {
+function SectionHead({ label, colCount, icon: Icon }: { label: string; colCount: number; icon?: LucideIcon }) {
   return (
     <tr className="bg-slate-50 border-y border-slate-100">
       <td
         colSpan={colCount + 1}
         className="px-6 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-widest"
       >
-        {label}
+        <span className="flex items-center gap-2">
+          {Icon && <Icon className="h-3.5 w-3.5" />}
+          {label}
+        </span>
       </td>
     </tr>
   )
@@ -75,6 +79,30 @@ function DataRow({ label, values }: RowProps) {
             ? val
             : <span className="text-slate-300">—</span>
           }
+        </td>
+      ))}
+    </tr>
+  )
+}
+
+function CheckRow({ label, values }: { label: string; values: boolean[] }) {
+  const diff = values.some(Boolean) && !values.every(Boolean)
+  return (
+    <tr className={`border-b border-slate-100 last:border-0 transition-colors ${diff ? 'bg-orange-50/50' : 'hover:bg-slate-50/40'}`}>
+      <td className="px-6 py-2.5 text-sm text-slate-600 border-r border-slate-100 align-middle">
+        {label}
+      </td>
+      {values.map((has, i) => (
+        <td key={i} className="px-4 py-2.5 text-center border-r border-slate-100 last:border-r-0 align-middle">
+          {has ? (
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 mx-auto">
+              <Check className="h-3.5 w-3.5 text-green-600" strokeWidth={2.5} />
+            </span>
+          ) : (
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 mx-auto">
+              <Minus className="h-3.5 w-3.5 text-slate-300" />
+            </span>
+          )}
         </td>
       ))}
     </tr>
@@ -132,7 +160,7 @@ export default async function ComparePage({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anyV = (v: unknown) => v as any
 
-  // Row data
+  // ── Basic & tech rows ──────────────────────────────────────────────────────
   const basicRows: RowProps[] = [
     { label: 'Rok výroby',      values: vehicles.map(v => String(v.year)) },
     { label: 'Najazdené',        values: vehicles.map(v => formatMileage(v.mileage)) },
@@ -153,16 +181,43 @@ export default async function ComparePage({
     { label: 'VIN',           values: vehicles.map(v => v.vin) },
   ]
 
-  const equipRows: RowProps[] = [
-    { label: 'Bezpečnosť',   values: vehicles.map(v => `${anyV(v).safetyFeatures?.length ?? 0} položiek`) },
-    { label: 'Komfort',      values: vehicles.map(v => `${anyV(v).comfortFeatures?.length ?? 0} položiek`) },
-    { label: 'Multimédiá',   values: vehicles.map(v => `${anyV(v).multimediaFeatures?.length ?? 0} položiek`) },
-    { label: 'Exteriér',     values: vehicles.map(v => `${anyV(v).exteriorFeatures?.length ?? 0} položiek`) },
-    { label: 'Ďalšia výbava', values: vehicles.map(v => `${(anyV(v).otherFeatures?.length ?? 0) + (anyV(v).features?.length ?? 0)} položiek`) },
-  ]
-  if (vehicles.some(v => (anyV(v).evFeatures?.length ?? 0) > 0)) {
-    equipRows.push({ label: 'EV / Hybrid', values: vehicles.map(v => `${anyV(v).evFeatures?.length ?? 0} položiek`) })
+  // ── Equipment categories ──────────────────────────────────────────────────
+  type EquipCategory = {
+    label: string
+    icon: LucideIcon
+    getItems: (v: ReturnType<typeof anyV>) => string[]
   }
+
+  const equipCategories: EquipCategory[] = [
+    { label: 'Bezpečnosť',    icon: ShieldCheck,   getItems: v => v.safetyFeatures ?? [] },
+    { label: 'Komfort',       icon: Armchair,       getItems: v => v.comfortFeatures ?? [] },
+    { label: 'Multimédiá',    icon: MonitorPlay,    getItems: v => v.multimediaFeatures ?? [] },
+    { label: 'Exteriér',      icon: Car,            getItems: v => v.exteriorFeatures ?? [] },
+    { label: 'Ďalšia výbava', icon: Wrench,         getItems: v => [...(v.otherFeatures ?? []), ...(v.features ?? [])] },
+    { label: 'EV / Hybrid',   icon: Zap,            getItems: v => v.evFeatures ?? [] },
+  ]
+
+  const equipSections = equipCategories
+    .map(cat => {
+      const allItems = new Set<string>()
+      vehicles.forEach(v => {
+        const items = cat.getItems(anyV(v)) as string[]
+        items.forEach(f => allItems.add(f))
+      })
+      if (allItems.size === 0) return null
+      const sorted = Array.from(allItems).sort((a, b) => a.localeCompare(b, 'sk'))
+      return {
+        label: cat.label,
+        icon: cat.icon,
+        rows: sorted.map(feature => ({
+          feature,
+          values: vehicles.map(v => (cat.getItems(anyV(v)) as string[]).includes(feature)),
+        })),
+      }
+    })
+    .filter((s): s is NonNullable<typeof s> => s !== null)
+
+  const hasEquip = equipSections.length > 0
 
   const tableMinWidth = 176 + colCount * 260
 
@@ -196,10 +251,24 @@ export default async function ComparePage({
         </div>
 
         {/* Legend */}
-        <p className="text-xs text-slate-400 mb-5 flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded bg-orange-100 border border-orange-200" />
-          Zvýraznené riadky obsahujú rozdielne hodnoty
-        </p>
+        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 mb-5">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded bg-orange-100 border border-orange-200" />
+            Zvýraznené riadky obsahujú rozdielne hodnoty
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-100">
+              <Check className="h-2.5 w-2.5 text-green-600" strokeWidth={2.5} />
+            </span>
+            Vozidlo má túto výbavu
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100">
+              <Minus className="h-2.5 w-2.5 text-slate-300" />
+            </span>
+            Vozidlo nemá túto výbavu
+          </span>
+        </div>
 
         {/* Table */}
         <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
@@ -320,8 +389,14 @@ export default async function ComparePage({
                 <SectionHead label="Technické parametre" colCount={colCount} />
                 {techRows.map(r => <DataRow key={r.label} {...r} />)}
 
-                <SectionHead label="Výbava (počet položiek)" colCount={colCount} />
-                {equipRows.map(r => <DataRow key={r.label} {...r} />)}
+                {hasEquip && equipSections.map(section => (
+                  <React.Fragment key={section.label}>
+                    <SectionHead label={`Výbava — ${section.label}`} colCount={colCount} icon={section.icon} />
+                    {section.rows.map(row => (
+                      <CheckRow key={row.feature} label={row.feature} values={row.values} />
+                    ))}
+                  </React.Fragment>
+                ))}
               </tbody>
             </table>
           </div>

@@ -6,7 +6,6 @@ import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Use
 import type { LucideIcon } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import VehicleGallery from '@/components/public/VehicleGallery'
 import VehicleCard from '@/components/public/VehicleCard'
 import InquiryModal from '@/components/public/InquiryModal'
@@ -219,20 +218,15 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   <InquiryModal vehicleTitle={vehicle.title} />
                 </div>
               )}
-              <div className="mb-3">
-                <CompareButton
-                  vehicle={{
-                    id: vehicle.id,
-                    title: vehicle.title,
-                    slug: vehicle.slug,
-                    imageUrl: vehicle.images[0]?.url ?? null,
-                  }}
-                  variant="detail"
-                />
-              </div>
-              <Button asChild variant="outline" className="w-full" size="lg">
-                <Link href="/contact">Kontaktovať predajcu</Link>
-              </Button>
+              <CompareButton
+                vehicle={{
+                  id: vehicle.id,
+                  title: vehicle.title,
+                  slug: vehicle.slug,
+                  imageUrl: vehicle.images[0]?.url ?? null,
+                }}
+                variant="detail"
+              />
             </div>
           </div>
 
