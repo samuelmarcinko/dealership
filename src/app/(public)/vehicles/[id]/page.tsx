@@ -8,7 +8,9 @@ import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import VehicleGallery from '@/components/public/VehicleGallery'
+import VehicleCard from '@/components/public/VehicleCard'
 import InquiryModal from '@/components/public/InquiryModal'
+import VehicleViewTracker from '@/components/public/VehicleViewTracker'
 import {
   formatPrice,
   formatMileage,
@@ -17,6 +19,7 @@ import {
   bodyTypeLabel,
   vehicleStatusLabel,
 } from '@/lib/utils'
+import type { PublicVehicle } from '@/types'
 
 async function getVehicle(idOrSlug: string) {
   return prisma.vehicle.findFirst({
@@ -70,6 +73,42 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   if (!vehicle) notFound()
 
+  // Related vehicles: same make, not sold, not this vehicle
+  let relatedRaw = await prisma.vehicle.findMany({
+    where: { make: vehicle.make, status: { not: 'SOLD' }, id: { not: vehicle.id } },
+    include: { images: { where: { isPrimary: true }, take: 1 } },
+    orderBy: { createdAt: 'desc' },
+    take: 3,
+  })
+
+  // Fallback: if no same-make vehicles, take any 3 available vehicles
+  if (relatedRaw.length === 0) {
+    relatedRaw = await prisma.vehicle.findMany({
+      where: { status: { not: 'SOLD' }, id: { not: vehicle.id } },
+      include: { images: { where: { isPrimary: true }, take: 1 } },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+    })
+  }
+
+  const relatedVehicles: PublicVehicle[] = relatedRaw.map((v) => ({
+    id: v.id,
+    slug: v.slug,
+    title: v.title,
+    make: v.make,
+    model: v.model,
+    variant: v.variant,
+    year: v.year,
+    price: v.price,
+    salePrice: v.salePrice,
+    mileage: v.mileage,
+    fuelType: v.fuelType,
+    transmission: v.transmission,
+    bodyType: v.bodyType,
+    status: v.status,
+    primaryImage: v.images[0] ?? null,
+  }))
+
   const statusVariant =
     vehicle.status === 'AVAILABLE' ? 'success' :
     vehicle.status === 'RESERVED' ? 'warning' : 'error'
@@ -107,6 +146,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="bg-slate-50 min-h-screen">
+      <VehicleViewTracker id={vehicle.id} />
       <div className="container mx-auto px-4 py-8">
         <Link
           href="/vehicles"
@@ -207,6 +247,18 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   items={s.items}
                 />
               ))}
+            </div>
+          )}
+
+          {/* 5. Related vehicles — full width */}
+          {relatedVehicles.length > 0 && (
+            <div className="lg:col-span-3">
+              <h2 className="font-semibold text-slate-900 text-lg mb-4">Podobné vozidlá</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {relatedVehicles.map((v) => (
+                  <VehicleCard key={v.id} vehicle={v} />
+                ))}
+              </div>
             </div>
           )}
         </div>

@@ -17,6 +17,7 @@ import {
   ScrollText,
   Boxes,
   Images,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -51,9 +52,10 @@ const navItems: NavItem[] = [
 interface Props {
   userName: string
   userEmail: string
+  onClose?: () => void
 }
 
-export default function AdminSidebar({ userName, userEmail }: Props) {
+export default function AdminSidebar({ userName, userEmail, onClose }: Props) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -71,14 +73,23 @@ export default function AdminSidebar({ userName, userEmail }: Props) {
     <aside className="flex flex-col w-64 bg-slate-900 min-h-screen">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-800">
-        <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center">
+        <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center shrink-0">
           <CarIcon className="h-5 w-5 text-white" />
         </div>
-        <div>
+        <div className="flex-1">
           <span className="text-white font-bold text-lg">Auto</span>
           <span className="text-orange-400 font-bold text-lg">Bazar</span>
           <div className="text-slate-500 text-xs">Admin</div>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Zatvoriť menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}

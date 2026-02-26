@@ -214,3 +214,14 @@ model CustomPage {
 
   @@map("custom_pages")
 }
+
+model VehicleView {
+  id        String   @id @default(cuid())
+  vehicleId String
+  source    String   @default("direct") // direct | google | facebook | instagram | internal | other
+  viewedAt  DateTime @default(now())
+
+  @@index([vehicleId])
+  @@index([viewedAt])
+  @@map("vehicle_views")
+}

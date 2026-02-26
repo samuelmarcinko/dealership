@@ -19,7 +19,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
 
   return (
     <Link href={href} className="group block">
-      <article className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-200">
+      <article className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-200 flex flex-col h-full">
         <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
           {vehicle.primaryImage ? (
             <Image
@@ -44,7 +44,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
           </div>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 flex flex-col flex-1">
           <h3 className="font-semibold text-slate-900 text-lg leading-tight mb-1 group-hover:text-primary transition-colors">
             {vehicle.title}
           </h3>
@@ -71,7 +71,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-3">
+          <div className="border-t border-slate-100 pt-3 mt-auto">
             {vehicle.salePrice ? (
               <div>
                 <div className="flex items-center gap-1.5">
@@ -83,7 +83,10 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
                 <span className="text-sm line-through text-slate-400">{formatPrice(vehicle.price)}</span>
               </div>
             ) : (
-              <span className="text-2xl font-bold text-primary">{formatPrice(vehicle.price)}</span>
+              <div>
+                <span className="text-2xl font-bold text-primary">{formatPrice(vehicle.price)}</span>
+                <div className="h-5" />
+              </div>
             )}
           </div>
         </div>
