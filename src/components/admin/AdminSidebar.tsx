@@ -71,7 +71,7 @@ export default function AdminSidebar({ userName, userEmail, onClose }: Props) {
   }
 
   return (
-    <aside className="flex flex-col w-64 bg-slate-900 min-h-screen">
+    <aside className="flex flex-col w-64 bg-slate-900 h-full min-h-screen lg:min-h-0">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-800">
         <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center shrink-0">
@@ -94,7 +94,7 @@ export default function AdminSidebar({ userName, userEmail, onClose }: Props) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => (
           <div key={item.href}>
             <Link

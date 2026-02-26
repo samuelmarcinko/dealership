@@ -39,25 +39,30 @@ export default async function PagesPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-slate-100">
-            <div className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
-              <div>
-                <span className="font-medium text-slate-900">O nás</span>
-                <div className="text-sm text-slate-400 mt-0.5">/about</div>
+            {[
+              { label: 'O nás',    path: '/about',   href: '/admin/pages/about' },
+              { label: 'Kontakt',  path: '/contact', href: '/admin/pages/contact' },
+            ].map(page => (
+              <div key={page.path} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
+                <div>
+                  <span className="font-medium text-slate-900">{page.label}</span>
+                  <div className="text-sm text-slate-400 mt-0.5">{page.path}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={page.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-200 hover:bg-slate-100 transition-colors text-slate-500"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={page.href}>Upraviť</Link>
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <a
-                  href="/about"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center h-9 w-9 rounded-md border border-slate-200 hover:bg-slate-100 transition-colors text-slate-500"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/admin/pages/about">Upraviť</Link>
-                </Button>
-              </div>
-            </div>
+            ))}
           </div>
         </CardContent>
       </Card>
