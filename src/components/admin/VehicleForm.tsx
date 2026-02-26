@@ -328,7 +328,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="year">Rok výroby *</Label>
               <Input
@@ -342,16 +342,13 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Inzerovaná cena (€) *</Label>
-              <Input id="price" name="price" type="number" step="0.01" min={0} defaultValue={vehicle?.price.toString()} required placeholder="0" />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="mileage">Najazdené (km) *</Label>
               <Input id="mileage" name="mileage" type="number" min={0} defaultValue={vehicle?.mileage} required placeholder="0" />
             </div>
-          </div>
-
-          <div className={`grid grid-cols-1 gap-4 ${isEdit ? 'sm:grid-cols-2' : ''}`}>
+            <div className="space-y-2">
+              <Label htmlFor="price">Inzerovaná cena (€) *</Label>
+              <Input id="price" name="price" type="number" step="0.01" min={0} defaultValue={vehicle?.price.toString()} required placeholder="0" />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="salePrice">
                 Zľavnená cena (€)
@@ -364,11 +361,13 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
                 step="0.01"
                 min={0}
                 defaultValue={vehicle?.salePrice?.toString() ?? ''}
-                placeholder="Nechajte prázdne ak nie je zľava"
+                placeholder="Prázdne = bez zľavy"
               />
-              <p className="text-xs text-slate-400">Ak vyplníte, musí byť nižšia ako inzerovaná cena. Na webe sa zobrazí ako zľava s preškrtnutou pôvodnou cenou.</p>
             </div>
-            {isEdit && (
+          </div>
+
+          {isEdit && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Stav</Label>
                 <Select value={status} onValueChange={setStatus}>
@@ -378,8 +377,8 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
                   </SelectContent>
                 </Select>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

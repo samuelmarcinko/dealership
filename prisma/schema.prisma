@@ -218,10 +218,11 @@ model CustomPage {
 model VehicleView {
   id        String   @id @default(cuid())
   vehicleId String
+  ip        String   @default("")
   source    String   @default("direct") // direct | google | facebook | instagram | internal | other
   viewedAt  DateTime @default(now())
 
-  @@index([vehicleId])
+  @@index([vehicleId, ip])
   @@index([viewedAt])
   @@map("vehicle_views")
 }

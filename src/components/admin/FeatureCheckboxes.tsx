@@ -141,22 +141,6 @@ export default function FeatureCheckboxes({ items, value, onChange }: Props) {
           )}
         </div>
 
-        {/* Selected chips (quick overview) */}
-        {current.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 p-3 bg-orange-50 border border-orange-100 rounded-lg">
-            {current.map(name => (
-              <span
-                key={name}
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-100 text-orange-800 text-xs rounded-full border border-orange-200"
-              >
-                {name}
-                <button type="button" onClick={() => removeItem(name)} className="hover:text-orange-900">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Items grouped by subcategory */}
         <div className="space-y-4 max-h-80 overflow-y-auto pr-0.5 overscroll-contain">
