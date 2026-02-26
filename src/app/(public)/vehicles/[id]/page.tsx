@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity, Hash, ShieldCheck, Armchair, MonitorPlay, Car, Wrench } from 'lucide-react'
+import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity, Hash, ShieldCheck, Armchair, MonitorPlay, Car, Wrench, Check } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
@@ -41,26 +41,30 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 interface FeatureSectionProps {
   icon: LucideIcon
   title: string
-  colorClasses: { bg: string; border: string; icon: string; badge: string }
   items: string[]
+  isFirst?: boolean
 }
 
-function FeatureSection({ icon: Icon, title, colorClasses, items }: FeatureSectionProps) {
+function FeatureSection({ icon: Icon, title, items, isFirst }: FeatureSectionProps) {
   if (items.length === 0) return null
   return (
-    <div className={`rounded-xl border ${colorClasses.border} ${colorClasses.bg} p-5`}>
-      <h3 className={`font-semibold text-base mb-3 flex items-center gap-2 ${colorClasses.icon}`}>
-        <Icon className="h-4 w-4" />
-        {title}
-      </h3>
-      <div className="flex flex-wrap gap-2">
+    <div className={isFirst ? '' : 'pt-6 border-t border-slate-100'}>
+      {/* Category header */}
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 shrink-0">
+          <Icon className="h-3.5 w-3.5 text-slate-500" />
+        </div>
+        <h3 className="font-semibold text-slate-800 text-sm">{title}</h3>
+        <span className="ml-auto text-xs text-slate-400 tabular-nums">{items.length}</span>
+      </div>
+
+      {/* Items — responsive 2-col grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
         {items.map((feature, i) => (
-          <span
-            key={i}
-            className={`text-sm px-3 py-1 rounded-full border ${colorClasses.badge}`}
-          >
-            {feature}
-          </span>
+          <div key={i} className="flex items-start gap-2 min-w-0">
+            <Check className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+            <span className="text-sm text-slate-600 leading-snug">{feature}</span>
+          </div>
         ))}
       </div>
     </div>
@@ -134,12 +138,12 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const v = vehicle as any
   const featureSections = [
-    { icon: ShieldCheck, title: 'Bezpečnosť',   items: v.safetyFeatures ?? [],    color: { bg: 'bg-blue-50/50',   border: 'border-blue-100',   icon: 'text-blue-700',   badge: 'bg-blue-50 text-blue-700 border-blue-200' } },
-    { icon: Armchair,    title: 'Komfort',       items: v.comfortFeatures ?? [],   color: { bg: 'bg-green-50/50',  border: 'border-green-100',  icon: 'text-green-700',  badge: 'bg-green-50 text-green-700 border-green-200' } },
-    { icon: MonitorPlay, title: 'Multimédiá',    items: v.multimediaFeatures ?? [], color: { bg: 'bg-purple-50/50', border: 'border-purple-100', icon: 'text-purple-700', badge: 'bg-purple-50 text-purple-700 border-purple-200' } },
-    { icon: Car,         title: 'Exteriér',      items: v.exteriorFeatures ?? [],  color: { bg: 'bg-slate-50/50',  border: 'border-slate-100',  icon: 'text-slate-700',  badge: 'bg-slate-100 text-slate-700 border-slate-200' } },
-    { icon: Wrench,      title: 'Ďalšia výbava', items: otherItems,                color: { bg: 'bg-orange-50/50', border: 'border-orange-100', icon: 'text-orange-700', badge: 'bg-orange-50 text-orange-700 border-orange-200' } },
-    { icon: Zap,         title: 'EV / Hybrid',   items: v.evFeatures ?? [],        color: { bg: 'bg-teal-50/50',   border: 'border-teal-100',   icon: 'text-teal-700',   badge: 'bg-teal-50 text-teal-700 border-teal-200' } },
+    { icon: ShieldCheck, title: 'Bezpečnosť',   items: v.safetyFeatures ?? [] },
+    { icon: Armchair,    title: 'Komfort',       items: v.comfortFeatures ?? [] },
+    { icon: MonitorPlay, title: 'Multimédiá',    items: v.multimediaFeatures ?? [] },
+    { icon: Car,         title: 'Exteriér',      items: v.exteriorFeatures ?? [] },
+    { icon: Wrench,      title: 'Ďalšia výbava', items: otherItems },
+    { icon: Zap,         title: 'EV / Hybrid',   items: v.evFeatures ?? [] },
   ].filter(s => s.items.length > 0)
 
   const hasFeatures = featureSections.length > 0
@@ -254,15 +258,15 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
           {/* 4. Feature sections — fourth on mobile, col 1-2 row 3 on desktop */}
           {hasFeatures && (
-            <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6 space-y-4">
-              <h2 className="font-semibold text-slate-900 text-lg">Výbava</h2>
-              {featureSections.map(s => (
+            <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6">
+              <h2 className="font-semibold text-slate-900 text-lg mb-5">Výbava</h2>
+              {featureSections.map((s, i) => (
                 <FeatureSection
                   key={s.title}
                   icon={s.icon}
                   title={s.title}
-                  colorClasses={s.color}
                   items={s.items}
+                  isFirst={i === 0}
                 />
               ))}
             </div>
