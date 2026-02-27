@@ -50,13 +50,19 @@ const navItems: NavItem[] = [
   { href: '/admin/import', label: 'Import', icon: Rss, exact: true },
 ]
 
+const ADMIN_ONLY_HREFS = ['/admin/users', '/admin/settings']
+
 interface Props {
   userName: string
   userEmail: string
+  userRole: string
   onClose?: () => void
 }
 
-export default function AdminSidebar({ userName, userEmail, onClose }: Props) {
+export default function AdminSidebar({ userName, userEmail, userRole, onClose }: Props) {
+  const visibleNavItems = userRole === 'ADMIN'
+    ? navItems
+    : navItems.filter(item => !ADMIN_ONLY_HREFS.includes(item.href))
   const pathname = usePathname()
   const router = useRouter()
 
@@ -95,7 +101,7 @@ export default function AdminSidebar({ userName, userEmail, onClose }: Props) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <div key={item.href}>
             <Link
               href={item.href}

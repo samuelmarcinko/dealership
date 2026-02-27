@@ -8,10 +8,11 @@ import AdminSidebar from '@/components/admin/AdminSidebar'
 interface Props {
   userName: string
   userEmail: string
+  userRole: string
   children: React.ReactNode
 }
 
-export default function AdminShell({ userName, userEmail, children }: Props) {
+export default function AdminShell({ userName, userEmail, userRole, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
 
@@ -38,6 +39,7 @@ export default function AdminShell({ userName, userEmail, children }: Props) {
         <AdminSidebar
           userName={userName}
           userEmail={userEmail}
+          userRole={userRole}
           onClose={() => setSidebarOpen(false)}
         />
       </div>

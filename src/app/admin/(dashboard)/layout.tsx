@@ -9,7 +9,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <ToastProvider>
-      <AdminShell userName={session.name} userEmail={session.email}>
+      <AdminShell userName={session.name} userEmail={session.email} userRole={session.role}>
         {children}
       </AdminShell>
     </ToastProvider>

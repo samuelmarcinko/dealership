@@ -20,6 +20,12 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
+    // Block EDITOR from admin-only sections
+    const ADMIN_ONLY = ['/admin/users', '/admin/settings']
+    if (session.role === 'EDITOR' && ADMIN_ONLY.some(p => pathname.startsWith(p))) {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
+
     // Pass user info to the request headers for use in server components
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-user-id', session.userId)
