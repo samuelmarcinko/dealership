@@ -19,6 +19,7 @@ import {
   Images,
   X,
   Globe,
+  Handshake,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -33,6 +34,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/customers', label: 'Zákazníci', icon: UserCheck },
+  { href: '/admin/consignors', label: 'Komisný predaj', icon: Handshake },
   {
     href: '/admin/vehicles',
     label: 'Ponuka vozidiel',

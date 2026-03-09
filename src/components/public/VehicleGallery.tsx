@@ -2,24 +2,72 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from 'lucide-react'
 import type { VehicleImage } from '@prisma/client'
+
+interface VideoItem {
+  id: string
+  url: string
+  title?: string | null
+}
 
 interface Props {
   images: VehicleImage[]
+  videos?: VideoItem[]
   title: string
 }
 
-export default function VehicleGallery({ images, title }: Props) {
+type MediaItem =
+  | { kind: 'image'; index: number; url: string }
+  | { kind: 'video'; index: number; url: string; embedUrl: string; thumbUrl: string | null }
+
+function getYoutubeThumbnail(url: string): string | null {
+  const m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+  return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : null
+}
+
+function getVideoEmbedUrl(url: string): string | null {
+  const ym = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+  if (ym) return `https://www.youtube.com/embed/${ym[1]}?autoplay=1`
+  const vm = url.match(/vimeo\.com\/(\d+)/)
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1`
+  return null
+}
+
+export default function VehicleGallery({ images, videos = [], title }: Props) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
 
-  const prev = () => setActiveIndex((i) => (i === 0 ? images.length - 1 : i - 1))
-  const next = () => setActiveIndex((i) => (i === images.length - 1 ? 0 : i + 1))
+  // Build unified media list: videos first, then images
+  const media: MediaItem[] = [
+    ...videos
+      .map((v, i) => {
+        const embedUrl = getVideoEmbedUrl(v.url)
+        if (!embedUrl) return null
+        return {
+          kind: 'video' as const,
+          index: i,
+          url: v.url,
+          embedUrl,
+          thumbUrl: getYoutubeThumbnail(v.url),
+        }
+      })
+      .filter(Boolean) as MediaItem[],
+    ...images.map((img, i) => ({
+      kind: 'image' as const,
+      index: i,
+      url: img.url,
+    })),
+  ]
 
-  const prevLightbox = useCallback(() => setLightboxIndex((i) => (i === 0 ? images.length - 1 : i - 1)), [images.length])
-  const nextLightbox = useCallback(() => setLightboxIndex((i) => (i === images.length - 1 ? 0 : i + 1)), [images.length])
+  const total = media.length
+
+  const prev = () => setActiveIndex((i) => (i === 0 ? total - 1 : i - 1))
+  const next = () => setActiveIndex((i) => (i === total - 1 ? 0 : i + 1))
+
+  const prevLightbox = useCallback(() => setLightboxIndex((i) => (i === 0 ? total - 1 : i - 1)), [total])
+  const nextLightbox = useCallback(() => setLightboxIndex((i) => (i === total - 1 ? 0 : i + 1)), [total])
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index)
@@ -41,7 +89,7 @@ export default function VehicleGallery({ images, title }: Props) {
     }
   }, [lightboxOpen, prevLightbox, nextLightbox])
 
-  if (images.length === 0) {
+  if (total === 0) {
     return (
       <div className="aspect-[16/9] bg-slate-200 rounded-xl flex items-center justify-center">
         <span className="text-slate-400 text-sm">Žiadne fotografie</span>
@@ -49,25 +97,45 @@ export default function VehicleGallery({ images, title }: Props) {
     )
   }
 
+  const activeItem = media[activeIndex]
+
   return (
     <div className="space-y-3">
-      {/* Main image */}
+      {/* Main media */}
       <div
-        className="relative aspect-[16/9] bg-slate-100 rounded-xl overflow-hidden cursor-zoom-in group"
+        className="relative aspect-[16/9] bg-slate-900 rounded-xl overflow-hidden cursor-pointer group"
         onClick={() => openLightbox(activeIndex)}
       >
-        <Image
-          src={images[activeIndex].url}
-          alt={`${title} – foto ${activeIndex + 1}`}
-          fill
-          className="object-contain"
-          sizes="(max-width: 1024px) 100vw, 66vw"
-          priority
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-          <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow" />
-        </div>
-        {images.length > 1 && (
+        {activeItem.kind === 'image' ? (
+          <>
+            <Image
+              src={activeItem.url}
+              alt={`${title} – foto ${activeIndex + 1}`}
+              fill
+              className="object-contain"
+              sizes="(max-width: 1024px) 100vw, 66vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+              <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow" />
+            </div>
+          </>
+        ) : (
+          <>
+            {activeItem.thumbUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={activeItem.thumbUrl} alt={title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-slate-800" />
+            )}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+              <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
+                <Play className="h-7 w-7 text-slate-900 ml-1" fill="currentColor" />
+              </div>
+            </div>
+          </>
+        )}
+        {total > 1 && (
           <>
             <button
               onClick={(e) => { e.stopPropagation(); prev() }}
@@ -82,53 +150,66 @@ export default function VehicleGallery({ images, title }: Props) {
               <ChevronRight className="h-5 w-5" />
             </button>
             <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">
-              {activeIndex + 1} / {images.length}
+              {activeIndex + 1} / {total}
             </div>
           </>
         )}
       </div>
 
-      {/* Thumbnails — equal-width grid, max 7 per row */}
-      {images.length > 1 && (() => {
+      {/* Thumbnails */}
+      {total > 1 && (() => {
         const MAX = 7
-        const hasMore = images.length > MAX
-        const visible = hasMore ? images.slice(0, MAX) : images
-        const extraCount = images.length - MAX  // how many hidden beyond the 7th slot
+        const hasMore = total > MAX
+        const visible = hasMore ? media.slice(0, MAX) : media
 
         return (
           <div
             className="grid gap-1.5"
             style={{ gridTemplateColumns: `repeat(${visible.length}, minmax(0, 1fr))` }}
           >
-            {visible.map((img, i) => {
+            {visible.map((item, i) => {
               const isOverlaySlot = hasMore && i === MAX - 1
               const isActive = i === activeIndex
 
               return (
                 <button
-                  key={img.id}
+                  key={i}
                   onClick={() => {
                     setActiveIndex(i)
                     if (isOverlaySlot) openLightbox(i)
                   }}
                   className={[
-                    'relative aspect-[4/3] rounded-lg overflow-hidden transition-all duration-150',
+                    'relative aspect-[4/3] rounded-lg overflow-hidden transition-all duration-150 bg-slate-900',
                     isActive
                       ? 'ring-2 ring-primary ring-offset-1 opacity-100'
                       : 'opacity-60 hover:opacity-90',
                   ].join(' ')}
                 >
-                  <Image
-                    src={img.url}
-                    alt={`Foto ${i + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 13vw, 9vw"
-                  />
+                  {item.kind === 'image' ? (
+                    <Image
+                      src={item.url}
+                      alt={`Foto ${i + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 13vw, 9vw"
+                    />
+                  ) : (
+                    <>
+                      {item.thumbUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.thumbUrl} alt={`Video ${i + 1}`} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-slate-800" />
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Play className="h-4 w-4 text-white drop-shadow" fill="currentColor" />
+                      </div>
+                    </>
+                  )}
                   {isOverlaySlot && (
                     <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
                       <span className="text-white font-bold text-sm sm:text-base leading-none">
-                        +{extraCount + 1}
+                        +{total - MAX + 1}
                       </span>
                     </div>
                   )}
@@ -139,7 +220,7 @@ export default function VehicleGallery({ images, title }: Props) {
         )
       })()}
 
-      {/* Lightbox — rendered in a portal-like pattern, z-[200] above navbar */}
+      {/* Lightbox */}
       {lightboxOpen && (
         <div
           className="fixed inset-0 z-[200] bg-black flex flex-col !mt-0"
@@ -152,7 +233,7 @@ export default function VehicleGallery({ images, title }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <span className="text-white/70 text-sm select-none">
-              {lightboxIndex + 1} / {images.length}
+              {lightboxIndex + 1} / {total}
             </span>
             <button
               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
@@ -162,23 +243,32 @@ export default function VehicleGallery({ images, title }: Props) {
             </button>
           </div>
 
-          {/* Image area — fills remaining space */}
+          {/* Media area */}
           <div className="flex-1 flex items-center justify-center relative min-h-0 px-12 sm:px-16">
             <div
               className="relative w-full h-full max-w-5xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <Image
-                src={images[lightboxIndex].url}
-                alt={`${title} – foto ${lightboxIndex + 1}`}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                quality={90}
-              />
+              {media[lightboxIndex]?.kind === 'image' ? (
+                <Image
+                  src={media[lightboxIndex].url}
+                  alt={`${title} – foto ${lightboxIndex + 1}`}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  quality={90}
+                />
+              ) : media[lightboxIndex]?.kind === 'video' ? (
+                <iframe
+                  src={(media[lightboxIndex] as { embedUrl: string }).embedUrl}
+                  className="w-full h-full"
+                  allowFullScreen
+                  allow="autoplay; fullscreen"
+                />
+              ) : null}
             </div>
 
-            {images.length > 1 && (
+            {total > 1 && (
               <>
                 <button
                   className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-10"
@@ -197,20 +287,32 @@ export default function VehicleGallery({ images, title }: Props) {
           </div>
 
           {/* Thumbnail strip */}
-          {images.length > 1 && (
+          {total > 1 && (
             <div
               className="shrink-0 py-3 px-4 flex gap-2 overflow-x-auto justify-center"
               onClick={(e) => e.stopPropagation()}
             >
-              {images.map((img, i) => (
+              {media.map((item, i) => (
                 <button
-                  key={img.id}
+                  key={i}
                   onClick={() => setLightboxIndex(i)}
-                  className={`relative shrink-0 w-14 h-10 sm:w-16 sm:h-11 rounded overflow-hidden border-2 transition-all ${
+                  className={`relative shrink-0 w-14 h-10 sm:w-16 sm:h-11 rounded overflow-hidden border-2 transition-all bg-slate-800 ${
                     i === lightboxIndex ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'
                   }`}
                 >
-                  <Image src={img.url} alt={`thumb ${i + 1}`} fill className="object-cover" sizes="64px" />
+                  {item.kind === 'image' ? (
+                    <Image src={item.url} alt={`thumb ${i + 1}`} fill className="object-cover" sizes="64px" />
+                  ) : (
+                    <>
+                      {item.thumbUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.thumbUrl} alt="" className="w-full h-full object-cover" />
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Play className="h-3 w-3 text-white" fill="currentColor" />
+                      </div>
+                    </>
+                  )}
                 </button>
               ))}
             </div>

@@ -165,13 +165,14 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
           border-bottom: 1px solid #e2e8f0;
         }
         .price-old {
-          font-size: 15px;
-          color: #94a3b8;
+          font-size: 22px;
+          font-weight: 700;
+          color: #475569;
           text-decoration: line-through;
           line-height: 1.2;
           margin-bottom: 2px;
         }
-        .price-old span { color: #94a3b8; }
+        .price-old span { color: #475569; }
         .price-main {
           font-size: 76px;
           font-weight: 900;
@@ -215,20 +216,20 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
         .spec-icon {
           color: var(--accent);
           flex-shrink: 0;
-          width: 18px;
-          height: 18px;
+          width: 22px;
+          height: 22px;
         }
         .spec-text { display: flex; flex-direction: column; min-width: 0; }
         .spec-label {
-          font-size: 9px;
+          font-size: 10px;
           color: #94a3b8;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           line-height: 1;
         }
         .spec-value {
-          font-size: 13px;
-          font-weight: 600;
+          font-size: 15px;
+          font-weight: 700;
           color: #1e293b;
           line-height: 1.3;
           white-space: nowrap;

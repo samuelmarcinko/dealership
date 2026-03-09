@@ -2,8 +2,9 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Handshake } from 'lucide-react'
+import { ArrowLeft, Handshake, Save } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { Button } from '@/components/ui/button'
 import VehicleForm from '@/components/admin/VehicleForm'
 import SellVehicleButton from '@/components/admin/SellVehicleButton'
 import PrintLabelButton from '@/components/admin/PrintLabelButton'
@@ -50,6 +51,14 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
 
         <div className="flex items-center gap-2">
           <PrintLabelButton vehicleId={vehicle.id} />
+          <Button
+            type="submit"
+            form="vehicle-form"
+            className="bg-orange-500 hover:bg-orange-600 text-white gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Uložiť zmeny
+          </Button>
           {vehicle.status !== 'SOLD' && (
             <SellVehicleButton
               vehicleId={vehicle.id}

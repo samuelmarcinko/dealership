@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
-import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag, Handshake, Search, User, Building2, Loader2 } from 'lucide-react'
+import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag, Handshake, Search, User, Building2, Loader2, ChevronDown, Video, Plus, PlayCircle } from 'lucide-react'
 import MakeCombobox from '@/components/admin/MakeCombobox'
 import FeatureCheckboxes from '@/components/admin/FeatureCheckboxes'
 import type { VehicleWithImages, Customer } from '@/types'
@@ -35,6 +35,23 @@ interface LocalImage {
   url: string
   file?: File
   isPrimary: boolean
+}
+
+interface LocalVideo {
+  id?: string
+  url: string
+  title?: string
+  isNew?: boolean
+  isDeleted?: boolean
+}
+
+function getYoutubeThumbnail(url: string): string | null {
+  const m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+  return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : null
+}
+
+function isYoutubeUrl(url: string): boolean {
+  return /(?:youtube\.com|youtu\.be)/.test(url)
 }
 
 const FUEL_TYPES = [
@@ -95,6 +112,43 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
   const [bodyType, setBodyType] = useState<string>(vehicle?.bodyType ?? '')
   const [status, setStatus] = useState<string>(vehicle?.status ?? 'AVAILABLE')
 
+  // Collapsible sections
+  const [openSections, setOpenSections] = useState({
+    basic: true, tech: true, desc: true, consignment: true, videos: true, photos: true,
+  })
+  function toggleSection(key: keyof typeof openSections) {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  // Videos
+  const [videos, setVideos] = useState<LocalVideo[]>([])
+  const [videoUrlInput, setVideoUrlInput] = useState('')
+  const [videosLoaded, setVideosLoaded] = useState(false)
+
+  React.useEffect(() => {
+    if (!vehicle?.id || videosLoaded) return
+    fetch(`/api/vehicles/${vehicle.id}/videos`)
+      .then(r => r.json())
+      .then(j => {
+        setVideos((j.data ?? []).map((v: { id: string; url: string; title?: string | null }) => ({
+          id: v.id, url: v.url, title: v.title ?? undefined,
+        })))
+        setVideosLoaded(true)
+      })
+      .catch(() => {})
+  }, [vehicle?.id, videosLoaded])
+
+  function addVideo() {
+    const url = videoUrlInput.trim()
+    if (!url) return
+    setVideos(prev => [...prev, { url, isNew: true }])
+    setVideoUrlInput('')
+  }
+
+  function removeVideo(index: number) {
+    setVideos(prev => prev.map((v, i) => i === index ? { ...v, isDeleted: true } : v))
+  }
+
   const [features, setFeatures] = useState<Record<EquipmentCategory, string[]>>(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const v = vehicle as any
@@ -107,6 +161,19 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       EV:         v?.evFeatures ?? [],
     }
   })
+
+  // Custom equipment categories
+  interface CustomCatType { id: string; name: string; icon: string }
+  const [customCategories, setCustomCategories] = useState<CustomCatType[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [customCatFeatures, setCustomCatFeatures] = useState<Record<string, string[]>>((vehicle as any)?.customCategoryFeatures ?? {})
+
+  useEffect(() => {
+    fetch('/api/equipment/categories')
+      .then(r => r.json())
+      .then(j => setCustomCategories(j.data ?? []))
+      .catch(() => {})
+  }, [])
 
   const [images, setImages] = useState<LocalImage[]>(initImages(vehicle))
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
@@ -129,7 +196,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
     if (consignorLoaded) return
     setConsignorLoading(true)
     try {
-      const res = await fetch('/api/customers')
+      const res = await fetch('/api/consignors')
       const json = await res.json()
       setConsignorList(json.data ?? [])
       setConsignorLoaded(true)
@@ -274,6 +341,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       isConsignment,
       consignorId: isConsignment ? consignorId : null,
       commissionRate: isConsignment && commissionRate ? parseFloat(commissionRate) : null,
+      customCategoryFeatures: customCatFeatures,
     }
 
     try {
@@ -318,6 +386,19 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
         }
       }
 
+      // Save videos
+      for (const video of videos) {
+        if (video.isNew && !video.isDeleted) {
+          await fetch(`/api/vehicles/${vehicleId}/videos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: video.url, title: video.title }),
+          })
+        } else if (video.isDeleted && video.id) {
+          await fetch(`/api/vehicles/${vehicleId}/videos?videoId=${video.id}`, { method: 'DELETE' })
+        }
+      }
+
       toast('success', isEdit ? 'Vozidlo aktualizované' : 'Vozidlo pridané')
       router.push('/admin/vehicles')
       router.refresh()
@@ -330,19 +411,22 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form id="vehicle-form" onSubmit={handleSubmit} className="space-y-5">
 
       {/* ── Základné informácie ── */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
-              <Info className="h-4 w-4 text-orange-600" />
+        <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => toggleSection('basic')}>
+          <CardTitle className="text-base font-semibold flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
+                <Info className="h-4 w-4 text-orange-600" />
+              </span>
+              Základné informácie
             </span>
-            Základné informácie
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${openSections.basic ? 'rotate-180' : ''}`} />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        {openSections.basic && <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Názov inzerátu *</Label>
             <Input
@@ -419,20 +503,23 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
               </div>
             </div>
           )}
-        </CardContent>
+        </CardContent>}
       </Card>
 
       {/* ── Technické parametre ── */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Settings className="h-4 w-4 text-blue-600" />
+        <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => toggleSection('tech')}>
+          <CardTitle className="text-base font-semibold flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Settings className="h-4 w-4 text-blue-600" />
+              </span>
+              Technické parametre
             </span>
-            Technické parametre
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${openSections.tech ? 'rotate-180' : ''}`} />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        {openSections.tech && <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Palivo *</Label>
@@ -502,20 +589,23 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
               />
             </div>
           </div>
-        </CardContent>
+        </CardContent>}
       </Card>
 
       {/* ── Popis a výbava ── */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center">
-              <FileText className="h-4 w-4 text-green-600" />
+        <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => toggleSection('desc')}>
+          <CardTitle className="text-base font-semibold flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-green-600" />
+              </span>
+              Popis a výbava
             </span>
-            Popis a výbava
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${openSections.desc ? 'rotate-180' : ''}`} />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        {openSections.desc && <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="description">Popis vozidla</Label>
             <Textarea
@@ -530,24 +620,34 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
             <Label>Výbava vozidla</Label>
             <FeatureCheckboxes
               items={equipmentItems}
-              value={features}
-              onChange={(cat, names) => setFeatures(prev => ({ ...prev, [cat]: names }))}
+              value={{ ...features, ...customCatFeatures }}
+              onChange={(cat, names) => {
+                if (cat === 'SAFETY' || cat === 'COMFORT' || cat === 'MULTIMEDIA' || cat === 'EXTERIOR' || cat === 'OTHER' || cat === 'EV') {
+                  setFeatures(prev => ({ ...prev, [cat]: names }))
+                } else {
+                  setCustomCatFeatures(prev => ({ ...prev, [cat]: names }))
+                }
+              }}
+              customCategories={customCategories}
             />
           </div>
-        </CardContent>
+        </CardContent>}
       </Card>
 
       {/* ── Komisný predaj ── */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
-              <Handshake className="h-4 w-4 text-purple-600" />
+        <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => toggleSection('consignment')}>
+          <CardTitle className="text-base font-semibold flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
+                <Handshake className="h-4 w-4 text-purple-600" />
+              </span>
+              Komisný predaj
             </span>
-            Komisný predaj
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${openSections.consignment ? 'rotate-180' : ''}`} />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        {openSections.consignment && <CardContent className="space-y-4">
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <div
               onClick={() => {
@@ -657,20 +757,88 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
               </div>
             </div>
           )}
-        </CardContent>
+        </CardContent>}
+      </Card>
+
+      {/* ── Videá ── */}
+      <Card>
+        <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => toggleSection('videos')}>
+          <CardTitle className="text-base font-semibold flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center">
+                <Video className="h-4 w-4 text-red-600" />
+              </span>
+              Videá
+            </span>
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${openSections.videos ? 'rotate-180' : ''}`} />
+          </CardTitle>
+        </CardHeader>
+        {openSections.videos && <CardContent className="space-y-4">
+          <p className="text-xs text-slate-400">Pridajte YouTube alebo Vimeo URL. Videá sa zobrazia v galérii na verejnej stránke.</p>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={videoUrlInput}
+              onChange={e => setVideoUrlInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addVideo())}
+              placeholder="https://www.youtube.com/watch?v=..."
+              className="flex-1 h-9 px-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+            <button
+              type="button"
+              onClick={addVideo}
+              disabled={!videoUrlInput.trim()}
+              className="h-9 px-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-md disabled:opacity-40 transition-colors flex items-center gap-1.5"
+            >
+              <Plus className="h-4 w-4" />
+              Pridať
+            </button>
+          </div>
+          {videos.filter(v => !v.isDeleted).length > 0 && (
+            <div className="space-y-2">
+              {videos.map((video, index) => {
+                if (video.isDeleted) return null
+                const thumb = getYoutubeThumbnail(video.url)
+                return (
+                  <div key={index} className="flex items-center gap-3 p-2.5 border border-slate-200 rounded-lg bg-slate-50">
+                    <div className="w-16 h-11 bg-slate-200 rounded overflow-hidden shrink-0 flex items-center justify-center">
+                      {thumb ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={thumb} alt="thumb" className="w-full h-full object-cover" />
+                      ) : (
+                        <PlayCircle className="h-5 w-5 text-slate-400" />
+                      )}
+                    </div>
+                    <span className="flex-1 text-sm text-slate-700 truncate min-w-0">{video.url}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeVideo(index)}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>}
       </Card>
 
       {/* ── Fotografie ── */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
-              <ImageIcon className="h-4 w-4 text-purple-600" />
+        <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => toggleSection('photos')}>
+          <CardTitle className="text-base font-semibold flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
+                <ImageIcon className="h-4 w-4 text-purple-600" />
+              </span>
+              Fotografie
             </span>
-            Fotografie
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${openSections.photos ? 'rotate-180' : ''}`} />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        {openSections.photos && <CardContent className="space-y-4">
           <div
             className="border-2 border-dashed border-slate-200 rounded-xl p-10 text-center cursor-pointer hover:border-orange-300 hover:bg-orange-50/50 transition-colors"
             onClick={() => fileInputRef.current?.click()}
@@ -752,7 +920,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
               </div>
             </>
           )}
-        </CardContent>
+        </CardContent>}
       </Card>
 
       {/* ── Sticky action bar ── */}

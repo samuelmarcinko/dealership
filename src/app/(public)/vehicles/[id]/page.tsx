@@ -24,7 +24,10 @@ import type { PublicVehicle } from '@/types'
 async function getVehicle(idOrSlug: string) {
   return prisma.vehicle.findFirst({
     where: { OR: [{ slug: idOrSlug }, { id: idOrSlug }] },
-    include: { images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] } },
+    include: {
+      images: { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }] },
+      videos: { orderBy: { sortOrder: 'asc' } },
+    },
   })
 }
 
@@ -179,7 +182,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
           {/* 1. Gallery — first on mobile, col 1-2 row 1 on desktop */}
           <div className="lg:col-span-2">
-            <VehicleGallery images={vehicle.images} title={vehicle.title} />
+            <VehicleGallery images={vehicle.images} videos={vehicle.videos} title={vehicle.title} />
           </div>
 
           {/* 2. Info card — second on mobile, col 3 spanning all rows on desktop */}

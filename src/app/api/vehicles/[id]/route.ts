@@ -35,6 +35,7 @@ const updateSchema = z.object({
   isConsignment: z.boolean().optional(),
   consignorId: z.string().nullable().optional(),
   commissionRate: z.number().min(0).max(100).nullable().optional(),
+  customCategoryFeatures: z.record(z.array(z.string())).optional(),
 })
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

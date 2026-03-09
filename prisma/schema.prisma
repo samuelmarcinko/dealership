@@ -86,6 +86,7 @@ model Customer {
   email       String?
   address     String?      @db.Text
   note        String?      @db.Text
+  isConsignor Boolean      @default(false)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   vehicles          Vehicle[]    @relation("VehicleBuyer")
@@ -137,11 +138,36 @@ model Vehicle {
   consignor        Customer?        @relation("VehicleConsignor", fields: [consignorId], references: [id], onDelete: SetNull)
   commissionRate   Decimal?         @db.Decimal(5, 2)
   commissionAmount Decimal?         @db.Decimal(12, 2)
+  customCategoryFeatures Json           @default("{}")
   images           VehicleImage[]
+  videos           VehicleVideo[]
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
   @@map("vehicles")
+}
+
+model VehicleVideo {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  url       String
+  title     String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("vehicle_videos")
+}
+
+model CustomEquipmentCategory {
+  id        String   @id @default(cuid())
+  name      String
+  icon      String   @default("Wrench")
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("custom_equipment_categories")
 }
 
 model VehicleImage {

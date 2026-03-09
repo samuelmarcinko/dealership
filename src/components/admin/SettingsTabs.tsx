@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Building2, Palette, LayoutGrid, ImageIcon, Search, Megaphone, Phone } from 'lucide-react'
+import { Building2, Palette, LayoutGrid, ImageIcon, Search, Megaphone, Phone, ChevronDown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import BrandingForm from '@/components/admin/BrandingForm'
 import ContactSettingsForm from '@/components/admin/ContactSettingsForm'
@@ -22,6 +22,42 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'vzhled', label: 'Vzhľad', icon: Palette },
   { id: 'homepage', label: 'Domovská stránka', icon: LayoutGrid },
 ]
+
+function CollapsibleSection({
+  title,
+  description,
+  icon: Icon,
+  defaultOpen = true,
+  children,
+}: {
+  title: string
+  description?: string
+  icon: React.ElementType
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <Card>
+      <CardHeader
+        className="cursor-pointer select-none"
+        onClick={() => setOpen(o => !o)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Icon className="h-5 w-5 text-orange-500" />
+            <CardTitle className="text-base font-semibold">{title}</CardTitle>
+          </div>
+          <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </div>
+        {description && (
+          <CardDescription className="mt-1">{description}</CardDescription>
+        )}
+      </CardHeader>
+      {open && <CardContent>{children}</CardContent>}
+    </Card>
+  )
+}
 
 export default function SettingsTabs({ settings }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('firma')
@@ -56,118 +92,69 @@ export default function SettingsTabs({ settings }: Props) {
       {/* Tab content */}
       {activeTab === 'firma' && (
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-orange-500" />
-                <CardTitle className="text-base font-semibold">Firemná identita</CardTitle>
-              </div>
-              <CardDescription>
-                Názov firmy, logo, kontaktné údaje, sociálne siete a päta stránky.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BrandingForm settings={settings} />
-            </CardContent>
-          </Card>
+          <CollapsibleSection
+            title="Firemná identita"
+            description="Názov firmy, logo, kontaktné údaje, sociálne siete a päta stránky."
+            icon={Building2}
+          >
+            <BrandingForm settings={settings} />
+          </CollapsibleSection>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-orange-500" />
-                <CardTitle className="text-base font-semibold">Stránka „Kontakt"</CardTitle>
-              </div>
-              <CardDescription>
-                Hero sekcia, otváracie hodiny a mapa.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ContactSettingsForm settings={settings} />
-            </CardContent>
-          </Card>
+          <CollapsibleSection
+            title={'Stránka \u201EKontakt\u201C'}
+            description="Hero sekcia, otváracie hodiny a mapa."
+            icon={Phone}
+          >
+            <ContactSettingsForm settings={settings} />
+          </CollapsibleSection>
         </div>
       )}
 
       {activeTab === 'vzhled' && (
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Palette className="h-5 w-5 text-orange-500" />
-                <CardTitle className="text-base font-semibold">Vizuálny dizajn</CardTitle>
-              </div>
-              <CardDescription>
-                Primárna farba, custom CSS, font webu a štýl navigačnej lišty.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AppearanceSettingsForm settings={settings} />
-            </CardContent>
-          </Card>
+          <CollapsibleSection
+            title="Vizuálny dizajn"
+            description="Primárna farba, custom CSS, font webu a štýl navigačnej lišty."
+            icon={Palette}
+          >
+            <AppearanceSettingsForm settings={settings} />
+          </CollapsibleSection>
         </div>
       )}
 
       {activeTab === 'homepage' && (
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <ImageIcon className="h-5 w-5 text-orange-500" />
-                <CardTitle className="text-base font-semibold">Hero sekcia</CardTitle>
-              </div>
-              <CardDescription>
-                Pozadie, badge, nadpisy a tlačidlá v hlavnej hero sekcii.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <HeroSettingsForm settings={settings} />
-            </CardContent>
-          </Card>
+          <CollapsibleSection
+            title="Hero sekcia"
+            description="Pozadie, badge, nadpisy a tlačidlá v hlavnej hero sekcii."
+            icon={ImageIcon}
+          >
+            <HeroSettingsForm settings={settings} />
+          </CollapsibleSection>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <LayoutGrid className="h-5 w-5 text-orange-500" />
-                <CardTitle className="text-base font-semibold">Obsah domovskej stránky</CardTitle>
-              </div>
-              <CardDescription>
-                Štatistiky (farebný pruh) a sekcia výhod.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <HomepageSettingsForm settings={settings} />
-            </CardContent>
-          </Card>
+          <CollapsibleSection
+            title="Obsah domovskej stránky"
+            description="Štatistiky (farebný pruh) a sekcia výhod."
+            icon={LayoutGrid}
+          >
+            <HomepageSettingsForm settings={settings} />
+          </CollapsibleSection>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Search className="h-5 w-5 text-orange-500" />
-                <CardTitle className="text-base font-semibold">SEO — Domovská stránka</CardTitle>
-              </div>
-              <CardDescription>
-                SEO nadpis, meta popis a OG obrázok (Google, Facebook, Twitter…).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <HomepageSeoSettingsForm settings={settings} />
-            </CardContent>
-          </Card>
+          <CollapsibleSection
+            title="SEO — Domovská stránka"
+            description="SEO nadpis, meta popis a OG obrázok (Google, Facebook, Twitter…)."
+            icon={Search}
+          >
+            <HomepageSeoSettingsForm settings={settings} />
+          </CollapsibleSection>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-orange-500" />
-                <CardTitle className="text-base font-semibold">Oznamovací pruh (Banner)</CardTitle>
-              </div>
-              <CardDescription>
-                Tenký pruh v hornej časti stránky s oznámením alebo akciou.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BannerSettingsForm settings={settings} />
-            </CardContent>
-          </Card>
+          <CollapsibleSection
+            title="Oznamovací pruh (Banner)"
+            description="Tenký pruh v hornej časti stránky s oznámením alebo akciou."
+            icon={Megaphone}
+          >
+            <BannerSettingsForm settings={settings} />
+          </CollapsibleSection>
         </div>
       )}
     </div>

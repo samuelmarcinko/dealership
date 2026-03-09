@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
 import {
   Search, Plus, Trash2, DatabaseZap, ShieldCheck, Armchair, MonitorPlay,
-  Car, Wrench, Zap, X, ChevronDown, ChevronUp,
+  Car, Wrench, Zap, X, ChevronDown, ChevronUp, Star, Heart, Home, Shield,
 } from 'lucide-react'
 import { CATEGORY_ORDER, CATEGORY_META, type EquipmentCategory } from '@/lib/equipmentData'
 
@@ -18,11 +18,17 @@ interface EquipmentItem {
   isActive: boolean
 }
 
+interface CustomCategory {
+  id: string
+  name: string
+  icon: string
+}
+
 interface Props {
   initialItems: EquipmentItem[]
 }
 
-const CATEGORY_ICONS: Record<EquipmentCategory, React.ElementType> = {
+const BUILTIN_ICONS: Record<EquipmentCategory, React.ElementType> = {
   SAFETY:     ShieldCheck,
   COMFORT:    Armchair,
   MULTIMEDIA: MonitorPlay,
@@ -31,25 +37,62 @@ const CATEGORY_ICONS: Record<EquipmentCategory, React.ElementType> = {
   EV:         Zap,
 }
 
+const ICON_OPTIONS = [
+  { name: 'Wrench', icon: Wrench },
+  { name: 'Car', icon: Car },
+  { name: 'Star', icon: Star },
+  { name: 'Heart', icon: Heart },
+  { name: 'Home', icon: Home },
+  { name: 'Zap', icon: Zap },
+  { name: 'Shield', icon: Shield },
+  { name: 'ShieldCheck', icon: ShieldCheck },
+]
+
+const ICON_MAP: Record<string, React.ElementType> = Object.fromEntries(ICON_OPTIONS.map(i => [i.name, i.icon]))
+
+function getIcon(name: string): React.ElementType {
+  return ICON_MAP[name] ?? Wrench
+}
+
 export default function EquipmentManager({ initialItems }: Props) {
   const { toast } = useToast()
   const [items, setItems] = useState<EquipmentItem[]>(initialItems)
-  const [activeTab, setActiveTab] = useState<EquipmentCategory>('SAFETY')
+  const [activeTab, setActiveTab] = useState<string>('SAFETY')
   const [search, setSearch] = useState('')
   const [seeding, setSeeding] = useState(false)
+
+  // Custom categories
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([])
+  const [customCatsLoaded, setCustomCatsLoaded] = useState(false)
+  const [showNewCatForm, setShowNewCatForm] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
+  const [newCatIcon, setNewCatIcon] = useState('Wrench')
+  const [savingCat, setSavingCat] = useState(false)
+
+  React.useEffect(() => {
+    if (customCatsLoaded) return
+    fetch('/api/equipment/categories')
+      .then(r => r.json())
+      .then(j => { setCustomCategories(j.data ?? []); setCustomCatsLoaded(true) })
+      .catch(() => {})
+  }, [customCatsLoaded])
 
   // Add form state
   const [newName, setNewName] = useState('')
   const [newSubcat, setNewSubcat] = useState('')
   const [newSubcatCustom, setNewSubcatCustom] = useState('')
-  const [addingToSubcat, setAddingToSubcat] = useState<string | null>(null) // which subcategory is inline-adding
+  const [addingToSubcat, setAddingToSubcat] = useState<string | null>(null)
 
   // Collapsed subcategory groups
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
+  const isBuiltin = CATEGORY_ORDER.includes(activeTab as EquipmentCategory)
+  const activeCustomCat = !isBuiltin ? customCategories.find(cc => cc.id === activeTab) : null
+
+  // For builtin tabs: use equipment items. For custom tabs: use custom cat items from DB (stored per-vehicle in vehicle JSON, but we manage the category list here)
   const tabItems = useMemo(
-    () => items.filter(i => i.category === activeTab),
-    [items, activeTab]
+    () => isBuiltin ? items.filter(i => i.category === activeTab) : items.filter(i => i.category === activeTab),
+    [items, activeTab, isBuiltin]
   )
 
   const filteredItems = useMemo(() => {
@@ -84,7 +127,6 @@ export default function EquipmentManager({ initialItems }: Props) {
       const json = await res.json()
       if (!res.ok) { toast('error', json.error ?? 'Chyba'); return }
       if (!json.seeded) { toast('error', 'Databáza nie je prázdna — seed sa nevykonal'); return }
-      // Reload items
       const listRes = await fetch('/api/equipment')
       const listJson = await listRes.json()
       setItems(listJson.data ?? [])
@@ -100,11 +142,12 @@ export default function EquipmentManager({ initialItems }: Props) {
     const name = newName.trim()
     const subcat = subcategory === '__new__' ? newSubcatCustom.trim() : subcategory
     if (!name || !subcat) return
+    const category = isBuiltin ? activeTab : activeTab
     try {
       const res = await fetch('/api/equipment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, category: activeTab, subcategory: subcat }),
+        body: JSON.stringify({ name, category, subcategory: subcat }),
       })
       const json = await res.json()
       if (!res.ok) { toast('error', json.error ?? 'Chyba'); return }
@@ -125,6 +168,39 @@ export default function EquipmentManager({ initialItems }: Props) {
     if (!res.ok) { toast('error', 'Chyba pri odstraňovaní'); return }
     setItems(prev => prev.filter(i => i.id !== id))
     toast('success', 'Položka odstránená')
+  }
+
+  async function handleAddCustomCategory() {
+    const name = newCatName.trim()
+    if (!name) return
+    setSavingCat(true)
+    try {
+      const res = await fetch('/api/equipment/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, icon: newCatIcon }),
+      })
+      const json = await res.json()
+      if (!res.ok) { toast('error', json.error ?? 'Chyba'); return }
+      setCustomCategories(prev => [...prev, json.data])
+      setNewCatName('')
+      setNewCatIcon('Wrench')
+      setShowNewCatForm(false)
+      toast('success', 'Kategória pridaná')
+    } catch {
+      toast('error', 'Nastala chyba')
+    } finally {
+      setSavingCat(false)
+    }
+  }
+
+  async function handleDeleteCustomCategory(id: string, name: string) {
+    if (!confirm(`Odstrániť kategóriu „${name}"?`)) return
+    const res = await fetch(`/api/equipment/categories/${id}`, { method: 'DELETE' })
+    if (!res.ok) { toast('error', 'Chyba pri odstraňovaní'); return }
+    setCustomCategories(prev => prev.filter(cc => cc.id !== id))
+    if (activeTab === id) setActiveTab('SAFETY')
+    toast('success', 'Kategória odstránená')
   }
 
   function toggleCollapse(subcat: string) {
@@ -158,7 +234,7 @@ export default function EquipmentManager({ initialItems }: Props) {
         <div className="flex flex-wrap gap-0 border-b border-slate-100 px-2 pt-2">
           {CATEGORY_ORDER.map(cat => {
             const meta = CATEGORY_META[cat]
-            const Icon = CATEGORY_ICONS[cat]
+            const Icon = BUILTIN_ICONS[cat]
             const count = items.filter(i => i.category === cat).length
             return (
               <button
@@ -180,9 +256,97 @@ export default function EquipmentManager({ initialItems }: Props) {
               </button>
             )
           })}
+          {customCategories.map(cc => {
+            const Icon = getIcon(cc.icon)
+            const count = items.filter(i => i.category === cc.id).length
+            return (
+              <div key={cc.id} className="relative group">
+                <button
+                  onClick={() => { setActiveTab(cc.id); setSearch(''); setAddingToSubcat(null) }}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors ${
+                    activeTab === cc.id
+                      ? 'border-orange-500 text-orange-600 bg-white'
+                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {cc.name}
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-normal ${
+                    activeTab === cc.id ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleDeleteCustomCategory(cc.id, cc.name)}
+                  className="absolute -top-0.5 -right-0.5 opacity-0 group-hover:opacity-100 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center transition-opacity"
+                  title="Odstrániť kategóriu"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </div>
+            )
+          })}
+          {/* Add new category button */}
+          <button
+            onClick={() => setShowNewCatForm(true)}
+            className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-slate-600 transition-colors"
+            title="Nová kategória"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
         </div>
 
+        {/* New category form */}
+        {showNewCatForm && (
+          <div className="flex flex-wrap gap-2 p-3 bg-slate-50 border-b border-slate-100">
+            <input
+              value={newCatName}
+              onChange={e => setNewCatName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAddCustomCategory()}
+              placeholder="Názov kategórie..."
+              autoFocus
+              className="h-9 px-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 min-w-48"
+            />
+            <div className="flex gap-1">
+              {ICON_OPTIONS.map(({ name, icon: Icon }) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setNewCatIcon(name)}
+                  className={`w-9 h-9 rounded-md border-2 flex items-center justify-center transition-colors ${
+                    newCatIcon === name ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                  }`}
+                  title={name}
+                >
+                  <Icon className="h-4 w-4" />
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleAddCustomCategory}
+              disabled={!newCatName.trim() || savingCat}
+              className="h-9 px-4 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {savingCat ? 'Ukladám...' : 'Pridať'}
+            </button>
+            <button
+              onClick={() => { setShowNewCatForm(false); setNewCatName(''); setNewCatIcon('Wrench') }}
+              className="h-9 px-3 text-slate-500 hover:text-slate-700 text-sm rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              Zrušiť
+            </button>
+          </div>
+        )}
+
         <CardContent className="pt-4 space-y-4">
+          {/* Custom category info */}
+          {!isBuiltin && activeCustomCat && (
+            <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">
+              Pridajte položky výbavy do kategórie <strong>{activeCustomCat.name}</strong>. Tieto položky budú dostupné ako checkboxy pri úprave vozidiel.
+            </p>
+          )}
+
           {/* Search + Add new subcategory button */}
           <div className="flex gap-3 items-center">
             <div className="relative flex-1">
@@ -208,7 +372,7 @@ export default function EquipmentManager({ initialItems }: Props) {
             </button>
           </div>
 
-          {/* New item form (top-level, new subcategory or select existing) */}
+          {/* New item form */}
           {addingToSubcat !== null && (
             <div className="flex flex-wrap gap-2 p-3 bg-orange-50 border border-orange-200 rounded-xl">
               <select
@@ -259,7 +423,7 @@ export default function EquipmentManager({ initialItems }: Props) {
             <div className="py-10 text-center text-slate-400">
               {items.length === 0
                 ? <p className="text-sm">Databáza je prázdna. Inicializujte predvolenú databázu alebo pridajte položky manuálne.</p>
-                : <p className="text-sm">Žiadne výsledky pre „{search}"</p>
+                : <p className="text-sm">Žiadne výsledky{search ? ` pre „${search}"` : ''}</p>
               }
             </div>
           ) : (

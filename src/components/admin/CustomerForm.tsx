@@ -26,23 +26,27 @@ interface CustomerData {
 
 interface Props {
   initialData?: CustomerData
+  isConsignor?: boolean
 }
 
-export default function CustomerForm({ initialData }: Props) {
+export default function CustomerForm({ initialData, isConsignor = false }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [type, setType] = useState<'PERSON' | 'COMPANY'>(initialData?.type ?? 'PERSON')
+
+  const redirectPath = isConsignor ? '/admin/consignors' : '/admin/customers'
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     const fd = new FormData(e.currentTarget)
 
-    const payload: Record<string, string> = { type }
+    const payload: Record<string, unknown> = { type }
     for (const [key, val] of fd.entries()) {
       payload[key] = val as string
     }
+    if (isConsignor) payload.isConsignor = true
 
     try {
       const url = initialData?.id ? `/api/customers/${initialData.id}` : '/api/customers'
@@ -58,7 +62,7 @@ export default function CustomerForm({ initialData }: Props) {
         return
       }
       toast('success', initialData?.id ? 'Zákazník uložený' : 'Zákazník vytvorený')
-      router.push('/admin/customers')
+      router.push(redirectPath)
       router.refresh()
     } catch {
       toast('error', 'Nastala chyba')
@@ -224,7 +228,7 @@ export default function CustomerForm({ initialData }: Props) {
           disabled={loading}
         >
           {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-          {loading ? 'Ukladám…' : initialData?.id ? 'Uložiť zmeny' : 'Vytvoriť zákazníka'}
+          {loading ? 'Ukladám…' : initialData?.id ? 'Uložiť zmeny' : isConsignor ? 'Vytvoriť komitenta' : 'Vytvoriť zákazníka'}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
           Zrušiť
