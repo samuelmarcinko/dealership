@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
 import { Save, Check } from 'lucide-react'
 
@@ -44,6 +46,8 @@ export default function AppearanceSettingsForm({ settings }: Props) {
   const [loading, setLoading] = useState(false)
   const [fontPreset, setFontPreset] = useState(settings['font_preset'] ?? 'default')
   const [navbarStyle, setNavbarStyle] = useState(settings['navbar_style'] ?? 'dark')
+  const [primaryColor, setPrimaryColor] = useState(settings['primary_color'] ?? '#f97316')
+  const [customCss, setCustomCss] = useState(settings['custom_css'] ?? '')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -56,6 +60,8 @@ export default function AppearanceSettingsForm({ settings }: Props) {
           settings: [
             { key: 'font_preset', value: fontPreset },
             { key: 'navbar_style', value: navbarStyle },
+            { key: 'primary_color', value: primaryColor },
+            { key: 'custom_css', value: customCss },
           ],
         }),
       })
@@ -74,6 +80,36 @@ export default function AppearanceSettingsForm({ settings }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Colors and CSS */}
+      <div className="space-y-4">
+        <p className="text-sm font-medium text-slate-900">Farby a CSS</p>
+        <div className="space-y-2">
+          <Label htmlFor="primary_color">Primárna farba</Label>
+          <div className="flex items-center gap-3">
+            <input
+              id="primary_color"
+              type="color"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+              className="h-10 w-16 cursor-pointer rounded border border-slate-300 p-0.5"
+            />
+            <span className="text-xs text-slate-500">Farba tlačidiel a akcentov na verejnom webe</span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="custom_css">Custom CSS</Label>
+          <Textarea
+            id="custom_css"
+            value={customCss}
+            onChange={(e) => setCustomCss(e.target.value)}
+            rows={4}
+            placeholder=".navbar { background: #1a1a2e; }&#10;.footer { background: #0d0d1a; }"
+            className="font-mono text-sm"
+          />
+          <p className="text-xs text-slate-500">CSS sa aplikuje na verejný web. Používajte opatrne.</p>
+        </div>
+      </div>
+
       {/* Font */}
       <div className="space-y-3">
         <p className="text-sm font-medium text-slate-900">Font webu</p>

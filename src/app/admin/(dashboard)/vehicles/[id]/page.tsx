@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import VehicleForm from '@/components/admin/VehicleForm'
 import SellVehicleButton from '@/components/admin/SellVehicleButton'
+import PrintLabelButton from '@/components/admin/PrintLabelButton'
 
 export const metadata: Metadata = { title: 'Upraviť vozidlo' }
 
@@ -46,21 +47,21 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
           <p className="text-slate-500 text-sm mt-1">{vehicle.title}</p>
         </div>
 
-        {vehicle.status !== 'SOLD' && (
-          <SellVehicleButton
-            vehicleId={vehicle.id}
-            vehicleTitle={vehicle.title}
-            listedPrice={Number(vehicle.price)}
-          />
-        )}
-
-        {vehicle.status === 'SOLD' && vehicle.buyer && (
-          <div className="text-right">
+        <div className="flex items-center gap-2">
+          <PrintLabelButton vehicleId={vehicle.id} />
+          {vehicle.status !== 'SOLD' && (
+            <SellVehicleButton
+              vehicleId={vehicle.id}
+              vehicleTitle={vehicle.title}
+              listedPrice={Number(vehicle.price)}
+            />
+          )}
+          {vehicle.status === 'SOLD' && vehicle.buyer && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium">
               ✓ Predané — {vehicle.buyer.companyName ?? `${vehicle.buyer.firstName ?? ''} ${vehicle.buyer.lastName ?? ''}`.trim()}
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <VehicleForm vehicle={vehicle} topMakes={topMakes} equipmentItems={equipmentItems} />
