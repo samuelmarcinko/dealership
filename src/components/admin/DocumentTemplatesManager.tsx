@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
 import {
   FileText, Upload, Trash2, ToggleLeft, ToggleRight, Info,
-  ChevronDown, ChevronUp, User, Building2, Users,
+  ChevronDown, ChevronUp, User, Building2, Users, Handshake,
 } from 'lucide-react'
 
 interface Template {
@@ -17,6 +17,7 @@ interface Template {
   description: string | null
   originalName: string
   isActive: boolean
+  isConsignment: boolean
   customerType: string | null   // null | 'PERSON' | 'COMPANY'
   sortOrder: number
   createdAt: string | Date
@@ -46,6 +47,13 @@ const VARIABLES = [
     '{predajca_nazov}', '{predajca_adresa}', '{predajca_telefon}',
     '{predajca_email}', '{predajca_ico}', '{predajca_dic}',
   ]},
+  { group: 'Komitent (komisný predaj)', vars: [
+    '{komitent_meno}', '{komitent_priezvisko}', '{komitent_cele_meno}',
+    '{komitent_firma}', '{komitent_nazov}',
+    '{komitent_ico}', '{komitent_dic}', '{komitent_ic_dph}',
+    '{komitent_telefon}', '{komitent_email}', '{komitent_adresa}',
+  ]},
+  { group: 'Komisia', vars: ['{komisia_sadzba}', '{komisia_odmena}'] },
   { group: 'Ostatné', vars: ['{datum_dnes}'] },
 ]
 
@@ -126,6 +134,18 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
     if (!res.ok) { toast('error', 'Nastala chyba'); return }
     const json = await res.json()
     setTemplates((prev) => prev.map((x) => x.id === t.id ? json.data : x))
+  }
+
+  async function toggleConsignment(t: Template) {
+    const res = await fetch(`/api/documents/templates/${t.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isConsignment: !t.isConsignment }),
+    })
+    if (!res.ok) { toast('error', 'Nastala chyba'); return }
+    const json = await res.json()
+    setTemplates((prev) => prev.map((x) => x.id === t.id ? json.data : x))
+    toast('success', t.isConsignment ? 'Zmenené na štandardnú zmluvu' : 'Zmenené na komisnú zmluvu')
   }
 
   async function updateCustomerType(t: Template, value: CustomerType) {
@@ -322,6 +342,12 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className={`font-medium text-sm ${t.isActive ? 'text-slate-900' : 'text-slate-400'}`}>{t.name}</p>
                       <CustomerTypeBadge type={t.customerType as CustomerType} />
+                      {t.isConsignment && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border bg-purple-100 text-purple-700 border-purple-200">
+                          <Handshake className="h-3 w-3" />
+                          Komis
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-400 truncate mt-0.5">{t.originalName}</p>
                     {t.description && <p className="text-xs text-slate-400 truncate">{t.description}</p>}
@@ -354,6 +380,19 @@ export default function DocumentTemplatesManager({ initialTemplates }: Props) {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleConsignment(t)}
+                      className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
+                        t.isConsignment
+                          ? 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}
+                      title={t.isConsignment ? 'Prepnúť na štandardnú' : 'Prepnúť na komisnú'}
+                    >
+                      <Handshake className="h-3.5 w-3.5" />
+                      {t.isConsignment ? 'Komis' : 'Štandard'}
+                    </button>
                     <button
                       type="button"
                       onClick={() => toggleActive(t)}

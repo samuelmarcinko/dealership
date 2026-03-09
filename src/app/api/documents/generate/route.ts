@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     const [vehicle, template, settings] = await Promise.all([
       prisma.vehicle.findUnique({
         where: { id: vehicleId },
-        include: { buyer: true },
+        include: { buyer: true, consignor: true },
       }),
       prisma.documentTemplate.findUnique({ where: { id: templateId } }),
       getTenantSettings(),
@@ -100,6 +100,29 @@ export async function GET(req: NextRequest) {
 
       // Dátum generovania
       datum_dnes:         fmtDate(new Date()),
+
+      // Komitent (vlastník komisného vozidla)
+      komitent_meno:        fmt(vehicle.consignor?.firstName),
+      komitent_priezvisko:  fmt(vehicle.consignor?.lastName),
+      komitent_cele_meno:   vehicle.consignor
+        ? `${fmt(vehicle.consignor.firstName)} ${fmt(vehicle.consignor.lastName)}`.trim()
+        : '',
+      komitent_firma:       fmt(vehicle.consignor?.companyName),
+      komitent_nazov:       vehicle.consignor
+        ? (vehicle.consignor.type === 'COMPANY'
+            ? (vehicle.consignor.companyName ?? '')
+            : `${vehicle.consignor.firstName ?? ''} ${vehicle.consignor.lastName ?? ''}`.trim())
+        : '',
+      komitent_ico:         fmt(vehicle.consignor?.ico),
+      komitent_dic:         fmt(vehicle.consignor?.dic),
+      komitent_ic_dph:      fmt(vehicle.consignor?.icDph),
+      komitent_telefon:     fmt(vehicle.consignor?.phone),
+      komitent_email:       fmt(vehicle.consignor?.email),
+      komitent_adresa:      fmt(vehicle.consignor?.address),
+
+      // Komisia
+      komisia_sadzba:       vehicle.commissionRate != null ? `${Number(vehicle.commissionRate)} %` : '',
+      komisia_odmena:       vehicle.commissionAmount != null ? fmtPrice(vehicle.commissionAmount) : '',
     }
 
     const fileBuffer = await readFile(template.filePath)

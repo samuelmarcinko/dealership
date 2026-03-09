@@ -14,6 +14,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     where: { id },
     data: {
       ...(typeof body.isActive === 'boolean' ? { isActive: body.isActive } : {}),
+      ...(typeof body.isConsignment === 'boolean' ? { isConsignment: body.isConsignment } : {}),
       ...(typeof body.sortOrder === 'number' ? { sortOrder: body.sortOrder } : {}),
       ...(typeof body.name === 'string' ? { name: body.name } : {}),
       ...('customerType' in body ? { customerType: body.customerType === 'PERSON' || body.customerType === 'COMPANY' ? body.customerType : null } : {}),

@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Pencil, FileInput, UserPen, Search } from 'lucide-react'
+import { Plus, Pencil, FileInput, UserPen, Search, Handshake } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +29,7 @@ const FUEL_OPTIONS = [
 export default async function AdminVehiclesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; fuelType?: string }>
+  searchParams: Promise<{ q?: string; status?: string; fuelType?: string; consignment?: string }>
 }) {
   const sp = await searchParams
   const q = sp.q?.trim() || undefined
@@ -37,6 +37,7 @@ export default async function AdminVehiclesPage({
   const fuelFilter = sp.fuelType && Object.values(FuelType).includes(sp.fuelType as FuelType)
     ? sp.fuelType as FuelType
     : undefined
+  const consignmentFilter = sp.consignment === '1' ? true : undefined
 
   const vehicles = await prisma.vehicle.findMany({
     where: {
@@ -49,6 +50,7 @@ export default async function AdminVehiclesPage({
         ],
       }),
       ...(fuelFilter && { fuelType: fuelFilter }),
+      ...(consignmentFilter && { isConsignment: true }),
     },
     orderBy: { createdAt: 'desc' },
     include: {
@@ -56,7 +58,7 @@ export default async function AdminVehiclesPage({
     },
   })
 
-  const hasFilter = !!(q || statusFilter || fuelFilter)
+  const hasFilter = !!(q || statusFilter || fuelFilter || consignmentFilter)
 
   return (
     <div className="space-y-6">
@@ -112,6 +114,17 @@ export default async function AdminVehiclesPage({
             {FUEL_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-slate-600">Zdroj</label>
+          <select
+            name="consignment"
+            defaultValue={sp.consignment ?? ''}
+            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          >
+            <option value="">Všetky</option>
+            <option value="1">Len komis</option>
           </select>
         </div>
         <button
@@ -208,7 +221,11 @@ export default async function AdminVehiclesPage({
                         <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
                       </TableCell>
                       <TableCell>
-                        {vehicle.externalId ? (
+                        {vehicle.isConsignment ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">
+                            <Handshake className="h-3.5 w-3.5" />Komis
+                          </span>
+                        ) : vehicle.externalId ? (
                           <span className="inline-flex items-center gap-1 text-xs text-slate-500">
                             <FileInput className="h-3.5 w-3.5" />XML
                           </span>

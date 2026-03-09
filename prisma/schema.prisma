@@ -86,9 +86,10 @@ model Customer {
   email       String?
   address     String?      @db.Text
   note        String?      @db.Text
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  vehicles    Vehicle[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  vehicles          Vehicle[]    @relation("VehicleBuyer")
+  consignedVehicles Vehicle[]    @relation("VehicleConsignor")
 
   @@map("customers")
 }
@@ -125,14 +126,20 @@ model Vehicle {
   externalId     String?          @unique
   importedAt     DateTime?
   // Predaj
-  soldAt         DateTime?
-  soldPrice      Decimal?         @db.Decimal(12, 2)
-  soldNote       String?          @db.Text
-  buyer          Customer?        @relation(fields: [buyerId], references: [id])
-  buyerId        String?
-  images         VehicleImage[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  soldAt           DateTime?
+  soldPrice        Decimal?         @db.Decimal(12, 2)
+  soldNote         String?          @db.Text
+  buyer            Customer?        @relation("VehicleBuyer", fields: [buyerId], references: [id])
+  buyerId          String?
+  // Komisný predaj
+  isConsignment    Boolean          @default(false)
+  consignorId      String?
+  consignor        Customer?        @relation("VehicleConsignor", fields: [consignorId], references: [id], onDelete: SetNull)
+  commissionRate   Decimal?         @db.Decimal(5, 2)
+  commissionAmount Decimal?         @db.Decimal(12, 2)
+  images           VehicleImage[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@map("vehicles")
 }
@@ -155,9 +162,10 @@ model DocumentTemplate {
   description  String?
   originalName String
   filePath     String
-  isActive     Boolean  @default(true)
-  customerType String?  // null = všetci | 'PERSON' | 'COMPANY'
-  sortOrder    Int      @default(0)
+  isActive      Boolean  @default(true)
+  isConsignment Boolean  @default(false)
+  customerType  String?  // null = všetci | 'PERSON' | 'COMPANY'
+  sortOrder     Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

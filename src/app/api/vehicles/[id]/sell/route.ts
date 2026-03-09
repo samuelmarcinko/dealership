@@ -8,6 +8,7 @@ const schema = z.object({
   soldPrice: z.number().positive(),
   soldAt: z.string().datetime().optional(),
   soldNote: z.string().optional(),
+  commissionRate: z.number().min(0).max(100).nullable().optional(),
 })
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -29,6 +30,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Vozidlo je už predané' }, { status: 409 })
     }
 
+    const commissionRate = parsed.data.commissionRate ?? null
+    const commissionAmount =
+      vehicle.isConsignment && commissionRate != null
+        ? (parsed.data.soldPrice * commissionRate) / 100
+        : null
+
     const updated = await prisma.vehicle.update({
       where: { id },
       data: {
@@ -37,6 +44,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         soldPrice: parsed.data.soldPrice,
         soldAt: parsed.data.soldAt ? new Date(parsed.data.soldAt) : new Date(),
         soldNote: parsed.data.soldNote ?? null,
+        ...(commissionRate != null ? { commissionRate } : {}),
+        ...(commissionAmount != null ? { commissionAmount } : {}),
       },
     })
 

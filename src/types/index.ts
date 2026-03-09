@@ -1,7 +1,9 @@
-import type { Vehicle, VehicleImage, User, TenantSettings } from '@prisma/client'
+import type { Vehicle, VehicleImage, Customer, User, TenantSettings } from '@prisma/client'
 
 export type VehicleWithImages = Vehicle & {
   images: VehicleImage[]
+  buyer?: Customer | null
+  consignor?: Customer | null
 }
 
 export type PublicVehicle = Pick<
@@ -11,7 +13,7 @@ export type PublicVehicle = Pick<
   primaryImage: VehicleImage | null
 }
 
-export type { Vehicle, VehicleImage, User, TenantSettings }
+export type { Vehicle, VehicleImage, Customer, User, TenantSettings }
 
 export type ApiResponse<T = null> =
   | { success: true; data: T }

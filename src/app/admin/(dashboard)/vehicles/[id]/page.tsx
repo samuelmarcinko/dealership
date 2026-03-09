@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Handshake } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import VehicleForm from '@/components/admin/VehicleForm'
 import SellVehicleButton from '@/components/admin/SellVehicleButton'
@@ -18,6 +18,7 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
       include: {
         images: { orderBy: { sortOrder: 'asc' } },
         buyer: true,
+        consignor: true,
       },
     }),
     prisma.vehicle.groupBy({
@@ -54,6 +55,8 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
               vehicleId={vehicle.id}
               vehicleTitle={vehicle.title}
               listedPrice={Number(vehicle.price)}
+              isConsignment={vehicle.isConsignment}
+              vehicleCommissionRate={vehicle.commissionRate != null ? Number(vehicle.commissionRate) : null}
             />
           )}
           {vehicle.status === 'SOLD' && vehicle.buyer && (
@@ -63,6 +66,24 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
           )}
         </div>
       </div>
+
+      {/* Consignor infobox */}
+      {vehicle.isConsignment && vehicle.consignor && (
+        <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-sm">
+          <Handshake className="h-4 w-4 text-purple-600 shrink-0" />
+          <span className="font-medium text-purple-800">Komisný predaj</span>
+          <span className="text-purple-600">·</span>
+          <Link
+            href={`/admin/customers/${vehicle.consignor.id}`}
+            className="text-purple-700 hover:underline font-medium"
+          >
+            {vehicle.consignor.companyName ?? `${vehicle.consignor.firstName ?? ''} ${vehicle.consignor.lastName ?? ''}`.trim()}
+          </Link>
+          {vehicle.commissionRate != null && (
+            <span className="ml-auto text-purple-700 font-medium">{Number(vehicle.commissionRate)} %</span>
+          )}
+        </div>
+      )}
 
       <VehicleForm vehicle={vehicle} topMakes={topMakes} equipmentItems={equipmentItems} />
     </div>

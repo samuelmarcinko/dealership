@@ -10,11 +10,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
-import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag } from 'lucide-react'
+import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag, Handshake, Search, User, Building2, Loader2 } from 'lucide-react'
 import MakeCombobox from '@/components/admin/MakeCombobox'
 import FeatureCheckboxes from '@/components/admin/FeatureCheckboxes'
-import type { VehicleWithImages } from '@/types'
+import type { VehicleWithImages, Customer } from '@/types'
 import type { EquipmentCategory } from '@/lib/equipmentData'
+import { customerDisplayName, customerShortInfo } from '@/lib/customer'
 
 interface EquipmentItem {
   id: string
@@ -109,6 +110,42 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
 
   const [images, setImages] = useState<LocalImage[]>(initImages(vehicle))
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
+
+  // Komisný predaj
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const v = vehicle as any
+  const [isConsignment, setIsConsignment] = useState<boolean>(v?.isConsignment ?? false)
+  const [consignorId, setConsignorId] = useState<string | null>(v?.consignorId ?? null)
+  const [commissionRate, setCommissionRate] = useState<string>(
+    v?.commissionRate != null ? String(Number(v.commissionRate)) : ''
+  )
+  const [consignorSearch, setConsignorSearch] = useState('')
+  const [consignorList, setConsignorList] = useState<Customer[]>([])
+  const [consignorLoading, setConsignorLoading] = useState(false)
+  const [consignorLoaded, setConsignorLoaded] = useState(false)
+  const [selectedConsignor, setSelectedConsignor] = useState<Customer | null>(v?.consignor ?? null)
+
+  async function loadConsignors() {
+    if (consignorLoaded) return
+    setConsignorLoading(true)
+    try {
+      const res = await fetch('/api/customers')
+      const json = await res.json()
+      setConsignorList(json.data ?? [])
+      setConsignorLoaded(true)
+    } catch { /* ignore */ } finally {
+      setConsignorLoading(false)
+    }
+  }
+
+  const filteredConsignors = consignorList.filter((c) => {
+    const q = consignorSearch.toLowerCase()
+    return (
+      customerDisplayName(c).toLowerCase().includes(q) ||
+      (c.email ?? '').toLowerCase().includes(q) ||
+      (c.phone ?? '').includes(q)
+    )
+  })
 
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -234,6 +271,9 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       evFeatures: features.EV,
       vin: (data.get('vin') as string) || null,
       status,
+      isConsignment,
+      consignorId: isConsignment ? consignorId : null,
+      commissionRate: isConsignment && commissionRate ? parseFloat(commissionRate) : null,
     }
 
     try {
@@ -494,6 +534,129 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
               onChange={(cat, names) => setFeatures(prev => ({ ...prev, [cat]: names }))}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Komisný predaj ── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
+              <Handshake className="h-4 w-4 text-purple-600" />
+            </span>
+            Komisný predaj
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => {
+                const next = !isConsignment
+                setIsConsignment(next)
+                if (next) loadConsignors()
+              }}
+              className={`relative w-11 h-6 rounded-full transition-colors ${isConsignment ? 'bg-purple-600' : 'bg-slate-200'}`}
+            >
+              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isConsignment ? 'translate-x-5' : ''}`} />
+            </div>
+            <span className="text-sm font-medium text-slate-700">Toto vozidlo je v komisnom predaji</span>
+          </label>
+
+          {isConsignment && (
+            <div className="space-y-4 border-t pt-4">
+              {/* Konsignor select */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Komitent (vlastník vozidla) *</Label>
+                {selectedConsignor ? (
+                  <div className="flex items-center justify-between p-3 bg-purple-50 border-2 border-purple-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
+                        {selectedConsignor.type === 'COMPANY'
+                          ? <Building2 className="h-4 w-4 text-purple-600" />
+                          : <User className="h-4 w-4 text-purple-600" />
+                        }
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900 text-sm">{customerDisplayName(selectedConsignor)}</p>
+                        <p className="text-xs text-slate-500">{customerShortInfo(selectedConsignor)}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedConsignor(null); setConsignorId(null) }}
+                      className="text-xs text-purple-600 hover:text-purple-800 font-medium"
+                    >
+                      Zmeniť
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={consignorSearch}
+                        onChange={(e) => setConsignorSearch(e.target.value)}
+                        placeholder="Hľadať zákazníka..."
+                        className="w-full h-9 pl-9 pr-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                      />
+                    </div>
+                    <div className="border border-slate-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                      {consignorLoading ? (
+                        <div className="flex items-center justify-center py-6 text-slate-400">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />Načítavam...
+                        </div>
+                      ) : filteredConsignors.length === 0 ? (
+                        <div className="py-6 text-center text-sm text-slate-400">
+                          {consignorList.length === 0 ? 'Žiadni zákazníci' : 'Žiadny výsledok'}
+                        </div>
+                      ) : (
+                        filteredConsignors.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => { setSelectedConsignor(c); setConsignorId(c.id) }}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-left"
+                          >
+                            <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
+                              {c.type === 'COMPANY'
+                                ? <Building2 className="h-3.5 w-3.5 text-slate-500" />
+                                : <User className="h-3.5 w-3.5 text-slate-500" />
+                              }
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-slate-900 text-sm truncate">{customerDisplayName(c)}</p>
+                              <p className="text-xs text-slate-400 truncate">{c.phone ?? c.email ?? ''}</p>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Commission rate */}
+              <div className="space-y-1.5">
+                <Label htmlFor="commissionRate">
+                  Dohodnutá provízia (%)
+                  <span className="text-slate-400 font-normal text-xs ml-1">— nepovinné</span>
+                </Label>
+                <input
+                  id="commissionRate"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="0.01"
+                  value={commissionRate}
+                  onChange={(e) => setCommissionRate(e.target.value)}
+                  placeholder="napr. 10"
+                  className="h-9 w-40 rounded-md border border-slate-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                <p className="text-xs text-slate-400">Odmena sa vypočíta z predajnej ceny pri predaji.</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

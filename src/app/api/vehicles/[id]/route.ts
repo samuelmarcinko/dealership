@@ -32,6 +32,9 @@ const updateSchema = z.object({
   evFeatures: z.array(z.string()).optional(),
   vin: z.string().max(17).nullable().optional(),
   status: z.nativeEnum(VehicleStatus).optional(),
+  isConsignment: z.boolean().optional(),
+  consignorId: z.string().nullable().optional(),
+  commissionRate: z.number().min(0).max(100).nullable().optional(),
 })
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

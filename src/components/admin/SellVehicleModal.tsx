@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
 import {
   X, Search, User, Building2, CheckCircle, Loader2, DollarSign,
-  FileText, Download, ArrowRight,
+  FileText, Download, ArrowRight, Handshake,
 } from 'lucide-react'
 import { customerDisplayName, customerShortInfo } from '@/lib/customer'
 
@@ -30,6 +30,7 @@ interface Template {
   description: string | null
   originalName: string
   isActive: boolean
+  isConsignment: boolean
   customerType: string | null
 }
 
@@ -37,10 +38,12 @@ interface Props {
   vehicleId: string
   vehicleTitle: string
   listedPrice: number
+  isConsignment?: boolean
+  vehicleCommissionRate?: number | null
   onClose: () => void
 }
 
-export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice, onClose }: Props) {
+export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice, isConsignment, vehicleCommissionRate, onClose }: Props) {
   const router = useRouter()
   const { toast } = useToast()
 
@@ -54,6 +57,9 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
   const [soldPrice, setSoldPrice] = useState(listedPrice.toString())
   const [soldAt, setSoldAt] = useState(new Date().toISOString().split('T')[0])
   const [soldNote, setSoldNote] = useState('')
+  const [commissionRate, setCommissionRate] = useState(
+    vehicleCommissionRate != null ? String(vehicleCommissionRate) : ''
+  )
   const [submitting, setSubmitting] = useState(false)
 
   const [templates, setTemplates] = useState<Template[]>([])
@@ -89,6 +95,7 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
     }
     setSubmitting(true)
     try {
+      const rate = commissionRate ? parseFloat(commissionRate) : null
       const res = await fetch(`/api/vehicles/${vehicleId}/sell`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,6 +104,7 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
           soldPrice: price,
           soldAt: new Date(soldAt).toISOString(),
           soldNote: soldNote || undefined,
+          ...(isConsignment && rate != null ? { commissionRate: rate } : {}),
         }),
       })
       const json = await res.json()
@@ -114,7 +122,9 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
       const tplRes = await fetch('/api/documents/templates')
       const tplJson = await tplRes.json()
       const active = (tplJson.data ?? []).filter((t: Template) =>
-        t.isActive && (!t.customerType || t.customerType === selected!.type)
+        t.isActive &&
+        (!t.customerType || t.customerType === selected!.type) &&
+        (isConsignment ? t.isConsignment : !t.isConsignment)
       )
       setTemplates(active)
       setStep('documents')
@@ -123,7 +133,7 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
     } finally {
       setSubmitting(false)
     }
-  }, [selectedId, soldPrice, soldAt, soldNote, vehicleId, selected, router, toast])
+  }, [selectedId, soldPrice, soldAt, soldNote, commissionRate, isConsignment, vehicleId, selected, router, toast])
 
   async function handleDownload(templateId: string, templateName: string) {
     setDownloading(templateId)
@@ -256,6 +266,42 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
                   </div>
                 )}
               </div>
+
+              {/* Commission rate (consignment only) */}
+              {isConsignment && (
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-purple-800">
+                    <Handshake className="h-4 w-4" />
+                    Komisionárska odmena
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="commissionRate" className="text-xs text-purple-700">Sadzba provízie (%)</Label>
+                      <input
+                        id="commissionRate"
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="0.01"
+                        value={commissionRate}
+                        onChange={(e) => setCommissionRate(e.target.value)}
+                        placeholder="0"
+                        className="h-9 w-28 rounded-md border border-purple-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                      />
+                    </div>
+                    {commissionRate && !isNaN(parseFloat(commissionRate)) && !isNaN(parseFloat(soldPrice.replace(',', '.'))) && (
+                      <div className="text-sm">
+                        <p className="text-xs text-purple-600">Odmena bazáru</p>
+                        <p className="font-semibold text-purple-900">
+                          {new Intl.NumberFormat('sk-SK', { style: 'currency', currency: 'EUR' }).format(
+                            (parseFloat(soldPrice.replace(',', '.')) * parseFloat(commissionRate)) / 100
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Sale details */}
               <div className="grid grid-cols-2 gap-4 border-t pt-4">

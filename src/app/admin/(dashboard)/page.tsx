@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Car, Users, CheckCircle, Clock, XCircle, ArrowRight, Plus, Gauge, Fuel, CalendarDays, Eye, TrendingUp } from 'lucide-react'
+import { Car, Users, CheckCircle, Clock, XCircle, ArrowRight, Plus, Gauge, Fuel, CalendarDays, Eye, TrendingUp, Handshake } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: 'Dashboard' }
 async function getStats() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-  const [totalVehicles, available, reserved, sold, totalUsers, recentVehicles, topViewsRaw, totalViews, sourceBreakdown] = await Promise.all([
+  const [totalVehicles, available, reserved, sold, totalUsers, recentVehicles, topViewsRaw, totalViews, sourceBreakdown, consignmentActive, consignmentSold, consignmentRevenue] = await Promise.all([
     prisma.vehicle.count(),
     prisma.vehicle.count({ where: { status: 'AVAILABLE' } }),
     prisma.vehicle.count({ where: { status: 'RESERVED' } }),
@@ -39,6 +39,9 @@ async function getStats() {
       where: { viewedAt: { gte: thirtyDaysAgo } },
       orderBy: { _count: { id: 'desc' } },
     }),
+    prisma.vehicle.count({ where: { isConsignment: true, status: { not: 'SOLD' } } }),
+    prisma.vehicle.count({ where: { isConsignment: true, status: 'SOLD' } }),
+    prisma.vehicle.aggregate({ where: { isConsignment: true, status: 'SOLD' }, _sum: { commissionAmount: true } }),
   ])
 
   // Fetch vehicle details for top viewed
@@ -56,7 +59,7 @@ async function getStats() {
     vehicle: topVehicleDetails.find((v) => v.id === r.vehicleId) ?? null,
   }))
 
-  return { totalVehicles, available, reserved, sold, totalUsers, recentVehicles, topVehicles, totalViews, sourceBreakdown }
+  return { totalVehicles, available, reserved, sold, totalUsers, recentVehicles, topVehicles, totalViews, sourceBreakdown, consignmentActive, consignmentSold, consignmentRevenue: Number(consignmentRevenue._sum.commissionAmount ?? 0) }
 }
 
 const sourceLabel: Record<string, string> = {
@@ -78,7 +81,7 @@ const sourceBadgeClass: Record<string, string> = {
 }
 
 export default async function DashboardPage() {
-  const { totalVehicles, available, reserved, sold, totalUsers, recentVehicles, topVehicles, totalViews, sourceBreakdown } = await getStats()
+  const { totalVehicles, available, reserved, sold, totalUsers, recentVehicles, topVehicles, totalViews, sourceBreakdown, consignmentActive, consignmentSold, consignmentRevenue } = await getStats()
 
   const statCards = [
     { label: 'Celkom vozidiel', value: totalVehicles, icon: Car, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -119,6 +122,34 @@ export default async function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      {/* Consignment stats */}
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="inline-flex p-2 rounded-lg bg-purple-50">
+              <Handshake className="h-5 w-5 text-purple-600" />
+            </div>
+            <div className="font-semibold text-slate-900">Komisný predaj</div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <div className="text-2xl font-bold text-slate-900">{consignmentActive}</div>
+              <div className="text-slate-500 text-sm mt-0.5">Aktívne</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-slate-900">{consignmentSold}</div>
+              <div className="text-slate-500 text-sm mt-0.5">Predané</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-purple-700">
+                {new Intl.NumberFormat('sk-SK', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(consignmentRevenue)}
+              </div>
+              <div className="text-slate-500 text-sm mt-0.5">Príjmy z provízií</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
