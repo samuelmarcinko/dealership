@@ -19,7 +19,10 @@
       "Bash(npm info:*)",
       "Bash(npx prisma migrate dev:*)",
       "Bash(DATABASE_URL=\"postgresql://user:pass@localhost:5432/db\" npx prisma generate:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(gh run:*)",
+      "Bash(gh.exe run:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

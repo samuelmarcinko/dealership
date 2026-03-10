@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 
-export interface MenuItem {
+interface MenuItem {
   id: string
   href: string
   label: string
@@ -11,7 +11,7 @@ export interface MenuItem {
   isBuiltin: boolean
 }
 
-export const DEFAULT_MENU_ITEMS: MenuItem[] = [
+const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { id: 'home', href: '/', label: 'Domov', exact: true, enabled: true, isBuiltin: true },
   { id: 'vehicles', href: '/vehicles', label: 'Vozidlá', enabled: true, isBuiltin: true },
   { id: 'about', href: '/about', label: 'O nás', enabled: true, isBuiltin: true },
