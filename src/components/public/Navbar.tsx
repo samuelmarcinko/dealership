@@ -18,10 +18,11 @@ const builtInNavLinks = [
 
 interface Props {
   branding?: TenantBranding
+  navLinks?: { href: string; label: string; exact?: boolean }[]
   customNavLinks?: { href: string; label: string }[]
 }
 
-export default function Navbar({ branding, customNavLinks = [] }: Props) {
+export default function Navbar({ branding, navLinks, customNavLinks = [] }: Props) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { count: compareCount, vehicles: compareVehicles } = useCompare()
@@ -33,7 +34,7 @@ export default function Navbar({ branding, customNavLinks = [] }: Props) {
   const name = branding?.businessName ?? 'AutoBazar'
   const style = branding?.navbarStyle ?? 'dark'
 
-  const allLinks = [
+  const allLinks = navLinks ?? [
     ...builtInNavLinks,
     ...customNavLinks.map((l) => ({ href: l.href, label: l.label, exact: false })),
   ]

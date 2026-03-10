@@ -39,26 +39,19 @@ export default function VehicleGallery({ images, videos = [], title }: Props) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
 
-  // Build unified media list: videos first, then images
+  // Build unified media list: primary image first, then videos, then remaining images
+  const validVideos = videos
+    .map((v, i) => {
+      const embedUrl = getVideoEmbedUrl(v.url)
+      if (!embedUrl) return null
+      return { kind: 'video' as const, index: i, url: v.url, embedUrl, thumbUrl: getYoutubeThumbnail(v.url) }
+    })
+    .filter(Boolean) as MediaItem[]
+
   const media: MediaItem[] = [
-    ...videos
-      .map((v, i) => {
-        const embedUrl = getVideoEmbedUrl(v.url)
-        if (!embedUrl) return null
-        return {
-          kind: 'video' as const,
-          index: i,
-          url: v.url,
-          embedUrl,
-          thumbUrl: getYoutubeThumbnail(v.url),
-        }
-      })
-      .filter(Boolean) as MediaItem[],
-    ...images.map((img, i) => ({
-      kind: 'image' as const,
-      index: i,
-      url: img.url,
-    })),
+    ...(images.length > 0 ? [{ kind: 'image' as const, index: 0, url: images[0].url }] : []),
+    ...validVideos,
+    ...images.slice(1).map((img, i) => ({ kind: 'image' as const, index: i + 1, url: img.url })),
   ]
 
   const total = media.length

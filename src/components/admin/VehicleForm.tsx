@@ -196,7 +196,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
     if (consignorLoaded) return
     setConsignorLoading(true)
     try {
-      const res = await fetch('/api/consignors')
+      const res = await fetch('/api/customers')
       const json = await res.json()
       setConsignorList(json.data ?? [])
       setConsignorLoaded(true)

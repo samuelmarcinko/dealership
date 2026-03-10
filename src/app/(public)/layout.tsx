@@ -13,15 +13,32 @@ import { LayoutDashboard } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [branding, navPages, session] = await Promise.all([
+  const [branding, navPages, session, navMenuSetting] = await Promise.all([
     getTenantBranding(),
     prisma.customPage
       .findMany({ where: { isPublished: true, showInNav: true }, orderBy: { navOrder: 'asc' } })
       .catch(() => [] as { slug: string; title: string }[]),
     getServerSession(),
+    prisma.tenantSettings.findUnique({ where: { key: 'nav_menu_config' } }),
   ])
 
   const customNavLinks = navPages.map((p) => ({ href: `/${p.slug}`, label: p.title }))
+
+  // If a custom menu config is saved, use it; otherwise fall back to defaults
+  let navLinks: { href: string; label: string; exact?: boolean }[] | undefined
+  if (navMenuSetting?.value) {
+    try {
+      const config = JSON.parse(navMenuSetting.value)
+      if (Array.isArray(config.items)) {
+        navLinks = [
+          ...(config.items as { href: string; label: string; exact?: boolean; enabled: boolean }[])
+            .filter((item) => item.enabled !== false)
+            .map(({ href, label, exact }) => ({ href, label, exact })),
+          ...customNavLinks,
+        ]
+      }
+    } catch {}
+  }
 
   const preset = FONT_PRESETS[branding.fontPreset ?? 'default'] ?? FONT_PRESETS.default
 
@@ -48,7 +65,7 @@ export default async function PublicLayout({ children }: { children: React.React
           />
         )}
         <div className="flex flex-col min-h-screen">
-          <Navbar branding={branding} customNavLinks={customNavLinks} />
+          <Navbar branding={branding} navLinks={navLinks} customNavLinks={customNavLinks} />
           <main className="flex-1">{children}</main>
           <Footer branding={branding} customNavLinks={customNavLinks} />
         </div>
