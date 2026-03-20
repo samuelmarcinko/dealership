@@ -162,6 +162,10 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
     }
   })
 
+  // Závady vozidla
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [defects, setDefects] = useState<string[]>((vehicle as any)?.defects ?? [])
+
   // Custom equipment categories
   interface CustomCatType { id: string; name: string; icon: string }
   const [customCategories, setCustomCategories] = useState<CustomCatType[]>([])
@@ -342,6 +346,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       consignorId: isConsignment ? consignorId : null,
       commissionRate: isConsignment && commissionRate ? parseFloat(commissionRate) : null,
       customCategoryFeatures: customCatFeatures,
+      defects,
     }
 
     try {
@@ -629,6 +634,8 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
                 }
               }}
               customCategories={customCategories}
+              defects={defects}
+              onDefectsChange={setDefects}
             />
           </div>
         </CardContent>}

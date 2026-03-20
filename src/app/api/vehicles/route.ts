@@ -36,6 +36,7 @@ const vehicleSchema = z.object({
   consignorId: z.string().nullable().optional(),
   commissionRate: z.number().min(0).max(100).nullable().optional(),
   customCategoryFeatures: z.record(z.array(z.string())).optional(),
+  defects: z.array(z.string()).default([]),
 })
 
 export async function GET(req: NextRequest) {

@@ -150,14 +150,6 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   const hasFeatures = featureSections.length > 0
 
-  // How many rows the left column (col 1-2) occupies on desktop:
-  //   row 1: gallery (always)
-  //   row 2: description (if present)
-  //   row 3: features   (if present)
-  // The info card in col 3 must span exactly these rows so sticky works correctly.
-  // (lg:row-span-full doesn't work on implicit grids — the explicit gridRow inline style is required)
-  const infoCardRowSpan = 1 + (vehicle.description ? 1 : 0) + (hasFeatures ? 1 : 0)
-
   return (
     <div className="bg-slate-50 min-h-screen">
       <VehicleViewTracker id={vehicle.id} />
@@ -170,113 +162,102 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           Späť na ponuku
         </Link>
 
-        {/*
-          Mobile order (flex-col): gallery → info card → description → features
-          Desktop order (3-col grid):
-            col 1-2 row 1: gallery
-            col 3  rows 1+: info card (sticky)
-            col 1-2 row 2: description
-            col 1-2 row 3: features
-        */}
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
+        <div className="flex flex-col gap-6">
+          {/* 2-column layout: left content + right sticky sidebar */}
+          <div className="flex flex-col lg:flex-row lg:items-start gap-6">
 
-          {/* 1. Gallery — first on mobile, col 1-2 row 1 on desktop */}
-          <div className="lg:col-span-2">
-            <VehicleGallery images={vehicle.images} videos={vehicle.videos} title={vehicle.title} />
-          </div>
+            {/* Left column: gallery → description → features */}
+            <div className="flex flex-col gap-6 min-w-0 lg:flex-1">
+              <VehicleGallery images={vehicle.images} videos={vehicle.videos} title={vehicle.title} />
 
-          {/* 2. Info card — second on mobile, col 3 spanning all rows on desktop */}
-          {/* gridRow inline style: explicit span required — lg:row-span-full fails on implicit grids */}
-          <div
-            className="lg:col-start-3"
-            style={{ gridRow: `1 / span ${infoCardRowSpan}` }}
-          >
-            <div className="bg-white rounded-xl border border-slate-100 p-6 lg:sticky lg:top-20">
-              <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
-              <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">{vehicle.title}</h1>
-              {vehicle.variant && (
-                <p className="text-slate-500 text-sm mb-3">{vehicle.variant}</p>
-              )}
-
-              {/* Price — with or without discount */}
-              {hasSalePrice ? (
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-4xl font-extrabold text-red-600">
-                      {formatPrice(vehicle.salePrice!)}
-                    </p>
-                    <span className="inline-flex items-center bg-red-100 text-red-700 text-sm font-bold px-2.5 py-1 rounded-lg">
-                      ZĽAVNENÁ CENA
-                    </span>
-                  </div>
-                  <p className="text-slate-400 line-through text-lg mt-1">
-                    {formatPrice(vehicle.price)}
+              {vehicle.description && (
+                <div className="bg-white rounded-xl border border-slate-100 p-6">
+                  <h2 className="font-semibold text-slate-900 text-lg mb-3">Popis vozidla</h2>
+                  <p className="text-slate-600 leading-relaxed whitespace-pre-line">
+                    {vehicle.description}
                   </p>
                 </div>
-              ) : (
-                <p className="text-4xl font-extrabold text-primary mb-6">
-                  {formatPrice(vehicle.price)}
-                </p>
               )}
 
-              <div className="grid grid-cols-1 gap-3 mb-6">
-                {specs.map((spec) => (
-                  <div key={spec.label} className="flex items-center justify-between py-2 border-b border-slate-50">
-                    <div className="flex items-center gap-2 text-slate-500 text-sm">
-                      <spec.icon className="h-4 w-4 text-slate-400" />
-                      {spec.label}
-                    </div>
-                    <span className="font-medium text-slate-900 text-sm">{spec.value}</span>
-                  </div>
-                ))}
-              </div>
-
-              {vehicle.status === 'AVAILABLE' && (
-                <div className="mb-3">
-                  <InquiryModal vehicleTitle={vehicle.title} />
+              {hasFeatures && (
+                <div className="bg-white rounded-xl border border-slate-100 p-6">
+                  <h2 className="font-semibold text-slate-900 text-lg mb-5">Výbava</h2>
+                  {featureSections.map((s, i) => (
+                    <FeatureSection
+                      key={s.title}
+                      icon={s.icon}
+                      title={s.title}
+                      items={s.items}
+                      isFirst={i === 0}
+                    />
+                  ))}
                 </div>
               )}
-              <CompareButton
-                vehicle={{
-                  id: vehicle.id,
-                  title: vehicle.title,
-                  slug: vehicle.slug,
-                  imageUrl: vehicle.images[0]?.url ?? null,
-                }}
-                variant="detail"
-              />
+            </div>
+
+            {/* Right column: sticky info card */}
+            <div className="lg:w-[360px] lg:shrink-0 lg:sticky lg:top-20">
+              <div className="bg-white rounded-xl border border-slate-100 p-6">
+                <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
+                <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">{vehicle.title}</h1>
+                {vehicle.variant && (
+                  <p className="text-slate-500 text-sm mb-3">{vehicle.variant}</p>
+                )}
+
+                {/* Price — with or without discount */}
+                {hasSalePrice ? (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-4xl font-extrabold text-red-600">
+                        {formatPrice(vehicle.salePrice!)}
+                      </p>
+                      <span className="inline-flex items-center bg-red-100 text-red-700 text-sm font-bold px-2.5 py-1 rounded-lg">
+                        ZĽAVNENÁ CENA
+                      </span>
+                    </div>
+                    <p className="text-slate-400 line-through text-lg mt-1">
+                      {formatPrice(vehicle.price)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-4xl font-extrabold text-primary mb-6">
+                    {formatPrice(vehicle.price)}
+                  </p>
+                )}
+
+                <div className="grid grid-cols-1 gap-3 mb-6">
+                  {specs.map((spec) => (
+                    <div key={spec.label} className="flex items-center justify-between py-2 border-b border-slate-50">
+                      <div className="flex items-center gap-2 text-slate-500 text-sm">
+                        <spec.icon className="h-4 w-4 text-slate-400" />
+                        {spec.label}
+                      </div>
+                      <span className="font-medium text-slate-900 text-sm">{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {vehicle.status === 'AVAILABLE' && (
+                  <div className="mb-3">
+                    <InquiryModal vehicleTitle={vehicle.title} />
+                  </div>
+                )}
+                <CompareButton
+                  vehicle={{
+                    id: vehicle.id,
+                    title: vehicle.title,
+                    slug: vehicle.slug,
+                    imageUrl: vehicle.images[0]?.url ?? null,
+                  }}
+                  variant="detail"
+                />
+              </div>
             </div>
           </div>
 
-          {/* 3. Description — third on mobile, col 1-2 row 2 on desktop */}
-          {vehicle.description && (
-            <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6">
-              <h2 className="font-semibold text-slate-900 text-lg mb-3">Popis vozidla</h2>
-              <p className="text-slate-600 leading-relaxed whitespace-pre-line">
-                {vehicle.description}
-              </p>
-            </div>
-          )}
-
-          {/* 4. Feature sections — fourth on mobile, col 1-2 row 3 on desktop */}
-          {hasFeatures && (
-            <div className="lg:col-span-2 lg:col-start-1 bg-white rounded-xl border border-slate-100 p-6">
-              <h2 className="font-semibold text-slate-900 text-lg mb-5">Výbava</h2>
-              {featureSections.map((s, i) => (
-                <FeatureSection
-                  key={s.title}
-                  icon={s.icon}
-                  title={s.title}
-                  items={s.items}
-                  isFirst={i === 0}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* 5. Related vehicles — full width */}
+          {/* Related vehicles — full width below */}
           {relatedVehicles.length > 0 && (
-            <div className="lg:col-span-3">
+            <div>
               <h2 className="font-semibold text-slate-900 text-lg mb-4">Podobné vozidlá</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {relatedVehicles.map((v) => (

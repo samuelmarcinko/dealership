@@ -98,6 +98,13 @@ export async function GET(req: NextRequest) {
       predajca_ico:       fmt(settings['business_ico']),
       predajca_dic:       fmt(settings['business_dic']),
 
+      // Závady vozidla
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vozidlo_zavady: ((vehicle as any).defects as string[] ?? []).length > 0
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ? ((vehicle as any).defects as string[]).join('\n')
+        : 'bez závad',
+
       // Dátum generovania
       datum_dnes:         fmtDate(new Date()),
 

@@ -139,6 +139,7 @@ model Vehicle {
   commissionRate   Decimal?         @db.Decimal(5, 2)
   commissionAmount Decimal?         @db.Decimal(12, 2)
   customCategoryFeatures Json           @default("{}")
+  defects          String[]         @default([])
   images           VehicleImage[]
   videos           VehicleVideo[]
   createdAt        DateTime         @default(now())

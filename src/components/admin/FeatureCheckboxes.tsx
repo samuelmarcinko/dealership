@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import {
-  Search, X, Plus, Check,
+  Search, X, Plus, Check, AlertTriangle,
   ShieldCheck, Armchair, MonitorPlay, Car, Wrench, Zap, Star, Heart, Home, Shield,
 } from 'lucide-react'
 import { CATEGORY_ORDER, CATEGORY_META, type EquipmentCategory } from '@/lib/equipmentData'
@@ -20,11 +20,15 @@ interface CustomCategory {
   icon: string
 }
 
+const DEFECTS_TAB = '__defects__'
+
 interface Props {
   items: EquipmentItem[]
   value: Record<string, string[]>
   onChange: (cat: string, names: string[]) => void
   customCategories?: CustomCategory[]
+  defects?: string[]
+  onDefectsChange?: (defects: string[]) => void
 }
 
 const BUILTIN_ICONS: Record<EquipmentCategory, React.ElementType> = {
@@ -44,7 +48,7 @@ function getCustomIcon(name: string): React.ElementType {
   return CUSTOM_ICON_MAP[name] ?? Wrench
 }
 
-export default function FeatureCheckboxes({ items, value, onChange, customCategories = [] }: Props) {
+export default function FeatureCheckboxes({ items, value, onChange, customCategories = [], defects = [], onDefectsChange }: Props) {
   const [activeTab, setActiveTab] = useState<string>('SAFETY')
   const [search, setSearch] = useState('')
   const [customInput, setCustomInput] = useState('')
@@ -161,7 +165,26 @@ export default function FeatureCheckboxes({ items, value, onChange, customCatego
             </button>
           )
         })}
-        {totalSelected > 0 && (
+        {/* ZÁVADY VOZIDLA tab — always last, red */}
+        <button
+          type="button"
+          onClick={() => { setActiveTab(DEFECTS_TAB); setSearch(''); setCustomInput('') }}
+          className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            activeTab === DEFECTS_TAB
+              ? 'border-red-500 text-red-600 bg-white'
+              : 'border-transparent text-red-500 hover:text-red-600 hover:bg-red-50/60'
+          }`}
+        >
+          <AlertTriangle className="h-3.5 w-3.5" />
+          Závady vozidla
+          {defects.length > 0 && (
+            <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full leading-none">
+              {defects.length}
+            </span>
+          )}
+        </button>
+
+        {totalSelected > 0 && activeTab !== DEFECTS_TAB && (
           <span className="ml-auto flex items-center px-3 text-xs text-slate-400">
             {totalSelected} vybraných celkom
           </span>
@@ -169,8 +192,53 @@ export default function FeatureCheckboxes({ items, value, onChange, customCatego
       </div>
 
       <div className="p-4 space-y-3 bg-white">
+
+        {/* ZÁVADY VOZIDLA content */}
+        {activeTab === DEFECTS_TAB && (
+          <div className="space-y-2">
+            {defects.length === 0 ? (
+              <p className="text-center text-slate-400 text-sm py-4">
+                Žiadne závady. Kliknite na &ldquo;Pridať riadok&rdquo; pre zápis závady.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {defects.map((defect, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 font-mono w-5 shrink-0 text-right">{idx + 1}.</span>
+                    <input
+                      value={defect}
+                      onChange={e => {
+                        const next = [...defects]
+                        next[idx] = e.target.value
+                        onDefectsChange?.(next)
+                      }}
+                      placeholder="Popíšte závadu..."
+                      className="flex-1 h-9 px-3 rounded-md border border-red-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-red-50/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => onDefectsChange?.(defects.filter((_, i) => i !== idx))}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => onDefectsChange?.([...defects, ''])}
+              className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 font-medium pt-1"
+            >
+              <Plus className="h-4 w-4" />
+              Pridať riadok
+            </button>
+          </div>
+        )}
+
         {/* Search (only for builtin tabs with items) */}
-        {isBuiltin && (
+        {activeTab !== DEFECTS_TAB && isBuiltin && (
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
             <input
@@ -192,7 +260,7 @@ export default function FeatureCheckboxes({ items, value, onChange, customCatego
         )}
 
         {/* Items grouped by subcategory (builtin) */}
-        {isBuiltin && (
+        {activeTab !== DEFECTS_TAB && isBuiltin && (
           <div className="space-y-4 max-h-80 overflow-y-auto pr-0.5 overscroll-contain">
             {grouped.size === 0 ? (
               <p className="text-center text-slate-400 text-sm py-6">
@@ -242,7 +310,7 @@ export default function FeatureCheckboxes({ items, value, onChange, customCatego
         )}
 
         {/* Custom category tab — just custom items */}
-        {!isBuiltin && (
+        {activeTab !== DEFECTS_TAB && !isBuiltin && (
           <div className="space-y-2 min-h-16">
             {current.length === 0 ? (
               <p className="text-center text-slate-400 text-sm py-4">Žiadne položky. Pridajte vlastnú výbavu nižšie.</p>
@@ -264,8 +332,8 @@ export default function FeatureCheckboxes({ items, value, onChange, customCatego
           </div>
         )}
 
-        {/* Custom item input */}
-        <div className="pt-3 border-t border-slate-100">
+        {/* Custom item input — hidden on defects tab */}
+        {activeTab !== DEFECTS_TAB && <div className="pt-3 border-t border-slate-100">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
             {isBuiltin ? 'Vlastná položka — len pre toto vozidlo' : 'Pridať položku'}
           </p>
@@ -302,7 +370,7 @@ export default function FeatureCheckboxes({ items, value, onChange, customCatego
               ))}
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   )
