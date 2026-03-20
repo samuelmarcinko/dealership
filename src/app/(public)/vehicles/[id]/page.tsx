@@ -164,10 +164,10 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
         <div className="flex flex-col gap-6">
           {/* 2-column layout: left content + right sticky sidebar */}
-          <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+          <div className="flex flex-col lg:grid lg:grid-cols-[3fr_2fr] lg:items-start gap-6">
 
             {/* Left column: gallery → description → features */}
-            <div className="flex flex-col gap-6 min-w-0 lg:flex-1">
+            <div className="flex flex-col gap-6 min-w-0">
               <VehicleGallery images={vehicle.images} videos={vehicle.videos} title={vehicle.title} />
 
               {vehicle.description && (
@@ -196,7 +196,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Right column: sticky info card */}
-            <div className="lg:w-[360px] lg:shrink-0 lg:sticky lg:top-20">
+            <div className="lg:sticky lg:top-20 lg:self-start">
               <div className="bg-white rounded-xl border border-slate-100 p-6">
                 <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
                 <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">{vehicle.title}</h1>
