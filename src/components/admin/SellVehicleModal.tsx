@@ -38,23 +38,26 @@ interface Props {
   vehicleId: string
   vehicleTitle: string
   listedPrice: number
+  salePrice?: number | null
   isConsignment?: boolean
   vehicleCommissionRate?: number | null
   onClose: () => void
 }
 
-export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice, isConsignment, vehicleCommissionRate, onClose }: Props) {
+export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice, salePrice, isConsignment, vehicleCommissionRate, onClose }: Props) {
   const router = useRouter()
   const { toast } = useToast()
 
   // Step: 'sell' | 'documents'
   const [step, setStep] = useState<'sell' | 'documents'>('sell')
 
+  const advertisedPrice = salePrice ?? listedPrice
+
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loadingCustomers, setLoadingCustomers] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [soldPrice, setSoldPrice] = useState(listedPrice.toString())
+  const [soldPrice, setSoldPrice] = useState(advertisedPrice.toString())
   const [soldAt, setSoldAt] = useState(new Date().toISOString().split('T')[0])
   const [soldNote, setSoldNote] = useState('')
   const [commissionRate, setCommissionRate] = useState(
@@ -304,19 +307,76 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
               )}
 
               {/* Sale details */}
-              <div className="grid grid-cols-2 gap-4 border-t pt-4">
+              <div className="space-y-4 border-t pt-4">
+                {/* Advertised price (read-only) */}
                 <div className="space-y-2">
-                  <Label htmlFor="soldPrice">
+                  <Label className="text-sm font-medium text-slate-900">
+                    Inzerovaná cena (€)
+                    {salePrice != null && (
+                      <span className="ml-2 text-xs font-normal text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">zľavnená</span>
+                    )}
+                  </Label>
+                  <div className="h-10 px-3 flex items-center bg-slate-50 border border-slate-200 rounded-md text-sm font-medium text-slate-700 select-none">
+                    {new Intl.NumberFormat('sk-SK', { style: 'currency', currency: 'EUR' }).format(advertisedPrice)}
+                  </div>
+                </div>
+
+                {/* Sold price */}
+                <div className="space-y-2">
+                  <Label htmlFor="soldPrice" className="text-sm font-medium text-slate-900">
                     <DollarSign className="inline h-3.5 w-3.5 mr-1" />
                     Predajná cena (€)
                   </Label>
+                  {/* Discount quick-buttons */}
+                  <div className="flex gap-2 flex-wrap">
+                    {[5, 10, 15, 20].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => setSoldPrice(Math.round(advertisedPrice * (1 - pct / 100)).toString())}
+                        className="px-3 py-1 text-xs font-medium rounded-full border border-slate-200 bg-white hover:border-orange-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+                      >
+                        -{pct}%
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setSoldPrice(advertisedPrice.toString())}
+                      className="px-3 py-1 text-xs font-medium rounded-full border border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50 transition-colors text-slate-500"
+                    >
+                      Reset
+                    </button>
+                  </div>
                   <Input
                     id="soldPrice"
                     value={soldPrice}
                     onChange={(e) => setSoldPrice(e.target.value)}
                     placeholder="15000"
                   />
+                  {/* Discount info */}
+                  {(() => {
+                    const sold = parseFloat(soldPrice.replace(',', '.'))
+                    const diff = advertisedPrice - sold
+                    const pct = advertisedPrice > 0 ? (diff / advertisedPrice) * 100 : 0
+                    if (!isNaN(sold) && diff > 0.01) {
+                      return (
+                        <p className="text-sm text-emerald-700 font-medium">
+                          Zľava: -{new Intl.NumberFormat('sk-SK', { style: 'currency', currency: 'EUR' }).format(diff)} ({pct.toFixed(1)}%)
+                        </p>
+                      )
+                    }
+                    if (!isNaN(sold) && diff < -0.01) {
+                      return (
+                        <p className="text-sm text-amber-600 font-medium">
+                          Príplatok: +{new Intl.NumberFormat('sk-SK', { style: 'currency', currency: 'EUR' }).format(-diff)}
+                        </p>
+                      )
+                    }
+                    return null
+                  })()}
                 </div>
+
+                {/* Date */}
                 <div className="space-y-2">
                   <Label htmlFor="soldAt">Dátum predaja</Label>
                   <Input

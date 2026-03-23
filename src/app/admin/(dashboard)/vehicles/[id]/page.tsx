@@ -64,6 +64,7 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
               vehicleId={vehicle.id}
               vehicleTitle={vehicle.title}
               listedPrice={Number(vehicle.price)}
+              salePrice={vehicle.salePrice != null ? Number(vehicle.salePrice) : null}
               isConsignment={vehicle.isConsignment}
               vehicleCommissionRate={vehicle.commissionRate != null ? Number(vehicle.commissionRate) : null}
             />

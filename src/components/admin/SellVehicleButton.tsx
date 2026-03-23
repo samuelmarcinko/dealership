@@ -9,11 +9,12 @@ interface Props {
   vehicleId: string
   vehicleTitle: string
   listedPrice: number
+  salePrice?: number | null
   isConsignment?: boolean
   vehicleCommissionRate?: number | null
 }
 
-export default function SellVehicleButton({ vehicleId, vehicleTitle, listedPrice, isConsignment, vehicleCommissionRate }: Props) {
+export default function SellVehicleButton({ vehicleId, vehicleTitle, listedPrice, salePrice, isConsignment, vehicleCommissionRate }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -31,6 +32,7 @@ export default function SellVehicleButton({ vehicleId, vehicleTitle, listedPrice
           vehicleId={vehicleId}
           vehicleTitle={vehicleTitle}
           listedPrice={listedPrice}
+          salePrice={salePrice}
           isConsignment={isConsignment}
           vehicleCommissionRate={vehicleCommissionRate}
           onClose={() => setOpen(false)}

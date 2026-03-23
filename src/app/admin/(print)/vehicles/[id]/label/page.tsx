@@ -189,8 +189,9 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
           line-height: 1.4;
         }
         .price-label {
-          font-size: 11px;
-          color: #94a3b8;
+          font-size: 25px;
+          font-weight: 600;
+          color: #000000;
           text-transform: uppercase;
           letter-spacing: 0.08em;
           margin-top: 1px;
@@ -203,32 +204,32 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
           grid-template-columns: 1fr 1fr;
           align-content: start;
           gap: 0;
-          padding: 8px 12px;
+          padding: 10px 14px;
           overflow: hidden;
         }
         .spec-row {
           display: flex;
           align-items: center;
-          gap: 7px;
-          padding: 4px 6px;
+          gap: 9px;
+          padding: 6px 6px;
           border-radius: 4px;
         }
         .spec-icon {
           color: var(--accent);
           flex-shrink: 0;
-          width: 22px;
-          height: 22px;
+          width: 28px;
+          height: 28px;
         }
         .spec-text { display: flex; flex-direction: column; min-width: 0; }
         .spec-label {
-          font-size: 10px;
+          font-size: 12px;
           color: #94a3b8;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           line-height: 1;
         }
         .spec-value {
-          font-size: 15px;
+          font-size: 18px;
           font-weight: 700;
           color: #1e293b;
           line-height: 1.3;
@@ -249,7 +250,7 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
         }
         .feat-cat { display: flex; flex-direction: column; gap: 2px; }
         .feat-cat-title {
-          font-size: 9px;
+          font-size: 12px;
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.07em;
@@ -259,7 +260,7 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
           border-bottom: 1px solid var(--accent);
         }
         .feat-item {
-          font-size: 10px;
+          font-size: 13px;
           color: #334155;
           display: flex;
           align-items: flex-start;
