@@ -80,13 +80,13 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
           background: white;
           font-family: Arial, Helvetica, sans-serif;
         }
-        @page { size: A4 landscape; margin: 8mm; }
+        @page { size: A4 landscape; margin: 0; }
         @media print {
           .no-print { display: none !important; }
           html, body {
-            width: 100%;
-            height: 100%;
-            max-height: 100%;
+            width: 297mm;
+            height: 210mm;
+            max-height: 210mm;
             overflow: hidden;
           }
         }
@@ -94,11 +94,12 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
         .wrap {
           display: flex;
           flex-direction: column;
-          width: 100%;
+          width: 297mm;
           height: 210mm;
           max-height: 210mm;
           overflow: hidden;
           background: white;
+          padding: 6mm;
         }
 
         /* ── HEADER ── */
