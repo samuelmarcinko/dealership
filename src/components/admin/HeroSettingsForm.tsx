@@ -95,9 +95,11 @@ export default function HeroSettingsForm({ settings }: Props) {
 
   // Layout
   const [heroHeight, setHeroHeight] = useState(settings['hero_height'] ?? 'large')
+  const [heroHeightCustom, setHeroHeightCustom] = useState(settings['hero_height_custom'] ?? '600')
   const [heroAlign, setHeroAlign] = useState(settings['hero_align'] ?? 'left')
 
   // Effects
+  const [heroEffect, setHeroEffect] = useState(settings['hero_effect'] ?? 'none')
   const [overlayGradient, setOverlayGradient] = useState(settings['hero_overlay_gradient'] === 'true')
   const [bottomShape, setBottomShape] = useState(settings['hero_bottom_shape'] ?? 'none')
   const [textAnimation, setTextAnimation] = useState(settings['hero_text_animation'] ?? 'fadeup')
@@ -138,12 +140,14 @@ export default function HeroSettingsForm({ settings }: Props) {
       { key: 'hero_btn2_url', value: fd.get('hero_btn2_url') as string },
       // Styling
       { key: 'hero_height', value: heroHeight },
+      { key: 'hero_height_custom', value: heroHeightCustom },
       { key: 'hero_align', value: heroAlign },
       { key: 'hero_bg_opacity', value: String(bgOpacity) },
       { key: 'hero_bg_pattern', value: bgPattern },
       { key: 'hero_overlay_gradient', value: overlayGradient ? 'true' : 'false' },
       { key: 'hero_bottom_shape', value: bottomShape },
       { key: 'hero_text_animation', value: textAnimation },
+      { key: 'hero_effect', value: heroEffect },
     ]
 
     try {
@@ -204,15 +208,30 @@ export default function HeroSettingsForm({ settings }: Props) {
         <div className="space-y-2">
           <Label>Výška sekcie</Label>
           <OptionGroup
-            value={heroHeight as 'compact' | 'medium' | 'large' | 'fullscreen'}
+            value={heroHeight as 'compact' | 'medium' | 'large' | 'fullscreen' | 'custom'}
             onChange={setHeroHeight}
             options={[
-              { key: 'compact',    label: 'Kompaktná',     desc: '~280 px' },
-              { key: 'medium',     label: 'Stredná',       desc: '~380 px' },
-              { key: 'large',      label: 'Veľká',         desc: '~520 px' },
+              { key: 'compact',    label: 'Kompaktná',      desc: '~280 px' },
+              { key: 'medium',     label: 'Stredná',        desc: '~380 px' },
+              { key: 'large',      label: 'Veľká',          desc: '~520 px' },
               { key: 'fullscreen', label: 'Celá obrazovka', desc: '100 vh' },
+              { key: 'custom',     label: 'Vlastná',        desc: 'zadaj px' },
             ]}
           />
+          {heroHeight === 'custom' && (
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="number"
+                min={200}
+                max={1400}
+                step={10}
+                value={heroHeightCustom}
+                onChange={(e) => setHeroHeightCustom(e.target.value)}
+                className="w-28 h-9 rounded-md border border-slate-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+              <span className="text-sm text-slate-500">px</span>
+            </div>
+          )}
         </div>
 
         {/* Align */}
@@ -252,16 +271,18 @@ export default function HeroSettingsForm({ settings }: Props) {
             <div className="flex items-center gap-3">
               <input
                 type="range"
-                min={10}
+                min={0}
                 max={90}
                 step={5}
                 value={bgOpacity}
                 onChange={(e) => setBgOpacity(Number(e.target.value))}
                 className="flex-1 accent-orange-500"
               />
-              <span className="w-10 text-sm font-medium text-slate-700 text-right tabular-nums">{bgOpacity}%</span>
+              <span className="w-14 text-sm font-medium text-slate-700 text-right tabular-nums">
+                {bgOpacity === 0 ? 'Vypnuté' : `${bgOpacity}%`}
+              </span>
             </div>
-            <p className="text-xs text-slate-400">Nižšia hodnota = tmavší obrázok, text čitateľnejší.</p>
+            <p className="text-xs text-slate-400">0 = obrázok neviditeľný (čisto tmavé pozadie). Nižšia hodnota = tmavší obrázok.</p>
           </div>
         )}
 
@@ -273,6 +294,30 @@ export default function HeroSettingsForm({ settings }: Props) {
           desc="Tmavý prechod zdola nahor — zlepšuje čitateľnosť textu nad obrázkom"
         />
 
+      </SettingSection>
+
+      {/* ── Vizuálne efekty ── */}
+      <SettingSection title="Vizuálny efekt">
+        <OptionGroup
+          value={heroEffect as 'none' | 'kenburns' | 'parallax' | 'particles' | 'shimmer' | 'pulseglow'}
+          onChange={setHeroEffect}
+          options={[
+            { key: 'none',      label: 'Žiadny',      desc: 'Statické pozadie' },
+            { key: 'kenburns',  label: 'Ken Burns',   desc: 'Pomalý zoom + posun obrázka' },
+            { key: 'parallax',  label: 'Paralax',     desc: 'Pohyb pozadia pri scrolle' },
+            { key: 'particles', label: 'Particles',   desc: 'Animované plávajúce bodky' },
+            { key: 'shimmer',   label: 'Shimmer',     desc: 'Lesklý efekt svetelného prechodu' },
+            { key: 'pulseglow', label: 'Pulse Glow',  desc: 'Pulzujúca žiara v primárnej farbe' },
+          ]}
+        />
+        {(heroEffect === 'kenburns' || heroEffect === 'parallax') && !bgImage && (
+          <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Ken Burns a Paralax vyžadujú nahratý obrázok pozadia.
+          </p>
+        )}
+        {heroEffect === 'parallax' && (
+          <p className="text-xs text-slate-400">Paralax efekt nemusí fungovať na mobilných zariadeniach (iOS obmedzenie).</p>
+        )}
       </SettingSection>
 
       {/* ── Tvar spodku ── */}

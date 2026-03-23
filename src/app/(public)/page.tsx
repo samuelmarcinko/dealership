@@ -154,19 +154,26 @@ export default async function HomePage() {
   ]
 
   // ── Hero computed ──────────────────────────────────────────────────────────
-  const heroHeightVal   = branding.heroHeight ?? 'large'
-  const heroAlignVal    = branding.heroAlign ?? 'left'
-  const heroBgOpacity   = (branding.heroBgOpacity ?? 30) / 100
-  const heroBottomShape = branding.heroBottomShape ?? 'none'
-  const heroBgPattern   = branding.heroBgPattern ?? 'grid'
-  const heroOverlay     = branding.heroOverlayGradient === 'true'
-  const heroTextAnim    = branding.heroTextAnimation ?? 'fadeup'
+  const heroHeightVal    = branding.heroHeight ?? 'large'
+  const heroHeightCustom = branding.heroHeightCustom ?? 600
+  const heroAlignVal     = branding.heroAlign ?? 'left'
+  const heroBgOpacity    = (branding.heroBgOpacity ?? 30) / 100
+  const heroBottomShape  = branding.heroBottomShape ?? 'none'
+  const heroBgPattern    = branding.heroBgPattern ?? 'grid'
+  const heroOverlay      = branding.heroOverlayGradient === 'true'
+  const heroTextAnim     = branding.heroTextAnimation ?? 'fadeup'
+  const heroEffect       = branding.heroEffect ?? 'none'
+  const accentColor      = branding.primaryColor ?? '#f97316'
 
   const heroHeightClass =
     heroHeightVal === 'compact'    ? 'py-14 md:py-20' :
     heroHeightVal === 'medium'     ? 'py-20 md:py-28' :
     heroHeightVal === 'fullscreen' ? 'min-h-[100svh] flex items-center' :
+    heroHeightVal === 'custom'     ? 'flex items-center' :
     'py-28 md:py-40'
+
+  const heroHeightStyle: React.CSSProperties =
+    heroHeightVal === 'custom' ? { minHeight: `${heroHeightCustom}px` } : {}
 
   const heroBottomPad = heroBottomShape !== 'none' ? 'pb-20' : ''
 
@@ -191,22 +198,50 @@ export default async function HomePage() {
     } :
     {}
 
+  // Convert hex accent to rgba for pulse glow CSS var
+  const hexToRgba = (hex: string, a: number) => {
+    const r = parseInt(hex.slice(1,3),16)
+    const g = parseInt(hex.slice(3,5),16)
+    const b = parseInt(hex.slice(5,7),16)
+    return `rgba(${r},${g},${b},${a})`
+  }
+
   return (
     <>
       {/* ── Hero ── */}
-      <section className={`relative bg-slate-900 text-white overflow-hidden ${heroHeightClass} ${heroBottomPad} ${heroAnimClass}`}>
-        {branding.heroBgImage ? (
+      <section
+        className={`relative bg-slate-900 text-white overflow-hidden ${heroHeightClass} ${heroBottomPad} ${heroAnimClass}`}
+        style={{ ...heroHeightStyle, '--hero-glow-color': hexToRgba(accentColor, 0.25) } as React.CSSProperties}
+      >
+        {/* ── Background ── */}
+        {heroEffect === 'parallax' && branding.heroBgImage ? (
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${branding.heroBgImage})`,
+              backgroundAttachment: 'fixed',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: heroBgOpacity,
+            }}
+          />
+        ) : branding.heroBgImage ? (
           <Image
             src={branding.heroBgImage}
             alt="Hero pozadie"
             fill
-            className="object-cover"
+            className={`object-cover${heroEffect === 'kenburns' ? ' hero-bg-kenburns' : ''}`}
             style={{ opacity: heroBgOpacity }}
             priority
           />
         ) : heroBgPattern !== 'none' ? (
           <div className="absolute inset-0 opacity-[0.07]" style={heroBgPatternStyle} />
         ) : null}
+
+        {/* ── Visual effects ── */}
+        {heroEffect === 'particles' && <div className="hero-particles-layer" />}
+        {heroEffect === 'shimmer'   && <div className="hero-shimmer-layer" />}
+        {heroEffect === 'pulseglow' && <div className="hero-pulse-layer" />}
 
         {/* Overlay gradient */}
         {heroOverlay && (
