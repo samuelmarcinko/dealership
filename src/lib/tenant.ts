@@ -72,6 +72,14 @@ export interface TenantBranding {
   bannerText?: string
   bannerUrl?: string
   bannerBgColor?: string
+  // Hero styling
+  heroHeight?: string          // 'compact' | 'medium' | 'large' | 'fullscreen'
+  heroAlign?: string           // 'left' | 'center'
+  heroBgOpacity?: number       // 10–90
+  heroBottomShape?: string     // 'none' | 'wave' | 'diagonal' | 'arc'
+  heroBgPattern?: string       // 'grid' | 'dots' | 'diagonal' | 'none'
+  heroOverlayGradient?: string // 'true' | 'false'
+  heroTextAnimation?: string   // 'fadeup' | 'slideup' | 'zoom' | 'fade'
 }
 
 export async function getTenantSettings(): Promise<Record<string, string>> {
@@ -101,6 +109,13 @@ export async function getTenantBranding(): Promise<TenantBranding> {
     heroBtn1Url: s['hero_btn1_url'] || undefined,
     heroBtn2Text: s['hero_btn2_text'] || undefined,
     heroBtn2Url: s['hero_btn2_url'] || undefined,
+    heroHeight: s['hero_height'] || undefined,
+    heroAlign: s['hero_align'] || undefined,
+    heroBgOpacity: s['hero_bg_opacity'] ? Number(s['hero_bg_opacity']) : undefined,
+    heroBottomShape: s['hero_bottom_shape'] || undefined,
+    heroBgPattern: s['hero_bg_pattern'] || undefined,
+    heroOverlayGradient: s['hero_overlay_gradient'] || undefined,
+    heroTextAnimation: s['hero_text_animation'] || undefined,
     // Phase 1
     fontPreset: s['font_preset'] || undefined,
     footerTagline: s['footer_tagline'] || undefined,

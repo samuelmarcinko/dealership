@@ -52,9 +52,43 @@
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes hero-slide-up-big {
+  from { opacity: 0; transform: translateY(60px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-zoom {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes hero-fade-only {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
 
+/* Default = fadeup */
 .animate-hero-1 { animation: hero-fade-up 0.7s ease both; }
 .animate-hero-2 { animation: hero-fade-up 0.7s ease 0.12s both; }
 .animate-hero-3 { animation: hero-fade-up 0.7s ease 0.24s both; }
 .animate-hero-4 { animation: hero-fade-up 0.7s ease 0.36s both; }
 .animate-hero-5 { animation: hero-fade-up 0.7s ease 0.48s both; }
+
+/* Slide up */
+.hero-anim-slideup .animate-hero-1 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) both; }
+.hero-anim-slideup .animate-hero-2 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) 0.08s both; }
+.hero-anim-slideup .animate-hero-3 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) 0.16s both; }
+.hero-anim-slideup .animate-hero-4 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) 0.24s both; }
+.hero-anim-slideup .animate-hero-5 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) 0.32s both; }
+
+/* Zoom */
+.hero-anim-zoom .animate-hero-1 { animation: hero-zoom 0.8s ease both; }
+.hero-anim-zoom .animate-hero-2 { animation: hero-zoom 0.8s ease 0.12s both; }
+.hero-anim-zoom .animate-hero-3 { animation: hero-zoom 0.8s ease 0.24s both; }
+.hero-anim-zoom .animate-hero-4 { animation: hero-zoom 0.8s ease 0.36s both; }
+.hero-anim-zoom .animate-hero-5 { animation: hero-zoom 0.8s ease 0.48s both; }
+
+/* Fade only */
+.hero-anim-fade .animate-hero-1 { animation: hero-fade-only 1s ease both; }
+.hero-anim-fade .animate-hero-2 { animation: hero-fade-only 1s ease 0.15s both; }
+.hero-anim-fade .animate-hero-3 { animation: hero-fade-only 1s ease 0.3s both; }
+.hero-anim-fade .animate-hero-4 { animation: hero-fade-only 1s ease 0.45s both; }
+.hero-anim-fade .animate-hero-5 { animation: hero-fade-only 1s ease 0.6s both; }

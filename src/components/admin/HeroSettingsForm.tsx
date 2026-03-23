@@ -7,17 +7,100 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
-import { Save, Upload, X } from 'lucide-react'
+import { Save, Upload, X, Check } from 'lucide-react'
 
 interface Props {
   settings: Record<string, string>
 }
 
+// ── Reusable option button group ──────────────────────────────────────────────
+function OptionGroup<T extends string>({
+  value, onChange, options,
+}: {
+  value: T
+  onChange: (v: T) => void
+  options: { key: T; label: string; desc?: string }[]
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          onClick={() => onChange(o.key)}
+          className={`relative px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors text-left ${
+            value === o.key
+              ? 'border-orange-500 bg-orange-50 text-orange-700'
+              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+          }`}
+        >
+          {value === o.key && (
+            <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-orange-500 rounded-full flex items-center justify-center">
+              <Check className="h-2 w-2 text-white" />
+            </span>
+          )}
+          <span className="block">{o.label}</span>
+          {o.desc && <span className="block text-xs font-normal text-slate-400 mt-0.5">{o.desc}</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Toggle switch ─────────────────────────────────────────────────────────────
+function Toggle({ value, onChange, label, desc }: {
+  value: boolean
+  onChange: (v: boolean) => void
+  label: string
+  desc?: string
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <p className="text-sm font-medium text-slate-800">{label}</p>
+        {desc && <p className="text-xs text-slate-400 mt-0.5">{desc}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!value)}
+        className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${value ? 'bg-orange-500' : 'bg-slate-200'}`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${value ? 'translate-x-5' : 'translate-x-0'}`}
+        />
+      </button>
+    </div>
+  )
+}
+
+// ── Section wrapper ───────────────────────────────────────────────────────────
+function SettingSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="border-t pt-5 space-y-4">
+      <h3 className="font-medium text-slate-900">{title}</h3>
+      {children}
+    </div>
+  )
+}
+
 export default function HeroSettingsForm({ settings }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+
+  // Background
   const [bgImage, setBgImage] = useState(settings['hero_bg_image'] ?? '')
   const [bgUploading, setBgUploading] = useState(false)
+  const [bgOpacity, setBgOpacity] = useState(Number(settings['hero_bg_opacity'] ?? 30))
+  const [bgPattern, setBgPattern] = useState(settings['hero_bg_pattern'] ?? 'grid')
+
+  // Layout
+  const [heroHeight, setHeroHeight] = useState(settings['hero_height'] ?? 'large')
+  const [heroAlign, setHeroAlign] = useState(settings['hero_align'] ?? 'left')
+
+  // Effects
+  const [overlayGradient, setOverlayGradient] = useState(settings['hero_overlay_gradient'] === 'true')
+  const [bottomShape, setBottomShape] = useState(settings['hero_bottom_shape'] ?? 'none')
+  const [textAnimation, setTextAnimation] = useState(settings['hero_text_animation'] ?? 'fadeup')
 
   async function handleBgUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -53,6 +136,14 @@ export default function HeroSettingsForm({ settings }: Props) {
       { key: 'hero_btn1_url', value: fd.get('hero_btn1_url') as string },
       { key: 'hero_btn2_text', value: fd.get('hero_btn2_text') as string },
       { key: 'hero_btn2_url', value: fd.get('hero_btn2_url') as string },
+      // Styling
+      { key: 'hero_height', value: heroHeight },
+      { key: 'hero_align', value: heroAlign },
+      { key: 'hero_bg_opacity', value: String(bgOpacity) },
+      { key: 'hero_bg_pattern', value: bgPattern },
+      { key: 'hero_overlay_gradient', value: overlayGradient ? 'true' : 'false' },
+      { key: 'hero_bottom_shape', value: bottomShape },
+      { key: 'hero_text_animation', value: textAnimation },
     ]
 
     try {
@@ -61,13 +152,11 @@ export default function HeroSettingsForm({ settings }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings: updates }),
       })
-
       if (!res.ok) {
         const json = await res.json()
         toast('error', json.error ?? 'Nastala chyba')
         return
       }
-
       toast('success', 'Hero sekcia uložená')
     } catch {
       toast('error', 'Nastala chyba')
@@ -78,7 +167,8 @@ export default function HeroSettingsForm({ settings }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Background image */}
+
+      {/* ── Background image ── */}
       <div className="space-y-3">
         <Label>Obrázok pozadia</Label>
         {bgImage && (
@@ -104,13 +194,118 @@ export default function HeroSettingsForm({ settings }: Props) {
             disabled={bgUploading}
           />
         </label>
-        <p className="text-xs text-slate-500">JPG/PNG/WebP, max 5 MB. Odporúčané rozmery: 1920×600 px.</p>
+        <p className="text-xs text-slate-500">JPG/PNG/WebP, max 5 MB. Odporúčané: 1920×600 px.</p>
       </div>
 
-      {/* Texts */}
-      <div className="border-t pt-5 space-y-4">
-        <h3 className="font-medium text-slate-900">Texty hero sekcie</h3>
+      {/* ── Styling ── */}
+      <SettingSection title="Štýlovanie">
 
+        {/* Height */}
+        <div className="space-y-2">
+          <Label>Výška sekcie</Label>
+          <OptionGroup
+            value={heroHeight as 'compact' | 'medium' | 'large' | 'fullscreen'}
+            onChange={setHeroHeight}
+            options={[
+              { key: 'compact',    label: 'Kompaktná',     desc: '~280 px' },
+              { key: 'medium',     label: 'Stredná',       desc: '~380 px' },
+              { key: 'large',      label: 'Veľká',         desc: '~520 px' },
+              { key: 'fullscreen', label: 'Celá obrazovka', desc: '100 vh' },
+            ]}
+          />
+        </div>
+
+        {/* Align */}
+        <div className="space-y-2">
+          <Label>Zarovnanie obsahu</Label>
+          <OptionGroup
+            value={heroAlign as 'left' | 'center'}
+            onChange={setHeroAlign}
+            options={[
+              { key: 'left',   label: 'Vľavo',   desc: 'Text zarovnaný doľava' },
+              { key: 'center', label: 'Na stred', desc: 'Text a tlačidlá vycentrované' },
+            ]}
+          />
+        </div>
+
+        {/* BG pattern (only when no image) */}
+        {!bgImage && (
+          <div className="space-y-2">
+            <Label>Vzor pozadia (bez obrázka)</Label>
+            <OptionGroup
+              value={bgPattern as 'grid' | 'dots' | 'diagonal' | 'none'}
+              onChange={setBgPattern}
+              options={[
+                { key: 'grid',     label: 'Mriežka'   },
+                { key: 'dots',     label: 'Bodky'     },
+                { key: 'diagonal', label: 'Šrafovanie' },
+                { key: 'none',     label: 'Žiadny'    },
+              ]}
+            />
+          </div>
+        )}
+
+        {/* BG opacity (only when image) */}
+        {bgImage && (
+          <div className="space-y-2">
+            <Label>Opacity obrázka pozadia</Label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={10}
+                max={90}
+                step={5}
+                value={bgOpacity}
+                onChange={(e) => setBgOpacity(Number(e.target.value))}
+                className="flex-1 accent-orange-500"
+              />
+              <span className="w-10 text-sm font-medium text-slate-700 text-right tabular-nums">{bgOpacity}%</span>
+            </div>
+            <p className="text-xs text-slate-400">Nižšia hodnota = tmavší obrázok, text čitateľnejší.</p>
+          </div>
+        )}
+
+        {/* Overlay gradient toggle */}
+        <Toggle
+          value={overlayGradient}
+          onChange={setOverlayGradient}
+          label="Gradient overlay"
+          desc="Tmavý prechod zdola nahor — zlepšuje čitateľnosť textu nad obrázkom"
+        />
+
+      </SettingSection>
+
+      {/* ── Tvar spodku ── */}
+      <SettingSection title="Tvar spodného okraja">
+        <OptionGroup
+          value={bottomShape as 'none' | 'wave' | 'diagonal' | 'arc'}
+          onChange={setBottomShape}
+          options={[
+            { key: 'none',     label: 'Rovný',    desc: 'Štandardný okraj' },
+            { key: 'wave',     label: 'Vlna',     desc: 'Plynulá vlna' },
+            { key: 'diagonal', label: 'Šikmý rez', desc: 'Uhlopriečny prerez' },
+            { key: 'arc',      label: 'Oblúk',    desc: 'Zaoblený spodok' },
+          ]}
+        />
+        <p className="text-xs text-slate-400">Dekoratívny tvar na spodnom okraji hero sekcie.</p>
+      </SettingSection>
+
+      {/* ── Animácia textu ── */}
+      <SettingSection title="Animácia textu">
+        <OptionGroup
+          value={textAnimation as 'fadeup' | 'slideup' | 'zoom' | 'fade'}
+          onChange={setTextAnimation}
+          options={[
+            { key: 'fadeup',  label: 'Fade + posun',  desc: 'Jemné vyletenie zdola (predvolené)' },
+            { key: 'slideup', label: 'Slide up',       desc: 'Výrazný posun zdola nahor' },
+            { key: 'zoom',    label: 'Zoom in',        desc: 'Priblíženie z diaľky' },
+            { key: 'fade',    label: 'Fade',           desc: 'Jednoduché zobrazenie' },
+          ]}
+        />
+      </SettingSection>
+
+      {/* ── Texts ── */}
+      <SettingSection title="Texty hero sekcie">
         <div className="space-y-2">
           <Label htmlFor="hero_badge">Badge text (malý nápis nad nadpisom)</Label>
           <Input
@@ -152,11 +347,10 @@ export default function HeroSettingsForm({ settings }: Props) {
             placeholder="Krátky popis..."
           />
         </div>
-      </div>
+      </SettingSection>
 
-      {/* Buttons */}
-      <div className="border-t pt-5 space-y-4">
-        <h3 className="font-medium text-slate-900">Tlačidlá</h3>
+      {/* ── Buttons ── */}
+      <SettingSection title="Tlačidlá">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="hero_btn1_text">Tlačidlo 1 — text</Label>
@@ -197,7 +391,7 @@ export default function HeroSettingsForm({ settings }: Props) {
             />
           </div>
         </div>
-      </div>
+      </SettingSection>
 
       <Button
         type="submit"

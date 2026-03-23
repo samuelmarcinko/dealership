@@ -153,31 +153,70 @@ export default async function HomePage() {
     },
   ]
 
+  // ── Hero computed ──────────────────────────────────────────────────────────
+  const heroHeightVal   = branding.heroHeight ?? 'large'
+  const heroAlignVal    = branding.heroAlign ?? 'left'
+  const heroBgOpacity   = (branding.heroBgOpacity ?? 30) / 100
+  const heroBottomShape = branding.heroBottomShape ?? 'none'
+  const heroBgPattern   = branding.heroBgPattern ?? 'grid'
+  const heroOverlay     = branding.heroOverlayGradient === 'true'
+  const heroTextAnim    = branding.heroTextAnimation ?? 'fadeup'
+
+  const heroHeightClass =
+    heroHeightVal === 'compact'    ? 'py-14 md:py-20' :
+    heroHeightVal === 'medium'     ? 'py-20 md:py-28' :
+    heroHeightVal === 'fullscreen' ? 'min-h-[100svh] flex items-center' :
+    'py-28 md:py-40'
+
+  const heroBottomPad = heroBottomShape !== 'none' ? 'pb-20' : ''
+
+  const heroAnimClass =
+    heroTextAnim === 'slideup' ? 'hero-anim-slideup' :
+    heroTextAnim === 'zoom'    ? 'hero-anim-zoom' :
+    heroTextAnim === 'fade'    ? 'hero-anim-fade' :
+    ''
+
+  const heroBgPatternStyle: React.CSSProperties =
+    heroBgPattern === 'dots' ? {
+      backgroundImage: 'radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1px)',
+      backgroundSize: '24px 24px',
+    } :
+    heroBgPattern === 'diagonal' ? {
+      backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 0px, transparent 50%)',
+      backgroundSize: '20px 20px',
+    } :
+    heroBgPattern === 'grid' ? {
+      backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+      backgroundSize: '48px 48px',
+    } :
+    {}
+
   return (
     <>
       {/* ── Hero ── */}
-      <section className="relative bg-slate-900 text-white overflow-hidden">
+      <section className={`relative bg-slate-900 text-white overflow-hidden ${heroHeightClass} ${heroBottomPad} ${heroAnimClass}`}>
         {branding.heroBgImage ? (
           <Image
             src={branding.heroBgImage}
             alt="Hero pozadie"
             fill
-            className="object-cover opacity-25"
+            className="object-cover"
+            style={{ opacity: heroBgOpacity }}
             priority
           />
-        ) : (
-          <div
-            className="absolute inset-0 opacity-[0.07]"
-            style={{
-              backgroundImage:
-                'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
-              backgroundSize: '48px 48px',
-            }}
-          />
+        ) : heroBgPattern !== 'none' ? (
+          <div className="absolute inset-0 opacity-[0.07]" style={heroBgPatternStyle} />
+        ) : null}
+
+        {/* Overlay gradient */}
+        {heroOverlay && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         )}
-        <div className="relative container mx-auto px-4 py-24 md:py-36">
-          <div className="max-w-3xl">
-            <p className="animate-hero-1 text-primary font-semibold text-sm uppercase tracking-widest mb-4 inline-flex items-center gap-2">
+
+        {/* Content */}
+        <div className="relative w-full container mx-auto px-4">
+          <div className={`max-w-3xl ${heroAlignVal === 'center' ? 'mx-auto text-center' : ''}`}>
+            <p className={`animate-hero-1 text-primary font-semibold text-sm uppercase tracking-widest mb-4 inline-flex items-center gap-2 ${heroAlignVal === 'center' ? 'justify-center' : ''}`}>
               <span className="w-5 h-px bg-primary inline-block" />
               {heroBadge}
             </p>
@@ -185,10 +224,10 @@ export default async function HomePage() {
               {heroTitle}<br />
               <span className="text-primary">{heroTitleAccent}</span>
             </h1>
-            <p className="animate-hero-3 text-slate-300 text-lg md:text-xl mb-8 max-w-xl">
+            <p className={`animate-hero-3 text-slate-300 text-lg md:text-xl mb-8 max-w-xl ${heroAlignVal === 'center' ? 'mx-auto' : ''}`}>
               {heroSubtitle}
             </p>
-            <div className="animate-hero-4 flex flex-wrap gap-4">
+            <div className={`animate-hero-4 flex flex-wrap gap-4 ${heroAlignVal === 'center' ? 'justify-center' : ''}`}>
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white">
                 <Link href={heroBtn1Url}>
                   {heroBtn1Text}
@@ -206,6 +245,29 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
+
+        {/* Bottom shapes */}
+        {heroBottomShape === 'wave' && (
+          <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none pointer-events-none">
+            <svg viewBox="0 0 1440 64" className="w-full h-16 block" preserveAspectRatio="none">
+              <path d="M0,32 C240,64 480,0 720,32 C960,64 1200,0 1440,32 L1440,64 L0,64 Z" fill="white" />
+            </svg>
+          </div>
+        )}
+        {heroBottomShape === 'diagonal' && (
+          <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none pointer-events-none">
+            <svg viewBox="0 0 1440 72" className="w-full h-[72px] block" preserveAspectRatio="none">
+              <polygon points="0,72 1440,0 1440,72" fill="white" />
+            </svg>
+          </div>
+        )}
+        {heroBottomShape === 'arc' && (
+          <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none pointer-events-none">
+            <svg viewBox="0 0 1440 72" className="w-full h-[72px] block" preserveAspectRatio="none">
+              <ellipse cx="720" cy="72" rx="800" ry="72" fill="white" />
+            </svg>
+          </div>
+        )}
       </section>
 
       {/* ── Stats bar ── */}
