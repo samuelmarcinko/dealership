@@ -65,33 +65,39 @@
   to   { opacity: 1; }
 }
 
+/*
+  Base delay 400ms — dáva čas fontom načítať sa (FOUT fix).
+  Stagger 180ms — každý prvok nastupuje výrazne po predchádzajúcom.
+  Dlhšia dĺžka + spring easing = profesionálny pocit.
+*/
+
 /* Default = fadeup */
-.animate-hero-1 { animation: hero-fade-up 0.7s ease both; }
-.animate-hero-2 { animation: hero-fade-up 0.7s ease 0.12s both; }
-.animate-hero-3 { animation: hero-fade-up 0.7s ease 0.24s both; }
-.animate-hero-4 { animation: hero-fade-up 0.7s ease 0.36s both; }
-.animate-hero-5 { animation: hero-fade-up 0.7s ease 0.48s both; }
+.animate-hero-1 { animation: hero-fade-up 1s cubic-bezier(0.16,1,0.3,1) 0.4s  both; }
+.animate-hero-2 { animation: hero-fade-up 1s cubic-bezier(0.16,1,0.3,1) 0.58s both; }
+.animate-hero-3 { animation: hero-fade-up 1s cubic-bezier(0.16,1,0.3,1) 0.76s both; }
+.animate-hero-4 { animation: hero-fade-up 1s cubic-bezier(0.16,1,0.3,1) 0.94s both; }
+.animate-hero-5 { animation: hero-fade-up 1s cubic-bezier(0.16,1,0.3,1) 1.12s both; }
 
 /* Slide up */
-.hero-anim-slideup .animate-hero-1 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) both; }
-.hero-anim-slideup .animate-hero-2 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) 0.08s both; }
-.hero-anim-slideup .animate-hero-3 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) 0.16s both; }
-.hero-anim-slideup .animate-hero-4 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) 0.24s both; }
-.hero-anim-slideup .animate-hero-5 { animation: hero-slide-up-big 0.9s cubic-bezier(0.16,1,0.3,1) 0.32s both; }
+.hero-anim-slideup .animate-hero-1 { animation: hero-slide-up-big 1s cubic-bezier(0.16,1,0.3,1) 0.4s  both; }
+.hero-anim-slideup .animate-hero-2 { animation: hero-slide-up-big 1s cubic-bezier(0.16,1,0.3,1) 0.58s both; }
+.hero-anim-slideup .animate-hero-3 { animation: hero-slide-up-big 1s cubic-bezier(0.16,1,0.3,1) 0.76s both; }
+.hero-anim-slideup .animate-hero-4 { animation: hero-slide-up-big 1s cubic-bezier(0.16,1,0.3,1) 0.94s both; }
+.hero-anim-slideup .animate-hero-5 { animation: hero-slide-up-big 1s cubic-bezier(0.16,1,0.3,1) 1.12s both; }
 
 /* Zoom */
-.hero-anim-zoom .animate-hero-1 { animation: hero-zoom 0.8s ease both; }
-.hero-anim-zoom .animate-hero-2 { animation: hero-zoom 0.8s ease 0.12s both; }
-.hero-anim-zoom .animate-hero-3 { animation: hero-zoom 0.8s ease 0.24s both; }
-.hero-anim-zoom .animate-hero-4 { animation: hero-zoom 0.8s ease 0.36s both; }
-.hero-anim-zoom .animate-hero-5 { animation: hero-zoom 0.8s ease 0.48s both; }
+.hero-anim-zoom .animate-hero-1 { animation: hero-zoom 1s cubic-bezier(0.16,1,0.3,1) 0.4s  both; }
+.hero-anim-zoom .animate-hero-2 { animation: hero-zoom 1s cubic-bezier(0.16,1,0.3,1) 0.58s both; }
+.hero-anim-zoom .animate-hero-3 { animation: hero-zoom 1s cubic-bezier(0.16,1,0.3,1) 0.76s both; }
+.hero-anim-zoom .animate-hero-4 { animation: hero-zoom 1s cubic-bezier(0.16,1,0.3,1) 0.94s both; }
+.hero-anim-zoom .animate-hero-5 { animation: hero-zoom 1s cubic-bezier(0.16,1,0.3,1) 1.12s both; }
 
 /* Fade only */
-.hero-anim-fade .animate-hero-1 { animation: hero-fade-only 1s ease both; }
-.hero-anim-fade .animate-hero-2 { animation: hero-fade-only 1s ease 0.15s both; }
-.hero-anim-fade .animate-hero-3 { animation: hero-fade-only 1s ease 0.3s both; }
-.hero-anim-fade .animate-hero-4 { animation: hero-fade-only 1s ease 0.45s both; }
-.hero-anim-fade .animate-hero-5 { animation: hero-fade-only 1s ease 0.6s both; }
+.hero-anim-fade .animate-hero-1 { animation: hero-fade-only 1.1s ease 0.4s  both; }
+.hero-anim-fade .animate-hero-2 { animation: hero-fade-only 1.1s ease 0.58s both; }
+.hero-anim-fade .animate-hero-3 { animation: hero-fade-only 1.1s ease 0.76s both; }
+.hero-anim-fade .animate-hero-4 { animation: hero-fade-only 1.1s ease 0.94s both; }
+.hero-anim-fade .animate-hero-5 { animation: hero-fade-only 1.1s ease 1.12s both; }
 
 /* ── Hero visual effects ────────────────────────────────────────────────── */
 
@@ -120,12 +126,18 @@
   pointer-events: none;
 }
 
-/* Shimmer — light sweep */
+/* Shimmer — double light sweep */
 @keyframes hero-shimmer-sweep {
-  0%   { transform: translateX(-200%) skewX(-18deg); opacity: 0; }
-  15%  { opacity: 1; }
-  85%  { opacity: 1; }
-  100% { transform: translateX(350%)  skewX(-18deg); opacity: 0; }
+  0%   { transform: translateX(-220%) skewX(-15deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateX(380%)  skewX(-15deg); opacity: 0; }
+}
+@keyframes hero-shimmer-sweep-b {
+  0%   { transform: translateX(-220%) skewX(-15deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateX(380%)  skewX(-15deg); opacity: 0; }
 }
 .hero-shimmer-layer {
   position: absolute;
@@ -133,24 +145,49 @@
   overflow: hidden;
   pointer-events: none;
 }
+/* Hlavný pás — výrazný */
 .hero-shimmer-layer::after {
   content: '';
   position: absolute;
   top: 0; left: 0;
-  width: 30%; height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%);
-  animation: hero-shimmer-sweep 7s ease-in-out infinite 2s;
+  width: 45%; height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent              0%,
+    rgba(255,255,255,0.03)  25%,
+    rgba(255,255,255,0.16)  50%,
+    rgba(255,255,255,0.03)  75%,
+    transparent             100%
+  );
+  animation: hero-shimmer-sweep 6s cubic-bezier(0.4,0,0.2,1) infinite 1s;
+}
+/* Druhý užší pás — oneskorený */
+.hero-shimmer-layer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 20%; height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent             0%,
+    rgba(255,255,255,0.08) 50%,
+    transparent            100%
+  );
+  animation: hero-shimmer-sweep-b 6s cubic-bezier(0.4,0,0.2,1) infinite 3.5s;
 }
 
 /* Pulse glow — radial accent color pulse */
 @keyframes hero-pulse-glow {
-  0%, 100% { opacity: 0.25; transform: scale(1);    }
-  50%       { opacity: 0.5;  transform: scale(1.12); }
+  0%, 100% { transform: scale(1);    }
+  50%       { transform: scale(1.08); }
 }
 .hero-pulse-layer {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 65% 55% at 50% 55%, var(--hero-glow-color, rgba(249,115,22,0.22)) 0%, transparent 70%);
-  animation: hero-pulse-glow 5s ease-in-out infinite;
+  inset: -20%;  /* presah aby glow nebol orezaný */
+  background:
+    radial-gradient(ellipse 50% 45% at 50% 60%, var(--hero-glow-color, rgba(249,115,22,0.55)) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 65% at 50% 65%, var(--hero-glow-color, rgba(249,115,22,0.2))  0%, transparent 70%);
+  animation: hero-pulse-glow 4s ease-in-out infinite;
   pointer-events: none;
+  mix-blend-mode: screen;
 }

@@ -211,7 +211,7 @@ export default async function HomePage() {
       {/* ── Hero ── */}
       <section
         className={`relative bg-slate-900 text-white overflow-hidden ${heroHeightClass} ${heroBottomPad} ${heroAnimClass}`}
-        style={{ ...heroHeightStyle, '--hero-glow-color': hexToRgba(accentColor, 0.25) } as React.CSSProperties}
+        style={{ ...heroHeightStyle, '--hero-glow-color': hexToRgba(accentColor, 0.55) } as React.CSSProperties}
       >
         {/* ── Background ── */}
         {heroEffect === 'parallax' && branding.heroBgImage ? (
