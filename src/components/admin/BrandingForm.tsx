@@ -17,6 +17,7 @@ export default function BrandingForm({ settings }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [logoUrl, setLogoUrl] = useState(settings['logo_url'] ?? '')
+  const [logoWidth, setLogoWidth] = useState(Number(settings['logo_width'] ?? 120))
   const [logoUploading, setLogoUploading] = useState(false)
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -46,6 +47,7 @@ export default function BrandingForm({ settings }: Props) {
     const updates = [
       { key: 'business_name', value: fd.get('business_name') as string },
       { key: 'logo_url', value: logoUrl },
+      { key: 'logo_width', value: String(logoWidth) },
       { key: 'contact_phone', value: fd.get('contact_phone') as string },
       { key: 'contact_email', value: fd.get('contact_email') as string },
       { key: 'contact_address', value: fd.get('contact_address') as string },
@@ -115,8 +117,33 @@ export default function BrandingForm({ settings }: Props) {
             />
           </label>
         </div>
-        <p className="text-xs text-slate-500">JPG, PNG, WebP alebo SVG. Odporúčané: 200×50 px. Prázdne = predvolená ikona.</p>
+        <p className="text-xs text-slate-500">JPG, PNG, WebP alebo SVG. Prázdne = predvolená ikona.</p>
       </div>
+
+      {logoUrl && (
+        <div className="space-y-2">
+          <Label>Šírka loga</Label>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min={60}
+              max={300}
+              step={4}
+              value={logoWidth}
+              onChange={(e) => setLogoWidth(Number(e.target.value))}
+              className="flex-1 accent-orange-500"
+            />
+            <span className="w-14 text-sm font-medium text-slate-700 text-right tabular-nums">{logoWidth} px</span>
+          </div>
+          <div className="rounded border border-slate-200 bg-slate-50 px-4 py-3 flex items-center">
+            <div className="relative h-10 overflow-hidden" style={{ width: logoWidth }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logoUrl} alt="Logo náhľad" className="h-full w-full object-contain object-left" />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">Šírka loga v navigácii. Výška je fixná (40 px), logo sa škáluje proporcionálne.</p>
+        </div>
+      )}
 
       <div className="border-t pt-5">
         <h3 className="font-medium text-slate-900 mb-4">Kontaktné informácie</h3>

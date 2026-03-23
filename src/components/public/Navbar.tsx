@@ -142,13 +142,13 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
             {branding?.logoUrl ? (
-              <div className="relative h-10 w-28">
+              <div className="relative h-10" style={{ width: branding.logoWidth ?? 120 }}>
                 <Image
                   src={branding.logoUrl}
                   alt={name}
                   fill
                   className="object-contain object-left"
-                  sizes="112px"
+                  sizes="300px"
                 />
               </div>
             ) : (

@@ -4,6 +4,7 @@ export interface TenantBranding {
   // Core
   businessName: string
   logoUrl?: string
+  logoWidth?: number
   primaryColor?: string
   customCss?: string
   contactPhone?: string
@@ -83,6 +84,7 @@ export async function getTenantBranding(): Promise<TenantBranding> {
   return {
     businessName: s['business_name'] || process.env.TENANT_NAME || 'AutoBazar',
     logoUrl: s['logo_url'] || undefined,
+    logoWidth: s['logo_width'] ? Number(s['logo_width']) : undefined,
     primaryColor: s['primary_color'] || undefined,
     customCss: s['custom_css'] || undefined,
     contactPhone: s['contact_phone'] || undefined,
