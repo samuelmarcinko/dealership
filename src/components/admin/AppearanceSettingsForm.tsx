@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
-import { Save, Check } from 'lucide-react'
+import { Save, Check, Sun, Moon } from 'lucide-react'
 
 const FONT_PRESETS = [
   { key: 'default', label: 'Geist', sample: 'system-ui, sans-serif' },
@@ -48,6 +48,7 @@ export default function AppearanceSettingsForm({ settings }: Props) {
   const [navbarStyle, setNavbarStyle] = useState(settings['navbar_style'] ?? 'dark')
   const [primaryColor, setPrimaryColor] = useState(settings['primary_color'] ?? '#f97316')
   const [customCss, setCustomCss] = useState(settings['custom_css'] ?? '')
+  const [defaultTheme, setDefaultTheme] = useState(settings['default_theme'] ?? 'light')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -62,6 +63,7 @@ export default function AppearanceSettingsForm({ settings }: Props) {
             { key: 'navbar_style', value: navbarStyle },
             { key: 'primary_color', value: primaryColor },
             { key: 'custom_css', value: customCss },
+            { key: 'default_theme', value: defaultTheme },
           ],
         }),
       })
@@ -173,6 +175,37 @@ export default function AppearanceSettingsForm({ settings }: Props) {
                 <p className="text-sm font-medium text-slate-800">{ns.label}</p>
                 <p className="text-xs text-slate-500">{ns.desc}</p>
               </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Default theme */}
+      <div className="space-y-3 border-t pt-5">
+        <p className="text-sm font-medium text-slate-900">Predvolený režim webu</p>
+        <p className="text-xs text-slate-500">Nastavenie platí pre nových návštevníkov. Ak si visitor zmení režim sám, bude sa pamätať jeho voľba.</p>
+        <div className="flex gap-3">
+          {([
+            { key: 'light', label: 'Svetlý', Icon: Sun },
+            { key: 'dark',  label: 'Tmavý',  Icon: Moon },
+          ] as const).map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setDefaultTheme(key)}
+              className={`relative flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors ${
+                defaultTheme === key
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+              }`}
+            >
+              {defaultTheme === key && (
+                <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-orange-500 rounded-full flex items-center justify-center">
+                  <Check className="h-2 w-2 text-white" />
+                </span>
+              )}
+              <Icon className="h-4 w-4" />
+              {label}
             </button>
           ))}
         </div>

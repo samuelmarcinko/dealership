@@ -123,7 +123,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     { icon: Calendar, label: 'Rok výroby', value: String(vehicle.year) },
     { icon: Gauge, label: 'Najazdené', value: formatMileage(vehicle.mileage) },
     { icon: Fuel, label: 'Palivo', value: fuelTypeLabel(vehicle.fuelType) },
-    { icon: Settings, label: 'Prevodovka', value: transmissionLabel(vehicle.transmission) },
+    { icon: Settings, label: 'Prevodovka', value: vehicle.gears ? `${transmissionLabel(vehicle.transmission)}, ${vehicle.gears}-st.` : transmissionLabel(vehicle.transmission) },
     ...(vehicle.power ? [{ icon: Zap, label: 'Výkon', value: `${vehicle.power} kW` }] : []),
     ...(vehicle.engineCapacity ? [{ icon: Activity, label: 'Objem motora', value: `${vehicle.engineCapacity} cc` }] : []),
     ...(vehicle.color ? [{ icon: Palette, label: 'Farba', value: vehicle.color }] : []),

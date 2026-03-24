@@ -2,6 +2,7 @@ import Navbar from '@/components/public/Navbar'
 import Footer from '@/components/public/Footer'
 import AnnouncementBar from '@/components/public/AnnouncementBar'
 import CompareBar from '@/components/public/CompareBar'
+import ThemeProvider from '@/components/public/ThemeProvider'
 import { CompareProvider } from '@/contexts/CompareContext'
 import { getTenantBranding } from '@/lib/tenant'
 import { hexToHsl } from '@/lib/utils'
@@ -53,36 +54,46 @@ export default async function PublicLayout({ children }: { children: React.React
     preset.headingCSS +
     (branding.customCss ?? '')
 
+  const defaultTheme = (branding.defaultTheme === 'dark' ? 'dark' : 'light') as 'light' | 'dark'
+
+  // Inline script runs before hydration — prevents FOUC on dark mode
+  const foucScript = `(function(){try{var s=localStorage.getItem('public-theme'),d='${defaultTheme}';if((s||d)==='dark')document.documentElement.classList.add('dark-public');}catch(e){}})();`
+
   return (
     <CompareProvider>
-      <>
-        {inlineStyles && <style dangerouslySetInnerHTML={{ __html: inlineStyles }} />}
-        {branding.bannerEnabled === 'true' && branding.bannerText && (
-          <AnnouncementBar
-            text={branding.bannerText}
-            url={branding.bannerUrl}
-            bgColor={branding.bannerBgColor}
-          />
-        )}
-        <div className="flex flex-col min-h-screen">
-          <Navbar branding={branding} navLinks={navLinks} customNavLinks={customNavLinks} />
-          <main className="flex-1">{children}</main>
-          <Footer branding={branding} customNavLinks={customNavLinks} />
-        </div>
+      <ThemeProvider defaultTheme={defaultTheme}>
+        <>
+          {/* FOUC prevention — must be first, runs synchronously */}
+          <script dangerouslySetInnerHTML={{ __html: foucScript }} />
 
-        {/* Admin shortcut — visible only when logged in */}
-        {session && (
-          <a
-            href="/admin"
-            className="fixed top-24 right-4 z-[60] flex items-center gap-2 px-3.5 py-2.5 bg-slate-900/90 backdrop-blur-sm text-white text-xs font-medium rounded-xl shadow-lg hover:bg-slate-800 transition-colors"
-          >
-            <LayoutDashboard className="h-3.5 w-3.5" />
-            Administrácia
-          </a>
-        )}
+          {inlineStyles && <style dangerouslySetInnerHTML={{ __html: inlineStyles }} />}
+          {branding.bannerEnabled === 'true' && branding.bannerText && (
+            <AnnouncementBar
+              text={branding.bannerText}
+              url={branding.bannerUrl}
+              bgColor={branding.bannerBgColor}
+            />
+          )}
+          <div className="flex flex-col min-h-screen">
+            <Navbar branding={branding} navLinks={navLinks} customNavLinks={customNavLinks} />
+            <main className="flex-1">{children}</main>
+            <Footer branding={branding} customNavLinks={customNavLinks} />
+          </div>
 
-        <CompareBar />
-      </>
+          {/* Admin shortcut — visible only when logged in */}
+          {session && (
+            <a
+              href="/admin"
+              className="fixed top-24 right-4 z-[60] flex items-center gap-2 px-3.5 py-2.5 bg-slate-900/90 backdrop-blur-sm text-white text-xs font-medium rounded-xl shadow-lg hover:bg-slate-800 transition-colors"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              Administrácia
+            </a>
+          )}
+
+          <CompareBar />
+        </>
+      </ThemeProvider>
     </CompareProvider>
   )
 }

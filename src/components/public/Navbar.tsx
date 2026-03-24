@@ -8,6 +8,7 @@ import { Menu, X, Car, Phone, Mail, GitCompareArrows } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TenantBranding } from '@/lib/tenant'
 import { useCompare } from '@/contexts/CompareContext'
+import ThemeToggle from './ThemeToggle'
 
 const builtInNavLinks = [
   { href: '/', label: 'Domov', exact: true },
@@ -168,8 +169,11 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
             ))}
           </nav>
 
-          {/* Right side: compare + phone + email */}
+          {/* Right side: compare + theme toggle + phone + email */}
           <div className="hidden md:flex items-center gap-4 shrink-0">
+            {/* Theme toggle */}
+            <ThemeToggle navStyle={style} />
+
             {/* Compare indicator */}
             {compareCount > 0 && (
               <Link
@@ -227,6 +231,14 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
       {open && (
         <div className={mobileMenuClass}>
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-1">
+            {/* Theme toggle row */}
+            <div className={cn(
+              'flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium',
+              style === 'light' ? 'text-slate-600' : 'text-slate-300'
+            )}>
+              <span>Tmavý režim</span>
+              <ThemeToggle navStyle={style} />
+            </div>
             {allLinks.map((link) => (
               <Link
                 key={link.href}

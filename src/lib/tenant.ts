@@ -67,6 +67,7 @@ export interface TenantBranding {
   contactHeroSubtitle?: string
   contactHours?: string
   contactMapUrl?: string
+  defaultTheme?: string        // 'light' | 'dark'
   // Phase 3 — banner
   bannerEnabled?: string
   bannerText?: string
@@ -93,6 +94,7 @@ export async function getTenantBranding(): Promise<TenantBranding> {
   const s = await getTenantSettings()
   return {
     businessName: s['business_name'] || process.env.TENANT_NAME || 'AutoBazar',
+    defaultTheme: s['default_theme'] || undefined,
     logoUrl: s['logo_url'] || undefined,
     logoWidth: s['logo_width'] ? Number(s['logo_width']) : undefined,
     primaryColor: s['primary_color'] || undefined,

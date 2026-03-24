@@ -22,6 +22,7 @@ const updateSchema = z.object({
   color: z.string().max(50).nullable().optional(),
   doors: z.number().int().min(2).max(6).nullable().optional(),
   seats: z.number().int().min(1).max(9).nullable().optional(),
+  gears: z.number().int().min(1).max(20).nullable().optional(),
   description: z.string().nullable().optional(),
   features: z.array(z.string()).optional(),
   safetyFeatures: z.array(z.string()).optional(),

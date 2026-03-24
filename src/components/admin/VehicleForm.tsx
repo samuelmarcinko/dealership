@@ -332,6 +332,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       color: (data.get('color') as string) || null,
       doors: data.get('doors') ? parseInt(data.get('doors') as string) : null,
       seats: data.get('seats') ? parseInt(data.get('seats') as string) : null,
+      gears: data.get('gears') ? parseInt(data.get('gears') as string) : null,
       description: (data.get('description') as string) || null,
       features: [],
       safetyFeatures: features.SAFETY,
@@ -555,7 +556,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             <div className="space-y-2">
               <Label htmlFor="engineCapacity">Objem motora (cm³)</Label>
               <Input id="engineCapacity" name="engineCapacity" type="number" min={0} defaultValue={vehicle?.engineCapacity ?? ''} placeholder="1968" />
@@ -571,6 +572,10 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
             <div className="space-y-2">
               <Label htmlFor="seats">Počet miest</Label>
               <Input id="seats" name="seats" type="number" min={1} max={9} defaultValue={vehicle?.seats ?? ''} placeholder="5" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gears">Počet stupňov</Label>
+              <Input id="gears" name="gears" type="number" min={1} max={20} defaultValue={vehicle?.gears ?? ''} placeholder="6" />
             </div>
           </div>
 
