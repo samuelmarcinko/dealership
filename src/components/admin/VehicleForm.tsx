@@ -619,14 +619,6 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
         </CardHeader>
         {openSections.desc && <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Popis vozidla</Label>
-            <RichTextEditor
-              value={description}
-              onChange={setDescription}
-              placeholder="Popíšte stav vozidla, históriu servisu, dôvod predaja a iné dôležité informácie..."
-            />
-          </div>
-          <div className="space-y-2">
             <Label>Výbava vozidla</Label>
             <FeatureCheckboxes
               items={equipmentItems}
@@ -641,6 +633,14 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
               customCategories={customCategories}
               defects={defects}
               onDefectsChange={setDefects}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Popis vozidla</Label>
+            <RichTextEditor
+              value={description}
+              onChange={setDescription}
+              placeholder="Popíšte stav vozidla, históriu servisu, dôvod predaja a iné dôležité informácie..."
             />
           </div>
         </CardContent>}

@@ -125,7 +125,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     { icon: Fuel, label: 'Palivo', value: fuelTypeLabel(vehicle.fuelType) },
     { icon: Settings, label: 'Prevodovka', value: vehicle.gears ? `${transmissionLabel(vehicle.transmission)}, ${vehicle.gears}-st.` : transmissionLabel(vehicle.transmission) },
     ...(vehicle.power ? [{ icon: Zap, label: 'Výkon', value: `${vehicle.power} kW` }] : []),
-    ...(vehicle.engineCapacity ? [{ icon: Activity, label: 'Objem motora', value: `${vehicle.engineCapacity} cc` }] : []),
+    ...(vehicle.engineCapacity ? [{ icon: Activity, label: 'Objem motora', value: `${vehicle.engineCapacity} cm³` }] : []),
     ...(vehicle.color ? [{ icon: Palette, label: 'Farba', value: vehicle.color }] : []),
     ...(vehicle.bodyType ? [{ icon: DoorOpen, label: 'Karoséria', value: bodyTypeLabel(vehicle.bodyType) }] : []),
     ...(vehicle.doors ? [{ icon: DoorOpen, label: 'Počet dverí', value: String(vehicle.doors) }] : []),
@@ -163,41 +163,16 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         </Link>
 
         <div className="flex flex-col gap-6">
-          {/* 2-column layout: left content + right sticky sidebar */}
-          <div className="flex flex-col lg:grid lg:grid-cols-[3fr_2fr] lg:items-start gap-6">
+          {/* 2-column grid: mobile = 1 col (Gallery → Sidebar → Content), desktop = 2 col */}
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] lg:items-start gap-6">
 
-            {/* Left column: gallery → description → features */}
-            <div className="flex flex-col gap-6 min-w-0">
+            {/* Gallery — desktop: col 1 row 1 */}
+            <div className="min-w-0 lg:col-start-1 lg:row-start-1">
               <VehicleGallery images={vehicle.images} videos={vehicle.videos} title={vehicle.title} />
-
-              {vehicle.description && (
-                <div className="bg-white rounded-xl border border-slate-100 p-6">
-                  <h2 className="font-semibold text-slate-900 text-lg mb-4">Popis vozidla</h2>
-                  <div
-                    className="rte-output text-slate-600"
-                    dangerouslySetInnerHTML={{ __html: vehicle.description }}
-                  />
-                </div>
-              )}
-
-              {hasFeatures && (
-                <div className="bg-white rounded-xl border border-slate-100 p-6">
-                  <h2 className="font-semibold text-slate-900 text-lg mb-5">Výbava</h2>
-                  {featureSections.map((s, i) => (
-                    <FeatureSection
-                      key={s.title}
-                      icon={s.icon}
-                      title={s.title}
-                      items={s.items}
-                      isFirst={i === 0}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Right column: sticky info card */}
-            <div className="lg:sticky lg:top-20 lg:self-start">
+            {/* Sidebar — mobile: 2nd (after gallery), desktop: col 2 spanning both rows */}
+            <div className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-20 lg:self-start">
               <div className="bg-white rounded-xl border border-slate-100 p-6">
                 <div className="flex items-center justify-between gap-3 mb-1">
                   <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
@@ -264,6 +239,34 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   variant="detail"
                 />
               </div>
+            </div>
+
+            {/* Features + Description — mobile: 3rd, desktop: col 1 row 2 */}
+            <div className="flex flex-col gap-6 min-w-0 lg:col-start-1 lg:row-start-2">
+              {hasFeatures && (
+                <div className="bg-white rounded-xl border border-slate-100 p-6">
+                  <h2 className="font-semibold text-slate-900 text-lg mb-5">Výbava</h2>
+                  {featureSections.map((s, i) => (
+                    <FeatureSection
+                      key={s.title}
+                      icon={s.icon}
+                      title={s.title}
+                      items={s.items}
+                      isFirst={i === 0}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {vehicle.description && (
+                <div className="bg-white rounded-xl border border-slate-100 p-6">
+                  <h2 className="font-semibold text-slate-900 text-lg mb-4">Popis vozidla</h2>
+                  <div
+                    className="rte-output text-slate-600"
+                    dangerouslySetInnerHTML={{ __html: vehicle.description }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
