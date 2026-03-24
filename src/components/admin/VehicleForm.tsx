@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/toast'
 import { Upload, X, Star, GripVertical, Info, Settings, FileText, ImageIcon, Tag, Handshake, Search, User, Building2, Loader2, ChevronDown, Video, Plus, PlayCircle } from 'lucide-react'
 import MakeCombobox from '@/components/admin/MakeCombobox'
 import FeatureCheckboxes from '@/components/admin/FeatureCheckboxes'
+import RichTextEditor from '@/components/admin/RichTextEditor'
 import type { VehicleWithImages, Customer } from '@/types'
 import type { EquipmentCategory } from '@/lib/equipmentData'
 import { customerDisplayName, customerShortInfo } from '@/lib/customer'
@@ -111,6 +112,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
   const [transmission, setTransmission] = useState<string>(vehicle?.transmission ?? 'MANUAL')
   const [bodyType, setBodyType] = useState<string>(vehicle?.bodyType ?? '')
   const [status, setStatus] = useState<string>(vehicle?.status ?? 'AVAILABLE')
+  const [description, setDescription] = useState<string>(vehicle?.description ?? '')
 
   // Collapsible sections
   const [openSections, setOpenSections] = useState({
@@ -333,7 +335,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       doors: data.get('doors') ? parseInt(data.get('doors') as string) : null,
       seats: data.get('seats') ? parseInt(data.get('seats') as string) : null,
       gears: data.get('gears') ? parseInt(data.get('gears') as string) : null,
-      description: (data.get('description') as string) || null,
+      description: description || null,
       features: [],
       safetyFeatures: features.SAFETY,
       comfortFeatures: features.COMFORT,
@@ -617,12 +619,10 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
         </CardHeader>
         {openSections.desc && <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="description">Popis vozidla</Label>
-            <Textarea
-              id="description"
-              name="description"
-              rows={5}
-              defaultValue={vehicle?.description ?? ''}
+            <Label>Popis vozidla</Label>
+            <RichTextEditor
+              value={description}
+              onChange={setDescription}
               placeholder="Popíšte stav vozidla, históriu servisu, dôvod predaja a iné dôležité informácie..."
             />
           </div>

@@ -49,6 +49,94 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   RICH TEXT EDITOR (TipTap) — admin editor area + public output
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Admin editor content area ── */
+.rte-content {
+  min-height: 160px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #1e293b;
+}
+
+/* Placeholder */
+.rte-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* ── Shared typographic styles (editor + public output) ── */
+.rte-content,
+.rte-output {
+  font-size: 0.925rem;
+  line-height: 1.75;
+}
+
+.rte-content h2, .rte-output h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 1.25rem 0 0.5rem;
+}
+.rte-content h3, .rte-output h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 1rem 0 0.4rem;
+}
+.rte-content p, .rte-output p {
+  margin: 0 0 0.75rem;
+}
+.rte-content p:last-child, .rte-output p:last-child {
+  margin-bottom: 0;
+}
+.rte-content strong, .rte-output strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+.rte-content em, .rte-output em {
+  font-style: italic;
+}
+.rte-content ul, .rte-output ul {
+  list-style: disc;
+  padding-left: 1.4rem;
+  margin: 0.5rem 0 0.75rem;
+}
+.rte-content ol, .rte-output ol {
+  list-style: decimal;
+  padding-left: 1.4rem;
+  margin: 0.5rem 0 0.75rem;
+}
+.rte-content li, .rte-output li {
+  margin-bottom: 0.2rem;
+}
+.rte-content a, .rte-output a,
+.rte-link {
+  color: var(--color-primary, #f97316);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.rte-content a:hover, .rte-output a:hover {
+  opacity: 0.8;
+}
+.rte-content hr, .rte-output hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1rem 0;
+}
+
+/* ── Dark mode overrides ── */
+.dark-public .rte-output h2   { color: #eef3f8 !important; }
+.dark-public .rte-output h3   { color: #d8e5ef !important; }
+.dark-public .rte-output strong { color: #eef3f8 !important; }
+.dark-public .rte-output hr   { border-top-color: #1e2c40 !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DARK MODE — verejný web (.dark-public trieda na <html>)
    Admin panel je vždy light a táto trieda sa naň nikdy nepridá.
 

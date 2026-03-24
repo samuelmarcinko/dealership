@@ -172,10 +172,11 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
               {vehicle.description && (
                 <div className="bg-white rounded-xl border border-slate-100 p-6">
-                  <h2 className="font-semibold text-slate-900 text-lg mb-3">Popis vozidla</h2>
-                  <p className="text-slate-600 leading-relaxed whitespace-pre-line">
-                    {vehicle.description}
-                  </p>
+                  <h2 className="font-semibold text-slate-900 text-lg mb-4">Popis vozidla</h2>
+                  <div
+                    className="rte-output text-slate-600"
+                    dangerouslySetInnerHTML={{ __html: vehicle.description }}
+                  />
                 </div>
               )}
 
