@@ -290,6 +290,7 @@ export default function FeatureCheckboxes({ items, value, onChange, customCatego
                           <input
                             type="checkbox"
                             className="sr-only"
+                            tabIndex={-1}
                             checked={checked}
                             onChange={() => toggle(item.name)}
                           />

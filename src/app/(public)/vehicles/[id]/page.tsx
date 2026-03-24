@@ -198,7 +198,18 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             {/* Right column: sticky info card */}
             <div className="lg:sticky lg:top-20 lg:self-start">
               <div className="bg-white rounded-xl border border-slate-100 p-6">
-                <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <Badge variant={statusVariant}>{vehicleStatusLabel(vehicle.status)}</Badge>
+                  <CompareButton
+                    vehicle={{
+                      id: vehicle.id,
+                      title: vehicle.title,
+                      slug: vehicle.slug,
+                      imageUrl: vehicle.images[0]?.url ?? null,
+                    }}
+                    variant="top"
+                  />
+                </div>
                 <h1 className="text-2xl font-bold text-slate-900 mt-2 mb-1">{vehicle.title}</h1>
                 {vehicle.variant && (
                   <p className="text-slate-500 text-sm mb-3">{vehicle.variant}</p>

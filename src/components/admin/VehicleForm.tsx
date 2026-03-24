@@ -526,7 +526,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
           </CardTitle>
         </CardHeader>
         {openSections.tech && <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label>Palivo *</Label>
               <Select value={fuelType} onValueChange={setFuelType}>
@@ -546,6 +546,10 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
               </Select>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="gears">Počet stupňov prevodovky</Label>
+              <Input id="gears" name="gears" type="number" min={1} max={20} defaultValue={vehicle?.gears ?? ''} placeholder="6" />
+            </div>
+            <div className="space-y-2">
               <Label>Karoséria</Label>
               <Select value={bodyType} onValueChange={setBodyType}>
                 <SelectTrigger><SelectValue placeholder="Vyberte..." /></SelectTrigger>
@@ -556,7 +560,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="engineCapacity">Objem motora (cm³)</Label>
               <Input id="engineCapacity" name="engineCapacity" type="number" min={0} defaultValue={vehicle?.engineCapacity ?? ''} placeholder="1968" />
@@ -572,10 +576,6 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
             <div className="space-y-2">
               <Label htmlFor="seats">Počet miest</Label>
               <Input id="seats" name="seats" type="number" min={1} max={9} defaultValue={vehicle?.seats ?? ''} placeholder="5" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="gears">Počet stupňov</Label>
-              <Input id="gears" name="gears" type="number" min={1} max={20} defaultValue={vehicle?.gears ?? ''} placeholder="6" />
             </div>
           </div>
 

@@ -6,13 +6,35 @@ import { useCompare, type CompareVehicle } from '@/contexts/CompareContext'
 
 interface Props {
   vehicle: CompareVehicle
-  variant?: 'card' | 'detail'
+  variant?: 'card' | 'detail' | 'top'
 }
 
 export default function CompareButton({ vehicle, variant = 'card' }: Props) {
   const { toggle, has, isFull } = useCompare()
   const selected = has(vehicle.id)
   const disabled = !selected && isFull
+
+  if (variant === 'top') {
+    return (
+      <button
+        type="button"
+        onClick={() => toggle(vehicle)}
+        disabled={disabled}
+        title={selected ? 'Odstrániť z porovnania' : disabled ? 'Porovnanie plné (max 3)' : 'Pridať do porovnania'}
+        className={cn(
+          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium transition-all',
+          selected
+            ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
+            : disabled
+            ? 'border-slate-200 text-slate-300 cursor-not-allowed'
+            : 'border-slate-200 text-slate-500 hover:border-orange-400 hover:text-orange-600 hover:bg-orange-50'
+        )}
+      >
+        <GitCompareArrows className="h-3.5 w-3.5 shrink-0" />
+        <span>{selected ? 'Porovnávam' : 'Porovnať'}</span>
+      </button>
+    )
+  }
 
   if (variant === 'detail') {
     return (

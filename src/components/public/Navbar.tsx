@@ -169,11 +169,8 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
             ))}
           </nav>
 
-          {/* Right side: compare + theme toggle + phone + email */}
+          {/* Right side: compare + phone + email + theme toggle */}
           <div className="hidden md:flex items-center gap-4 shrink-0">
-            {/* Theme toggle */}
-            <ThemeToggle navStyle={style} />
-
             {/* Compare indicator */}
             {compareCount > 0 && (
               <Link
@@ -214,6 +211,8 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
                 <span>{branding.contactEmail}</span>
               </a>
             )}
+            {/* Theme toggle — úplne na konci */}
+            <ThemeToggle navStyle={style} />
           </div>
 
           {/* Mobile menu toggle */}

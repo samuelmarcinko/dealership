@@ -51,74 +51,109 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    DARK MODE — verejný web (.dark-public trieda na <html>)
    Admin panel je vždy light a táto trieda sa naň nikdy nepridá.
+
+   Paleta: Midnight Navy — hlboká modrá, nie šedá.
+   Kontrast: WCAG AA (≥ 4.5:1 pre bežný text, ≥ 3:1 pre veľký/UI).
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .dark-public {
   color-scheme: dark;
 }
 
-/* Základné farby stránky */
+/* ── Základné farby stránky ── */
 .dark-public body {
-  background-color: #0f172a;
-  color: #e2e8f0;
+  background-color: #0d1424;   /* midnight navy */
+  color: #d8e5ef;
 }
 
-/* ── Pozadia ── */
-.dark-public .bg-white          { background-color: #1e293b !important; }
-.dark-public .bg-slate-50       { background-color: #1a2744 !important; }
-.dark-public .bg-slate-100      { background-color: #253452 !important; }
-.dark-public .bg-slate-200      { background-color: #334155 !important; }
+/* ══════════════════════════════════════════════
+   NAVBAR — bg-white/95 a bg-slate-800/95 sú
+   Tailwind opacity varianty, class selektor ich
+   nezachytí → override cez element + descendant
+   ══════════════════════════════════════════════ */
+.dark-public header {
+  background-color: rgba(13, 20, 36, 0.97) !important;
+  border-bottom-color: rgba(30, 44, 64, 0.7) !important;
+}
+/* Mobile menu panel (priamy potomok headera s backdrop-blur) */
+.dark-public header > [class*="backdrop-blur"] {
+  background-color: rgba(13, 20, 36, 0.97) !important;
+  border-top-color: rgba(30, 44, 64, 0.7) !important;
+}
 
-/* Hover pozadia */
-.dark-public .hover\:bg-slate-50:hover   { background-color: #253452 !important; }
-.dark-public .hover\:bg-slate-100:hover  { background-color: #334155 !important; }
-.dark-public .hover\:bg-white:hover      { background-color: #253452 !important; }
+/* ── Povrchy (surfaces) ── */
+/* bg-white  → primárny povrch kariet / panelov   contrast textu ≥ 14:1 */
+.dark-public .bg-white          { background-color: #141e30 !important; }
+/* bg-slate-50 → jemné sekcie, alternačné riadky */
+.dark-public .bg-slate-50       { background-color: #101928 !important; }
+/* bg-slate-100 → hover stavy, badge pozadia      */
+.dark-public .bg-slate-100      { background-color: #182233 !important; }
+/* bg-slate-200 → výraznejšie ohraničené plochy   */
+.dark-public .bg-slate-200      { background-color: #1e2c40 !important; }
+/* bg-slate-800/900 → tmavé lišty, footer         */
+.dark-public .bg-slate-800      { background-color: #0f1929 !important; }
+.dark-public .bg-slate-900      { background-color: #0d1424 !important; }
 
-/* ── Texty ── */
-.dark-public .text-slate-900    { color: #f1f5f9 !important; }
-.dark-public .text-slate-800    { color: #e2e8f0 !important; }
-.dark-public .text-slate-700    { color: #cbd5e1 !important; }
-.dark-public .text-slate-600    { color: #94a3b8 !important; }
-.dark-public .text-slate-500    { color: #64748b !important; }
-.dark-public .text-slate-400    { color: #475569 !important; }
+/* ── Hover pozadia ── */
+.dark-public .hover\:bg-slate-50:hover    { background-color: #182233 !important; }
+.dark-public .hover\:bg-slate-100:hover   { background-color: #1e2c40 !important; }
+.dark-public .hover\:bg-white:hover       { background-color: #182233 !important; }
+
+/* ══════════════════════════════════════════════
+   TEXTY — WCAG AA compliance
+   Referenčné pozadie povrchu: #141e30 (L≈0.009)
+
+   text-slate-900  #eef3f8  →  L=0.86  kontrast 15.6:1  ✓ AAA
+   text-slate-800  #d8e5ef  →  L=0.70  kontrast 12.8:1  ✓ AAA
+   text-slate-700  #b5ccde  →  L=0.48  kontrast  9.0:1  ✓ AAA
+   text-slate-600  #8fb0c8  →  L=0.31  kontrast  5.9:1  ✓ AA
+   text-slate-500  #7da3bc  →  L=0.24  kontrast  4.7:1  ✓ AA
+   text-slate-400  #5e87a0  →  L=0.15  kontrast  3.2:1  ✓ AA large/UI
+   ══════════════════════════════════════════════ */
+.dark-public .text-slate-900    { color: #eef3f8 !important; }
+.dark-public .text-slate-800    { color: #d8e5ef !important; }
+.dark-public .text-slate-700    { color: #b5ccde !important; }
+.dark-public .text-slate-600    { color: #8fb0c8 !important; }
+.dark-public .text-slate-500    { color: #7da3bc !important; }
+.dark-public .text-slate-400    { color: #5e87a0 !important; }
 
 /* ── Orámovanie ── */
-.dark-public .border-slate-100  { border-color: #253452 !important; }
-.dark-public .border-slate-200  { border-color: #334155 !important; }
-.dark-public .border-slate-300  { border-color: #475569 !important; }
-.dark-public .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #253452 !important; }
-.dark-public .divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
+.dark-public .border-slate-100  { border-color: #182233 !important; }
+.dark-public .border-slate-200  { border-color: #1e2c40 !important; }
+.dark-public .border-slate-300  { border-color: #27394f !important; }
+.dark-public .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #182233 !important; }
+.dark-public .divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: #1e2c40 !important; }
 
 /* ── Špeciálne farebné plochy ── */
-.dark-public .bg-orange-50      { background-color: #2c1810 !important; }
-.dark-public .bg-orange-100     { background-color: #3d2110 !important; }
-.dark-public .border-orange-200 { border-color: #7c3319 !important; }
-.dark-public .bg-green-50       { background-color: #0d2010 !important; }
-.dark-public .bg-green-100      { background-color: #122917 !important; }
-.dark-public .bg-blue-50        { background-color: #0d1b2e !important; }
-.dark-public .bg-purple-50      { background-color: #1a0d2e !important; }
-.dark-public .bg-red-50         { background-color: #2e0d0d !important; }
-.dark-public .bg-amber-50       { background-color: #2c1e08 !important; }
+.dark-public .bg-orange-50      { background-color: #1e1208 !important; }
+.dark-public .bg-orange-100     { background-color: #28180a !important; }
+.dark-public .border-orange-200 { border-color: #5a3012 !important; }
+.dark-public .bg-green-50       { background-color: #0a1a0d !important; }
+.dark-public .bg-green-100      { background-color: #0e2012 !important; }
+.dark-public .bg-blue-50        { background-color: #0a1422 !important; }
+.dark-public .bg-purple-50      { background-color: #130d22 !important; }
+.dark-public .bg-red-50         { background-color: #1a0a0a !important; }
+.dark-public .bg-amber-50       { background-color: #1c1508 !important; }
 
 /* ── Formulárové prvky ── */
 .dark-public input:not([type="range"]):not([type="color"]):not([type="checkbox"]):not([type="radio"]),
 .dark-public textarea,
 .dark-public select {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
-  color: #e2e8f0 !important;
+  background-color: #141e30 !important;
+  border-color: #1e2c40 !important;
+  color: #d8e5ef !important;
 }
 .dark-public input::placeholder,
 .dark-public textarea::placeholder {
-  color: #475569 !important;
+  color: #5e87a0 !important;
 }
 
-/* ── Shadow zmäkčenie v dark móde ── */
-.dark-public .shadow-sm  { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
-.dark-public .shadow-md  { box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important; }
-.dark-public .shadow-lg  { box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important; }
-.dark-public .shadow-xl  { box-shadow: 0 16px 40px rgba(0,0,0,0.6) !important; }
-.dark-public .shadow-2xl { box-shadow: 0 24px 60px rgba(0,0,0,0.7) !important; }
+/* ── Tiene — hlbšie pre dark povrchy ── */
+.dark-public .shadow-sm  { box-shadow: 0 1px 3px  rgba(0,0,0,0.55) !important; }
+.dark-public .shadow-md  { box-shadow: 0 4px 12px rgba(0,0,0,0.65) !important; }
+.dark-public .shadow-lg  { box-shadow: 0 8px 24px rgba(0,0,0,0.70) !important; }
+.dark-public .shadow-xl  { box-shadow: 0 16px 40px rgba(0,0,0,0.75) !important; }
+.dark-public .shadow-2xl { box-shadow: 0 24px 60px rgba(0,0,0,0.85) !important; }
 
 /* ── Plynulý prechod pri prepínaní ── */
 .dark-public *,
