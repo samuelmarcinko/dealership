@@ -60,10 +60,11 @@ interface Props {
   userName: string
   userEmail: string
   userRole: string
+  businessName: string
   onClose?: () => void
 }
 
-export default function AdminSidebar({ userName, userEmail, userRole, onClose }: Props) {
+export default function AdminSidebar({ userName, userEmail, userRole, businessName, onClose }: Props) {
   const visibleNavItems = userRole === 'ADMIN'
     ? navItems
     : navItems.filter(item => !ADMIN_ONLY_HREFS.includes(item.href))
@@ -87,9 +88,8 @@ export default function AdminSidebar({ userName, userEmail, userRole, onClose }:
         <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center shrink-0">
           <CarIcon className="h-5 w-5 text-white" />
         </div>
-        <div className="flex-1">
-          <span className="text-white font-bold text-lg">Auto</span>
-          <span className="text-orange-400 font-bold text-lg">Bazar</span>
+        <div className="flex-1 min-w-0">
+          <span className="text-white font-bold text-lg leading-tight block truncate">{businessName}</span>
           <div className="text-slate-500 text-xs">Admin</div>
         </div>
         {onClose && (

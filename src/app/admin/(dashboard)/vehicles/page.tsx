@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Plus, Pencil, FileInput, UserPen, Search, Handshake } from 'lucide-react'
+import SellVehicleButton from '@/components/admin/SellVehicleButton'
+import PrintLabelButton from '@/components/admin/PrintLabelButton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -163,13 +165,15 @@ export default async function AdminVehiclesPage({
                 <TableHead>Zľavnená cena</TableHead>
                 <TableHead>Stav</TableHead>
                 <TableHead>Zdroj</TableHead>
-                <TableHead className="w-[100px]">Akcie</TableHead>
+                <TableHead className="w-[90px]">Akcie</TableHead>
+                <TableHead className="w-[110px]">Predaj</TableHead>
+                <TableHead className="w-[100px]">Štítok</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vehicles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8 text-slate-400">
+                  <TableCell colSpan={12} className="text-center py-8 text-slate-400">
                     {hasFilter ? 'Žiadne vozidlá nevyhovujú filtrám' : 'Žiadne vozidlá v ponuke'}
                   </TableCell>
                 </TableRow>
@@ -244,6 +248,20 @@ export default async function AdminVehiclesPage({
                           </Button>
                           <DeleteVehicleButton vehicleId={vehicle.id} />
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <SellVehicleButton
+                          vehicleId={vehicle.id}
+                          vehicleTitle={vehicle.title}
+                          listedPrice={Number(vehicle.price)}
+                          salePrice={vehicle.salePrice != null ? Number(vehicle.salePrice) : null}
+                          isConsignment={vehicle.isConsignment}
+                          vehicleCommissionRate={vehicle.commissionRate != null ? Number(vehicle.commissionRate) : null}
+                          size="sm"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <PrintLabelButton vehicleId={vehicle.id} />
                       </TableCell>
                     </TableRow>
                   )

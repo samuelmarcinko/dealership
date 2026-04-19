@@ -3,13 +3,16 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { ChevronLeft, ShoppingBag, Calendar, Handshake } from 'lucide-react'
+import { ChevronLeft, ShoppingBag, Calendar, Handshake, Car, Gauge, Fuel, Tag, TrendingUp, Pencil } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import CustomerForm from '@/components/admin/CustomerForm'
+import SellVehicleButton from '@/components/admin/SellVehicleButton'
+import PrintLabelButton from '@/components/admin/PrintLabelButton'
 import { customerDisplayName } from '@/lib/customer'
-import { formatPrice, vehicleStatusLabel } from '@/lib/utils'
+import { formatPrice, vehicleStatusLabel, fuelTypeLabel, formatMileage } from '@/lib/utils'
 
 export const metadata: Metadata = { title: 'Upraviť zákazníka' }
 
@@ -44,7 +47,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_460px] gap-6 items-start">
         {/* Left — edit form */}
         <CustomerForm
           initialData={{
@@ -65,8 +68,9 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
 
         {/* Right — purchase history + consignment history */}
         <div className="xl:sticky xl:top-6 space-y-4">
+          {/* Purchase history */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="h-4 w-4 text-orange-500" />
                 <CardTitle className="text-base font-semibold">
@@ -85,31 +89,51 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
               <CardContent className="p-0">
                 <div className="divide-y divide-slate-100">
                   {customer.vehicles.map((v) => (
-                    <div key={v.id} className="flex items-center gap-3 px-5 py-4">
-                      <div className="relative w-14 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
-                        {v.images[0] ? (
-                          <Image src={v.images[0].url} alt={v.title} fill className="object-cover" sizes="56px" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">foto</div>
-                        )}
+                    <div key={v.id} className="px-5 py-4 space-y-3">
+                      <div className="flex gap-3">
+                        <div className="relative w-20 h-14 bg-slate-100 rounded-lg overflow-hidden shrink-0">
+                          {v.images[0] ? (
+                            <Image src={v.images[0].url} alt={v.title} fill className="object-cover" sizes="80px" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                              <Car className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-900 text-sm leading-snug">{v.title}</p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                            <span className="flex items-center gap-1 text-xs text-slate-500">
+                              <Car className="h-3 w-3" />{v.year}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs text-slate-500">
+                              <Gauge className="h-3 w-3" />{formatMileage(v.mileage)}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs text-slate-500">
+                              <Fuel className="h-3 w-3" />{fuelTypeLabel(v.fuelType)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 text-sm truncate">{v.title}</p>
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <div className="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-3">
                           {v.soldAt && (
-                            <span className="flex items-center gap-1 text-xs text-slate-400">
+                            <span className="flex items-center gap-1 text-xs text-slate-500">
                               <Calendar className="h-3 w-3" />
                               {new Date(v.soldAt).toLocaleDateString('sk-SK')}
                             </span>
                           )}
                           {v.soldPrice && (
-                            <span className="text-xs font-semibold text-slate-700">{formatPrice(v.soldPrice)}</span>
+                            <span className="flex items-center gap-1 text-xs font-bold text-orange-600">
+                              <Tag className="h-3 w-3" />
+                              {formatPrice(v.soldPrice)}
+                            </span>
                           )}
                         </div>
+                        <Link href={`/admin/sold`} className="text-xs text-orange-500 hover:text-orange-700 font-medium shrink-0">
+                          Predané vozidlá →
+                        </Link>
                       </div>
-                      <Link href="/admin/sold" className="text-xs text-orange-500 hover:underline shrink-0">
-                        Detail →
-                      </Link>
                     </div>
                   ))}
                 </div>
@@ -119,15 +143,27 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
 
           {/* Consigned vehicles */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Handshake className="h-4 w-4 text-purple-500" />
-                <CardTitle className="text-base font-semibold">
-                  Komisné vozidlá
-                  {customer.consignedVehicles.length > 0 && (
-                    <span className="ml-1.5 text-sm font-normal text-slate-400">({customer.consignedVehicles.length})</span>
-                  )}
-                </CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Handshake className="h-4 w-4 text-purple-500" />
+                  <CardTitle className="text-base font-semibold">
+                    Komisné vozidlá
+                    {customer.consignedVehicles.length > 0 && (
+                      <span className="ml-1.5 text-sm font-normal text-slate-400">({customer.consignedVehicles.length})</span>
+                    )}
+                  </CardTitle>
+                </div>
+                {customer.consignedVehicles.some(v => v.status === 'SOLD' && v.commissionAmount != null) && (
+                  <span className="flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded-md">
+                    <TrendingUp className="h-3 w-3" />
+                    {formatPrice(
+                      customer.consignedVehicles
+                        .filter(v => v.commissionAmount != null)
+                        .reduce((sum, v) => sum + Number(v.commissionAmount), 0)
+                    )}
+                  </span>
+                )}
               </div>
             </CardHeader>
             {customer.consignedVehicles.length === 0 ? (
@@ -140,34 +176,91 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
                   {customer.consignedVehicles.map((v) => {
                     const statusVariant = v.status === 'AVAILABLE' ? 'success' : v.status === 'RESERVED' ? 'warning' : 'error'
                     return (
-                      <div key={v.id} className="flex items-center gap-3 px-5 py-4">
-                        <div className="relative w-14 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
-                          {v.images[0] ? (
-                            <Image src={v.images[0].url} alt={v.title} fill className="object-cover" sizes="56px" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">foto</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-900 text-sm truncate">{v.title}</p>
-                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                            <Badge variant={statusVariant}>{vehicleStatusLabel(v.status)}</Badge>
-                            {v.status === 'SOLD' && v.soldAt && (
-                              <span className="flex items-center gap-1 text-xs text-slate-400">
-                                <Calendar className="h-3 w-3" />
-                                {new Date(v.soldAt).toLocaleDateString('sk-SK')}
-                              </span>
-                            )}
-                            {v.status === 'SOLD' && v.commissionAmount != null && (
-                              <span className="text-xs font-semibold text-purple-700">
-                                Odmena: {formatPrice(v.commissionAmount)}
-                              </span>
+                      <div key={v.id} className="px-5 py-4 space-y-3">
+                        <div className="flex gap-3">
+                          <div className="relative w-20 h-14 bg-slate-100 rounded-lg overflow-hidden shrink-0">
+                            {v.images[0] ? (
+                              <Image src={v.images[0].url} alt={v.title} fill className="object-cover" sizes="80px" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                <Car className="h-5 w-5" />
+                              </div>
                             )}
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-slate-900 text-sm leading-snug">{v.title}</p>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                              <span className="flex items-center gap-1 text-xs text-slate-500">
+                                <Car className="h-3 w-3" />{v.year}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs text-slate-500">
+                                <Gauge className="h-3 w-3" />{formatMileage(v.mileage)}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs text-slate-500">
+                                <Fuel className="h-3 w-3" />{fuelTypeLabel(v.fuelType)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <Link href={`/admin/vehicles/${v.id}`} className="text-xs text-purple-500 hover:underline shrink-0">
-                          Detail →
-                        </Link>
+                        <div className="bg-slate-50 rounded-lg px-3 py-2 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <Badge variant={statusVariant}>{vehicleStatusLabel(v.status)}</Badge>
+                              <span className="flex items-center gap-1 text-xs font-semibold text-slate-700">
+                                <Tag className="h-3 w-3" />{formatPrice(v.price)}
+                              </span>
+                              {v.commissionRate != null && (
+                                <span className="text-xs text-slate-500">Provízia: {Number(v.commissionRate)} %</span>
+                              )}
+                            </div>
+                          </div>
+                          {v.status === 'SOLD' && (v.soldAt || v.commissionAmount != null) && (
+                            <div className="flex items-center gap-3 flex-wrap pt-1 border-t border-slate-200">
+                              {v.soldAt && (
+                                <span className="flex items-center gap-1 text-xs text-slate-500">
+                                  <Calendar className="h-3 w-3" />
+                                  Predané {new Date(v.soldAt).toLocaleDateString('sk-SK')}
+                                </span>
+                              )}
+                              {v.commissionAmount != null && (
+                                <span className="flex items-center gap-1 text-xs font-bold text-purple-700">
+                                  <TrendingUp className="h-3 w-3" />
+                                  Odmena: {formatPrice(v.commissionAmount)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {v.status !== 'SOLD' && (
+                          <div className="flex items-center gap-2">
+                            <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+                              <Link href={`/admin/vehicles/${v.id}`}>
+                                <Pencil className="h-3 w-3 mr-1" />
+                                Upraviť
+                              </Link>
+                            </Button>
+                            <PrintLabelButton vehicleId={v.id} />
+                            <SellVehicleButton
+                              vehicleId={v.id}
+                              vehicleTitle={v.title}
+                              listedPrice={Number(v.price)}
+                              salePrice={v.salePrice != null ? Number(v.salePrice) : null}
+                              isConsignment={v.isConsignment}
+                              vehicleCommissionRate={v.commissionRate != null ? Number(v.commissionRate) : null}
+                              size="sm"
+                            />
+                          </div>
+                        )}
+                        {v.status === 'SOLD' && (
+                          <div className="flex items-center gap-2">
+                            <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+                              <Link href={`/admin/vehicles/${v.id}`}>
+                                <Pencil className="h-3 w-3 mr-1" />
+                                Zobraziť detail
+                              </Link>
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )
                   })}

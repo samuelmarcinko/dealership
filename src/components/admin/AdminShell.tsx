@@ -9,10 +9,11 @@ interface Props {
   userName: string
   userEmail: string
   userRole: string
+  businessName: string
   children: React.ReactNode
 }
 
-export default function AdminShell({ userName, userEmail, userRole, children }: Props) {
+export default function AdminShell({ userName, userEmail, userRole, businessName, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
 
@@ -40,6 +41,7 @@ export default function AdminShell({ userName, userEmail, userRole, children }: 
           userName={userName}
           userEmail={userEmail}
           userRole={userRole}
+          businessName={businessName}
           onClose={() => setSidebarOpen(false)}
         />
       </div>
@@ -59,7 +61,7 @@ export default function AdminShell({ userName, userEmail, userRole, children }: 
             <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
               <Car className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="text-white font-semibold text-sm">AutoBazar Admin</span>
+            <span className="text-white font-semibold text-sm">{businessName} Admin</span>
           </div>
         </header>
 

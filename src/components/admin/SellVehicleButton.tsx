@@ -12,19 +12,21 @@ interface Props {
   salePrice?: number | null
   isConsignment?: boolean
   vehicleCommissionRate?: number | null
+  size?: 'default' | 'sm'
 }
 
-export default function SellVehicleButton({ vehicleId, vehicleTitle, listedPrice, salePrice, isConsignment, vehicleCommissionRate }: Props) {
+export default function SellVehicleButton({ vehicleId, vehicleTitle, listedPrice, salePrice, isConsignment, vehicleCommissionRate, size = 'default' }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
     <>
       <Button
         onClick={() => setOpen(true)}
+        size={size}
         className="bg-green-600 hover:bg-green-700 text-white gap-2"
       >
         <HandCoins className="h-4 w-4" />
-        Predať vozidlo
+        {size === 'sm' ? 'Predať' : 'Predať vozidlo'}
       </Button>
 
       {open && (
