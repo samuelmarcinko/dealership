@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import type { TenantBranding } from '@/lib/tenant'
 import { useCompare } from '@/contexts/CompareContext'
 import ThemeToggle from './ThemeToggle'
+import { useTheme } from './ThemeProvider'
 
 const builtInNavLinks = [
   { href: '/', label: 'Domov', exact: true },
@@ -32,8 +33,10 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
     ? `/compare?ids=${compareVehicles.map(v => v.id).join(',')}`
     : '/compare'
 
+  const { theme } = useTheme()
   const name = branding?.businessName ?? 'AutoBazar'
   const style = branding?.navbarStyle ?? 'dark'
+  const effectiveLogoUrl = (theme === 'dark' && branding?.logoUrlLight) ? branding.logoUrlLight : branding?.logoUrl
 
   const allLinks = navLinks ?? [
     ...builtInNavLinks,
@@ -142,10 +145,10 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            {branding?.logoUrl ? (
-              <div className="relative h-10" style={{ width: branding.logoWidth ?? 120 }}>
+            {effectiveLogoUrl ? (
+              <div className="relative h-10" style={{ width: branding?.logoWidth ?? 120 }}>
                 <Image
-                  src={branding.logoUrl}
+                  src={effectiveLogoUrl}
                   alt={name}
                   fill
                   className="object-contain object-left"
@@ -230,14 +233,6 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
       {open && (
         <div className={mobileMenuClass}>
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-1">
-            {/* Theme toggle row */}
-            <div className={cn(
-              'flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium',
-              style === 'light' ? 'text-slate-600' : 'text-slate-300'
-            )}>
-              <span>Tmavý režim</span>
-              <ThemeToggle navStyle={style} />
-            </div>
             {allLinks.map((link) => (
               <Link
                 key={link.href}
@@ -284,6 +279,14 @@ export default function Navbar({ branding, navLinks, customNavLinks = [] }: Prop
                 {branding.contactEmail}
               </a>
             )}
+            {/* Theme toggle row — last item */}
+            <div className={cn(
+              'flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium border-t mt-1 pt-3',
+              style === 'light' ? 'text-slate-600 border-slate-200' : 'text-slate-300 border-white/10'
+            )}>
+              <span>Tmavý režim</span>
+              <ThemeToggle navStyle={style} />
+            </div>
           </nav>
         </div>
       )}

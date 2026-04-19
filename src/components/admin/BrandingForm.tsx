@@ -17,8 +17,10 @@ export default function BrandingForm({ settings }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [logoUrl, setLogoUrl] = useState(settings['logo_url'] ?? '')
+  const [logoUrlLight, setLogoUrlLight] = useState(settings['logo_url_light'] ?? '')
   const [logoWidth, setLogoWidth] = useState(Number(settings['logo_width'] ?? 120))
   const [logoUploading, setLogoUploading] = useState(false)
+  const [logoLightUploading, setLogoLightUploading] = useState(false)
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -39,6 +41,25 @@ export default function BrandingForm({ settings }: Props) {
     }
   }
 
+  async function handleLogoLightUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoLightUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/upload/branding', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (res.ok) setLogoUrlLight(json.url)
+      else toast('error', json.error ?? 'Chyba nahrávania')
+    } catch {
+      toast('error', 'Chyba nahrávania')
+    } finally {
+      setLogoLightUploading(false)
+      e.target.value = ''
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
@@ -47,6 +68,7 @@ export default function BrandingForm({ settings }: Props) {
     const updates = [
       { key: 'business_name', value: fd.get('business_name') as string },
       { key: 'logo_url', value: logoUrl },
+      { key: 'logo_url_light', value: logoUrlLight },
       { key: 'logo_width', value: String(logoWidth) },
       { key: 'contact_phone', value: fd.get('contact_phone') as string },
       { key: 'contact_email', value: fd.get('contact_email') as string },
@@ -118,6 +140,36 @@ export default function BrandingForm({ settings }: Props) {
           </label>
         </div>
         <p className="text-xs text-slate-500">JPG, PNG, WebP alebo SVG. Prázdne = predvolená ikona.</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Logo pre tmavý režim <span className="text-slate-400 font-normal">(voliteľné)</span></Label>
+        <div className="flex items-center gap-3 flex-wrap">
+          {logoUrlLight && (
+            <div className="relative h-12 w-32 rounded border border-slate-200 bg-slate-800 overflow-hidden flex items-center justify-center p-1">
+              <Image src={logoUrlLight} alt="Logo (dark mode)" fill className="object-contain p-1" sizes="128px" />
+              <button
+                type="button"
+                onClick={() => setLogoUrlLight('')}
+                className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+          <label className="inline-flex items-center gap-2 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-3 py-2 rounded-md transition-colors">
+            <Upload className="h-4 w-4" />
+            {logoLightUploading ? 'Nahrávam…' : logoUrlLight ? 'Zmeniť light logo' : 'Nahrať light logo'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={handleLogoLightUpload}
+              disabled={logoLightUploading}
+            />
+          </label>
+        </div>
+        <p className="text-xs text-slate-500">Zobrazí sa v navigácii pri zapnutom tmavom režime. Zvyčajne svetlá/biela verzia loga.</p>
       </div>
 
       {logoUrl && (

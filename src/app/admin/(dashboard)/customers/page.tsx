@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, User, Building2, Phone, Mail, ShoppingBag, Search } from 'lucide-react'
+import { Plus, User, Building2, Phone, Mail, Search, Handshake, MapPin, Car } from 'lucide-react'
 import { customerDisplayName } from '@/lib/customer'
 import DeleteCustomerButton from '@/components/admin/DeleteCustomerButton'
 import { CustomerType } from '@prisma/client'
@@ -36,7 +36,10 @@ export default async function CustomersPage({
         }),
       },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { vehicles: true } } },
+      include: {
+        _count: { select: { vehicles: true, consignedVehicles: true } },
+        vehicles: { where: { soldAt: { not: null } }, select: { soldAt: true }, orderBy: { soldAt: 'desc' }, take: 1 },
+      },
     }),
     prisma.customer.groupBy({
       by: ['type'],
@@ -72,7 +75,7 @@ export default async function CustomersPage({
           { label: 'Fyzické osoby', value: personsAll, icon: User, color: 'text-blue-600 bg-blue-50' },
           { label: 'Firmy / Živnostníci', value: companiesAll, icon: Building2, color: 'text-purple-600 bg-purple-50' },
         ].map((s) => (
-          <Card key={s.label}>
+          <Card key={s.label} className="hover:shadow-md hover:-translate-y-0.5 hover:border-slate-300 cursor-default">
             <CardContent className="pt-5 pb-4">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
@@ -155,7 +158,7 @@ export default async function CustomersPage({
           ) : (
             <div className="divide-y divide-slate-100">
               {customers.map((c) => (
-                <div key={c.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
+                <div key={c.id} className="group flex items-center gap-4 px-6 py-4 hover:bg-orange-50/40 hover:border-l-[3px] hover:border-l-orange-400 transition-all duration-150">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                     c.type === 'COMPANY' ? 'bg-purple-100' : 'bg-blue-100'
                   }`}>
@@ -164,35 +167,74 @@ export default async function CustomersPage({
                       : <User className="h-4 w-4 text-blue-600" />
                     }
                   </div>
+                  {/* Name + contact */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-slate-900">{customerDisplayName(c)}</span>
                       <Badge className={`text-xs border-0 ${c.type === 'COMPANY' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                         {c.type === 'COMPANY' ? 'Firma' : 'Osoba'}
                       </Badge>
+                      {c.type === 'COMPANY' && c.ico && (
+                        <span className="text-xs text-slate-400 font-mono">IČO: {c.ico}</span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-4 mt-0.5">
+                    <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       {c.phone && (
-                        <span className="flex items-center gap-1 text-xs text-slate-400">
+                        <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors">
                           <Phone className="h-3 w-3" />{c.phone}
-                        </span>
+                        </a>
                       )}
                       {c.email && (
-                        <span className="flex items-center gap-1 text-xs text-slate-400">
+                        <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors">
                           <Mail className="h-3 w-3" />{c.email}
-                        </span>
-                      )}
-                      {c.type === 'COMPANY' && c.ico && (
-                        <span className="text-xs text-slate-400">IČO: {c.ico}</span>
+                        </a>
                       )}
                     </div>
                   </div>
-                  {c._count.vehicles > 0 && (
-                    <div className="flex items-center gap-1 text-xs text-slate-500 shrink-0">
-                      <ShoppingBag className="h-3.5 w-3.5" />
-                      {c._count.vehicles} {c._count.vehicles === 1 ? 'kúpa' : 'kúpy'}
+
+                  {/* Address */}
+                  {c.address && (
+                    <div className="hidden xl:flex items-center gap-1 text-xs text-slate-400 shrink-0 max-w-[140px]">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{c.address.split('\n')[0]}</span>
                     </div>
                   )}
+
+                  {/* Bought vehicles */}
+                  <div className="hidden md:flex flex-col items-center gap-0.5 shrink-0 min-w-[64px]">
+                    <div className={`flex items-center gap-1 text-sm font-bold ${
+                      c._count.vehicles > 0 ? 'text-blue-600' : 'text-slate-300'
+                    }`}>
+                      <Car className="h-3.5 w-3.5" />
+                      {c._count.vehicles}
+                    </div>
+                    <span className="text-[10px] text-slate-400 leading-none">Kúpené</span>
+                  </div>
+
+                  {/* Consigned vehicles */}
+                  <div className="hidden md:flex flex-col items-center gap-0.5 shrink-0 min-w-[64px]">
+                    <div className={`flex items-center gap-1 text-sm font-bold ${
+                      c._count.consignedVehicles > 0 ? 'text-purple-600' : 'text-slate-300'
+                    }`}>
+                      <Handshake className="h-3.5 w-3.5" />
+                      {c._count.consignedVehicles}
+                    </div>
+                    <span className="text-[10px] text-slate-400 leading-none">Komisné</span>
+                  </div>
+
+                  {/* Last activity */}
+                  <div className="hidden lg:flex flex-col items-end gap-0.5 shrink-0 min-w-[90px]">
+                    {c.vehicles[0]?.soldAt ? (
+                      <>
+                        <span className="text-xs font-medium text-slate-600">
+                          {new Intl.DateTimeFormat('sk-SK', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(c.vehicles[0].soldAt))}
+                        </span>
+                        <span className="text-[10px] text-slate-400">Posledný nákup</span>
+                      </>
+                    ) : (
+                      <span className="text-[10px] text-slate-300">—</span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/admin/customers/${c.id}`}>Upraviť</Link>
