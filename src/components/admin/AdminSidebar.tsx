@@ -82,7 +82,7 @@ export default function AdminSidebar({ userName, userEmail, userRole, businessNa
   }
 
   return (
-    <aside className="flex flex-col w-64 bg-slate-900 h-full min-h-screen lg:min-h-0">
+    <aside className="flex flex-col w-64 bg-slate-900 h-full">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-800">
         <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center shrink-0">

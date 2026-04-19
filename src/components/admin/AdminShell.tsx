@@ -22,7 +22,7 @@ export default function AdminShell({ userName, userEmail, userRole, businessName
   }, [pathname])
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -33,7 +33,7 @@ export default function AdminShell({ userName, userEmail, userRole, businessName
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 lg:sticky lg:top-0 lg:h-screen lg:z-auto lg:shrink-0 transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 lg:relative lg:z-auto lg:shrink-0 lg:h-full transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
       >
@@ -47,9 +47,9 @@ export default function AdminShell({ userName, userEmail, userRole, businessName
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Mobile header */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800">
+        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -65,7 +65,7 @@ export default function AdminShell({ userName, userEmail, userRole, businessName
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
   )
