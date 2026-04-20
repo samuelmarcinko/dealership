@@ -26,6 +26,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin', request.url))
     }
 
+    // MANAGER: allowlist — only Dashboard, Zákazníci, Komisný predaj, Ponuka vozidiel, Predané vozidlá
+    const MANAGER_ALLOWED_PREFIXES = ['/admin/customers', '/admin/consignors', '/admin/vehicles', '/admin/sold']
+    if (
+      session.role === 'MANAGER' &&
+      pathname !== '/admin' &&
+      !MANAGER_ALLOWED_PREFIXES.some(p => pathname.startsWith(p))
+    ) {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
+
     // Pass user info to the request headers for use in server components
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-user-id', session.userId)

@@ -55,6 +55,7 @@ const navItems: NavItem[] = [
 ]
 
 const ADMIN_ONLY_HREFS = ['/admin/users', '/admin/settings']
+const MANAGER_ALLOWED_HREFS = ['/admin', '/admin/customers', '/admin/consignors', '/admin/vehicles', '/admin/sold']
 
 interface Props {
   userName: string
@@ -67,7 +68,9 @@ interface Props {
 export default function AdminSidebar({ userName, userEmail, userRole, businessName, onClose }: Props) {
   const visibleNavItems = userRole === 'ADMIN'
     ? navItems
-    : navItems.filter(item => !ADMIN_ONLY_HREFS.includes(item.href))
+    : userRole === 'MANAGER'
+      ? navItems.filter(item => MANAGER_ALLOWED_HREFS.includes(item.href))
+      : navItems.filter(item => !ADMIN_ONLY_HREFS.includes(item.href))
   const pathname = usePathname()
   const router = useRouter()
 

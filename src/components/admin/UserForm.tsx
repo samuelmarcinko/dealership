@@ -107,6 +107,7 @@ export default function UserForm({ user }: Props) {
           <SelectContent>
             <SelectItem value="ADMIN">Admin</SelectItem>
             <SelectItem value="EDITOR">Editor</SelectItem>
+            <SelectItem value="MANAGER">Správca bazáru</SelectItem>
           </SelectContent>
         </Select>
       </div>

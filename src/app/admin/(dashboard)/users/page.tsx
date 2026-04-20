@@ -62,8 +62,12 @@ export default async function UsersPage() {
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell className="text-slate-600">{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
-                        {user.role}
+                      <Badge variant={
+                        (user.role as string) === 'ADMIN' ? 'default' :
+                        (user.role as string) === 'MANAGER' ? 'warning' : 'secondary'
+                      }>
+                        {(user.role as string) === 'ADMIN' ? 'Admin' :
+                         (user.role as string) === 'MANAGER' ? 'Správca bazáru' : 'Editor'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
