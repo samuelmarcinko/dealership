@@ -212,14 +212,14 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   </p>
                 )}
 
-                <div className="grid grid-cols-1 gap-3 mb-6">
+                <div className="grid grid-cols-1 mb-6">
                   {specs.map((spec) => (
-                    <div key={spec.label} className="flex items-center justify-between py-2 border-b border-slate-50">
-                      <div className="flex items-center gap-2 text-slate-500 text-sm">
-                        <spec.icon className="h-4 w-4 text-slate-400" />
+                    <div key={spec.label} className="group flex items-center justify-between py-2.5 px-3 -mx-3 rounded-lg border-b border-slate-100 last:border-0 hover:bg-slate-100 hover:border-transparent transition-colors duration-150 cursor-default">
+                      <div className="flex items-center gap-2 text-slate-500 text-sm group-hover:text-slate-700 transition-colors">
+                        <spec.icon className="h-4 w-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                         {spec.label}
                       </div>
-                      <span className="font-medium text-slate-900 text-sm">{spec.value}</span>
+                      <span className="font-semibold text-slate-900 text-sm">{spec.value}</span>
                     </div>
                   ))}
                 </div>
