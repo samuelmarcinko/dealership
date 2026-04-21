@@ -279,28 +279,24 @@ export default function FeatureCheckboxes({ items, value, onChange, customCatego
                     {groupItems.map(item => {
                       const checked = current.includes(item.name)
                       return (
-                        <label
+                        <button
                           key={item.id}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-sm transition-all select-none border ${
+                          type="button"
+                          aria-pressed={checked}
+                          onClick={() => toggle(item.name)}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-sm transition-all select-none border text-left ${
                             checked
                               ? 'bg-orange-50 border-orange-200 text-orange-900'
                               : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
                           }`}
                         >
-                          <input
-                            type="checkbox"
-                            className="sr-only"
-                            tabIndex={-1}
-                            checked={checked}
-                            onChange={() => toggle(item.name)}
-                          />
                           <span className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
                             checked ? 'bg-orange-500 border-orange-500' : 'border-slate-300 bg-white'
                           }`}>
                             {checked && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
                           </span>
                           <span className="leading-snug">{item.name}</span>
-                        </label>
+                        </button>
                       )
                     })}
                   </div>

@@ -114,6 +114,14 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
   const [status, setStatus] = useState<string>(vehicle?.status ?? 'AVAILABLE')
   const [description, setDescription] = useState<string>(vehicle?.description ?? '')
 
+  // STK / EK
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const v0 = vehicle as any
+  const [stkMonth, setStkMonth] = useState<string>(v0?.stkMonth ? String(v0.stkMonth) : '')
+  const [stkYear, setStkYear]   = useState<string>(v0?.stkYear  ? String(v0.stkYear)  : '')
+  const [ekMonth, setEkMonth]   = useState<string>(v0?.ekMonth  ? String(v0.ekMonth)  : '')
+  const [ekYear, setEkYear]     = useState<string>(v0?.ekYear   ? String(v0.ekYear)   : '')
+
   // Collapsible sections
   const [openSections, setOpenSections] = useState({
     basic: true, tech: true, desc: true, consignment: true, videos: true, photos: true,
@@ -344,6 +352,10 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       otherFeatures: features.OTHER,
       evFeatures: features.EV,
       vin: (data.get('vin') as string) || null,
+      stkMonth: stkMonth ? parseInt(stkMonth) : null,
+      stkYear:  stkYear  ? parseInt(stkYear)  : null,
+      ekMonth:  ekMonth  ? parseInt(ekMonth)  : null,
+      ekYear:   ekYear   ? parseInt(ekYear)   : null,
       status,
       isConsignment,
       consignorId: isConsignment ? consignorId : null,
@@ -599,6 +611,62 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
                 maxLength={17}
                 className="uppercase"
               />
+            </div>
+          </div>
+
+          {/* STK / EK */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Platnosť STK <span className="text-slate-400 font-normal text-xs">— nepovinné</span></Label>
+              <div className="flex gap-2">
+                <Select value={stkMonth} onValueChange={setStkMonth}>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Mesiac" /></SelectTrigger>
+                  <SelectContent>
+                    {['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'].map((m, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={stkYear} onValueChange={setStkYear}>
+                  <SelectTrigger className="w-28"><SelectValue placeholder="Rok" /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 15 }, (_, i) => CURRENT_YEAR - 2 + i).map(y => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {(stkMonth || stkYear) && (
+                  <button type="button" onClick={() => { setStkMonth(''); setStkYear('') }} className="text-slate-400 hover:text-red-500 transition-colors" title="Vymazať STK">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Platnosť EK <span className="text-slate-400 font-normal text-xs">— nepovinné</span></Label>
+              <div className="flex gap-2">
+                <Select value={ekMonth} onValueChange={setEkMonth}>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Mesiac" /></SelectTrigger>
+                  <SelectContent>
+                    {['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'].map((m, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={ekYear} onValueChange={setEkYear}>
+                  <SelectTrigger className="w-28"><SelectValue placeholder="Rok" /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 15 }, (_, i) => CURRENT_YEAR - 2 + i).map(y => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {(ekMonth || ekYear) && (
+                  <button type="button" onClick={() => { setEkMonth(''); setEkYear('') }} className="text-slate-400 hover:text-red-500 transition-colors" title="Vymazať EK">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>}

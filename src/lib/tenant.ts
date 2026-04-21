@@ -84,6 +84,7 @@ export interface TenantBranding {
   heroOverlayGradient?: string // 'true' | 'false'
   heroTextAnimation?: string   // 'fadeup' | 'slideup' | 'zoom' | 'fade'
   heroEffect?: string          // 'none' | 'kenburns' | 'parallax' | 'particles' | 'shimmer' | 'pulseglow'
+  labelOrientation?: string     // 'landscape' | 'portrait'
 }
 
 export async function getTenantSettings(): Promise<Record<string, string>> {
@@ -174,5 +175,6 @@ export async function getTenantBranding(): Promise<TenantBranding> {
     bannerText: s['banner_text'] || undefined,
     bannerUrl: s['banner_url'] || undefined,
     bannerBgColor: s['banner_bg_color'] || undefined,
+    labelOrientation: s['label_orientation'] || 'landscape',
   }
 }

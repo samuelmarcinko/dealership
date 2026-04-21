@@ -119,6 +119,10 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     vehicle.status === 'AVAILABLE' ? 'success' :
     vehicle.status === 'RESERVED' ? 'warning' : 'error'
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const veh = vehicle as any
+  const MONTHS_SK = ['Jan','Feb','Mar','Apr','Máj','Jún','Júl','Aug','Sep','Okt','Nov','Dec']
+
   const specs = [
     { icon: Calendar, label: 'Rok výroby', value: String(vehicle.year) },
     { icon: Gauge, label: 'Najazdené', value: formatMileage(vehicle.mileage) },
@@ -131,6 +135,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     ...(vehicle.doors ? [{ icon: DoorOpen, label: 'Počet dverí', value: String(vehicle.doors) }] : []),
     ...(vehicle.seats ? [{ icon: Users, label: 'Počet miest', value: String(vehicle.seats) }] : []),
     ...(vehicle.vin ? [{ icon: Hash, label: 'VIN', value: vehicle.vin }] : []),
+    ...(veh.stkMonth && veh.stkYear ? [{ icon: ShieldCheck, label: 'Platnosť STK', value: `${MONTHS_SK[veh.stkMonth - 1]} ${veh.stkYear}` }] : []),
+    ...(veh.ekMonth && veh.ekYear ? [{ icon: ShieldCheck, label: 'Platnosť EK', value: `${MONTHS_SK[veh.ekMonth - 1]} ${veh.ekYear}` }] : []),
   ]
 
   const hasSalePrice = vehicle.salePrice != null && Number(vehicle.salePrice) > 0

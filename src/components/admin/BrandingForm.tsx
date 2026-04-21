@@ -21,6 +21,7 @@ export default function BrandingForm({ settings }: Props) {
   const [logoWidth, setLogoWidth] = useState(Number(settings['logo_width'] ?? 120))
   const [logoUploading, setLogoUploading] = useState(false)
   const [logoLightUploading, setLogoLightUploading] = useState(false)
+  const [labelOrientation, setLabelOrientation] = useState<string>(settings['label_orientation'] ?? 'landscape')
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -76,6 +77,7 @@ export default function BrandingForm({ settings }: Props) {
       { key: 'social_facebook', value: fd.get('social_facebook') as string },
       { key: 'social_instagram', value: fd.get('social_instagram') as string },
       { key: 'footer_tagline', value: fd.get('footer_tagline') as string },
+      { key: 'label_orientation', value: labelOrientation },
     ]
 
     try {
@@ -256,6 +258,46 @@ export default function BrandingForm({ settings }: Props) {
               placeholder="https://instagram.com/autobazar"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="border-t pt-5">
+        <h3 className="font-medium text-slate-900 mb-4">Tlač štítkov</h3>
+        <div className="space-y-2">
+          <Label>Orientácia tlačového štítku</Label>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setLabelOrientation('landscape')}
+              className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                labelOrientation === 'landscape'
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-600'
+              }`}
+            >
+              <div className="w-16 h-10 rounded border-2 border-current flex items-center justify-center">
+                <span className="text-xs font-bold">A4</span>
+              </div>
+              <span className="text-sm font-medium">Na šírku (Landscape)</span>
+              <span className="text-xs text-slate-500">297 × 210 mm</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLabelOrientation('portrait')}
+              className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                labelOrientation === 'portrait'
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-600'
+              }`}
+            >
+              <div className="w-10 h-14 rounded border-2 border-current flex items-center justify-center">
+                <span className="text-xs font-bold">A4</span>
+              </div>
+              <span className="text-sm font-medium">Na výšku (Portrait)</span>
+              <span className="text-xs text-slate-500">210 × 297 mm</span>
+            </button>
+          </div>
+          <p className="text-xs text-slate-500">Táto voľba určuje orientáciu papiera pri tlači štítku vozidla.</p>
         </div>
       </div>
 

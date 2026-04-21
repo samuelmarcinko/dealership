@@ -124,6 +124,10 @@ model Vehicle {
   otherFeatures       String[]         @default([])
   evFeatures          String[]         @default([])
   vin             String?
+  stkMonth        Int?
+  stkYear         Int?
+  ekMonth         Int?
+  ekYear          Int?
   slug           String?          @unique
   status         VehicleStatus    @default(AVAILABLE)
   externalId     String?          @unique
