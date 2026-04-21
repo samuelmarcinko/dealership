@@ -73,7 +73,7 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
 
   // Strip HTML tags from description, limit length
   const description = vehicle.description
-    ? vehicle.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, isPortrait ? 350 : 200)
+    ? vehicle.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, isPortrait ? 500 : 450)
     : null
 
   if (isPortrait) {
@@ -102,9 +102,9 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
           .spec-text { display: flex; flex-direction: column; min-width: 0; }
           .spec-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1; }
           .spec-value { font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-          .desc-block { flex-shrink: 0; padding: 5px 8px; border-bottom: 1px solid #e2e8f0; }
-          .desc-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #94a3b8; margin-bottom: 2px; }
-          .desc-text { font-size: 10px; color: #475569; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+          .desc-block { flex-shrink: 0; padding: 6px 8px 8px; border-bottom: 1px solid #e2e8f0; }
+          .desc-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 4px; padding-bottom: 2px; border-bottom: 1px solid var(--accent); }
+          .desc-text { font-size: 12px; color: #0f172a; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
           .features { flex: 1; display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 5px 10px; padding: 6px 8px; overflow: hidden; }
           .feat-cat { display: flex; flex-direction: column; gap: 1px; }
           .feat-cat-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 2px; padding-bottom: 1px; border-bottom: 1px solid var(--accent); }
@@ -199,14 +199,16 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
         .price-main { font-size: 64px; font-weight: 900; color: var(--accent); line-height: 1; letter-spacing: -0.03em; display: flex; align-items: baseline; gap: 6px; }
         .price-eur { font-size: 32px; font-weight: 800; line-height: 1.4; }
         .price-label { font-size: 22px; font-weight: 600; color: #000; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 1px; }
-        .specs { flex: 1; display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 0; padding: 6px 12px; overflow: hidden; }
+        .specs-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .specs { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 0; padding: 6px 12px; }
         .spec-row { display: flex; align-items: center; gap: 8px; padding: 4px 4px; border-radius: 4px; }
         .spec-icon { color: var(--accent); flex-shrink: 0; width: 24px; height: 24px; }
         .spec-text { display: flex; flex-direction: column; min-width: 0; }
         .spec-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1; }
         .spec-value { font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .desc-block { flex-shrink: 0; padding: 4px 12px 6px; border-top: 1px solid #e2e8f0; }
-        .desc-text { font-size: 10px; color: #475569; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .desc-block { flex-shrink: 0; padding: 5px 12px 8px; border-top: 1px solid #e2e8f0; }
+        .desc-cat-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 3px; padding-bottom: 2px; border-bottom: 1px solid var(--accent); }
+        .desc-text { font-size: 12px; color: #0f172a; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         .col-right { width: 45%; padding: 8px 10px; display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 6px 10px; overflow: hidden; }
         .feat-cat { display: flex; flex-direction: column; gap: 2px; }
         .feat-cat-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 2px; padding-bottom: 2px; border-bottom: 1px solid var(--accent); }
@@ -238,22 +240,25 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
                 <div className="price-main">{fmt(price)}<span className="price-eur">€</span></div>
               )}
             </div>
-            <div className="specs">
-              {specs.map((s) => (
-                <div key={s.label} className="spec-row">
-                  <SpecIcon name={s.icon} />
-                  <div className="spec-text">
-                    <span className="spec-label">{s.label}</span>
-                    <span className="spec-value">{s.value}</span>
+            <div className="specs-wrap">
+              <div className="specs">
+                {specs.map((s) => (
+                  <div key={s.label} className="spec-row">
+                    <SpecIcon name={s.icon} />
+                    <div className="spec-text">
+                      <span className="spec-label">{s.label}</span>
+                      <span className="spec-value">{s.value}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            {description && (
-              <div className="desc-block">
-                <p className="desc-text">{description}</p>
+                ))}
               </div>
-            )}
+              {description && (
+                <div className="desc-block">
+                  <div className="desc-cat-title">Popis vozidla</div>
+                  <p className="desc-text">{description}</p>
+                </div>
+              )}
+            </div>
           </div>
           <div className="col-right">
             {categories.map(({ cat, meta, items }) => (

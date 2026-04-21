@@ -954,14 +954,14 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
                       dragIndex === index ? 'opacity-40' : ''
                     } ${dragOverIndex === index && dragIndex !== index ? 'ring-2 ring-orange-400 rounded-lg' : ''}`}
                   >
-                    <div className={`aspect-square rounded-lg overflow-hidden border-2 ${img.isPrimary ? 'border-orange-500' : 'border-transparent'}`}>
+                    <div className={`relative aspect-square rounded-lg overflow-hidden border-2 ${img.isPrimary ? 'border-orange-500' : 'border-transparent'}`}>
                       <Image
                         src={img.url}
                         alt={`Vehicle image ${index + 1}`}
                         fill
                         className="object-cover"
-                        sizes="200px"
-                        quality={85}
+                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+                        quality={90}
                       />
                     </div>
 
