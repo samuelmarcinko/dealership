@@ -62,6 +62,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
+# Copy bcryptjs so prisma/seed.js can run inside the container
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/bcryptjs ./node_modules/bcryptjs
+
 # Install the Prisma CLI at the same major version as the project.
 # We do this with npm install (as root, before USER nextjs) so all transitive
 # dependencies (e.g. @prisma/config → effect) are resolved automatically.
