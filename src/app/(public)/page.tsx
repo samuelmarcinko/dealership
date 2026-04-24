@@ -385,9 +385,12 @@ export default async function HomePage() {
                 </AnimateIn>
               ))}
             </div>
-            <div className="mt-8 text-center md:hidden">
-              <Button asChild variant="outline">
-                <Link href="/vehicles">Zobraziť všetky vozidlá</Link>
+            <div className="mt-10 text-center">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white gap-2">
+                <Link href="/vehicles">
+                  Zobraziť kompletnú ponuku
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>

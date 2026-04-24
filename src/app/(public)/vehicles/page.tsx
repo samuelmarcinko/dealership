@@ -1,5 +1,7 @@
 import React from 'react'
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import VehicleCard from '@/components/public/VehicleCard'
 import VehicleFilters from '@/components/public/VehicleFilters'
@@ -13,30 +15,26 @@ export const metadata: Metadata = {
 
 export const revalidate = 30
 
+const PAGE_SIZE = 12
+
 interface SearchParams {
-  make?: string         // comma-separated, e.g. "BMW,Audi"
-  fuelType?: string     // comma-separated
-  transmission?: string // comma-separated
-  bodyType?: string     // comma-separated
+  make?: string
+  fuelType?: string
+  transmission?: string
+  bodyType?: string
   minPrice?: string
   maxPrice?: string
   minYear?: string
   maxYear?: string
   minMileage?: string
   maxMileage?: string
+  page?: string
 }
 
-async function getVehicles(params: SearchParams): Promise<{
-  vehicles: PublicVehicle[]
-  makes: string[]
-  yearDbMin: number
-  yearDbMax: number
-  mileageDbMax: number
-}> {
+async function getVehicles(params: SearchParams) {
   const NON_SOLD = { status: { not: 'SOLD' as const } }
   const where: Record<string, unknown> = { ...NON_SOLD }
 
-  // Multiselect: comma-separated values
   if (params.make) {
     const vals = params.make.split(',').filter(Boolean)
     if (vals.length === 1) where.make = vals[0]
@@ -73,12 +71,18 @@ async function getVehicles(params: SearchParams): Promise<{
   if (params.maxYear) yearFilter.lte = parseInt(params.maxYear)
   if (Object.keys(yearFilter).length) where.year = yearFilter
 
-  const [raw, makesRaw, yearStats] = await Promise.all([
+  const page = Math.max(1, parseInt(params.page ?? '1'))
+  const skip = (page - 1) * PAGE_SIZE
+
+  const [raw, total, makesRaw, yearStats] = await Promise.all([
     prisma.vehicle.findMany({
       where,
       orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
       include: { images: { where: { isPrimary: true }, take: 1 } },
+      skip,
+      take: PAGE_SIZE,
     }),
+    prisma.vehicle.count({ where }),
     prisma.vehicle.findMany({
       where: NON_SOLD,
       select: { make: true },
@@ -98,9 +102,13 @@ async function getVehicles(params: SearchParams): Promise<{
   }))
 
   const currentYear = new Date().getFullYear()
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return {
     vehicles,
+    total,
+    page,
+    totalPages,
     makes: makesRaw.map((m) => m.make),
     yearDbMin: yearStats._min.year ?? 1990,
     yearDbMax: yearStats._max.year ?? currentYear,
@@ -108,13 +116,88 @@ async function getVehicles(params: SearchParams): Promise<{
   }
 }
 
+// ── Pagination component ───────────────────────────────────────────────────
+
+function buildUrl(params: Record<string, string | undefined>, page: number): string {
+  const p = new URLSearchParams()
+  Object.entries(params).forEach(([k, v]) => { if (v && k !== 'page') p.set(k, v) })
+  if (page > 1) p.set('page', String(page))
+  const qs = p.toString()
+  return qs ? `/vehicles?${qs}` : '/vehicles'
+}
+
+function Pagination({ page, totalPages, params }: {
+  page: number
+  totalPages: number
+  params: Record<string, string | undefined>
+}) {
+  if (totalPages <= 1) return null
+
+  // Build page numbers to show: always first, last, current ±1, with ellipsis
+  const pages: (number | 'ellipsis')[] = []
+  const delta = 1
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= page - delta && i <= page + delta)) {
+      pages.push(i)
+    } else if (pages[pages.length - 1] !== 'ellipsis') {
+      pages.push('ellipsis')
+    }
+  }
+
+  const btnBase = 'inline-flex items-center justify-center h-9 min-w-9 px-2 rounded-lg text-sm font-medium transition-colors'
+  const btnActive = 'bg-primary text-white'
+  const btnIdle = 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+  const btnDisabled = 'bg-white border border-slate-200 text-slate-300 cursor-not-allowed'
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 mt-10">
+      {page > 1 ? (
+        <Link href={buildUrl(params, page - 1)} className={`${btnBase} ${btnIdle}`} scroll={true}>
+          <ChevronLeft className="h-4 w-4" />
+        </Link>
+      ) : (
+        <span className={`${btnBase} ${btnDisabled}`}><ChevronLeft className="h-4 w-4" /></span>
+      )}
+
+      {pages.map((p, i) =>
+        p === 'ellipsis' ? (
+          <span key={`e-${i}`} className="px-1 text-slate-400 text-sm select-none">…</span>
+        ) : (
+          <Link
+            key={p}
+            href={buildUrl(params, p)}
+            className={`${btnBase} ${p === page ? btnActive : btnIdle}`}
+            scroll={true}
+          >
+            {p}
+          </Link>
+        )
+      )}
+
+      {page < totalPages ? (
+        <Link href={buildUrl(params, page + 1)} className={`${btnBase} ${btnIdle}`} scroll={true}>
+          <ChevronRight className="h-4 w-4" />
+        </Link>
+      ) : (
+        <span className={`${btnBase} ${btnDisabled}`}><ChevronRight className="h-4 w-4" /></span>
+      )}
+    </div>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────
+
 export default async function VehiclesPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const { vehicles, makes, yearDbMin, yearDbMax, mileageDbMax } = await getVehicles(params)
+  const { vehicles, total, page, totalPages, makes, yearDbMin, yearDbMax, mileageDbMax } = await getVehicles(params)
+
+  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const to = Math.min(page * PAGE_SIZE, total)
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -123,15 +206,19 @@ export default async function VehiclesPage({
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-2">Ponuka vozidiel</h1>
           <p className="text-slate-400">
-            Nájdené: <span className="text-white font-semibold">{vehicles.length}</span> vozidiel
+            {total === 0
+              ? 'Žiadne vozidlá nenájdené'
+              : <>Zobrazujem <span className="text-white font-semibold">{from}–{to}</span> z <span className="text-white font-semibold">{total}</span> vozidiel</>
+            }
           </p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters sidebar */}
-          <aside className="w-full lg:w-64 shrink-0">
+        <div className="flex flex-col lg:flex-row gap-8 lg:items-start">
+
+          {/* Filters sidebar — sticky on desktop */}
+          <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-6">
             <VehicleFilters
               makes={makes}
               currentParams={params as Record<string, string | undefined>}
@@ -141,18 +228,26 @@ export default async function VehiclesPage({
             />
           </aside>
 
-          {/* Vehicle grid */}
-          <div className="flex-1">
+          {/* Vehicle grid + pagination */}
+          <div className="flex-1 min-w-0">
             {vehicles.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-slate-500 text-lg">Pre vaše filtrovacie kritériá sme nenašli žiadne vozidlá v ponuke.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {vehicles.map((vehicle) => (
-                  <VehicleCard key={vehicle.id} vehicle={vehicle} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {vehicles.map((vehicle) => (
+                    <VehicleCard key={vehicle.id} vehicle={vehicle} />
+                  ))}
+                </div>
+
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  params={params as Record<string, string | undefined>}
+                />
+              </>
             )}
           </div>
         </div>
