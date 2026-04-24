@@ -33,6 +33,7 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
   const price = Number(vehicle.price)
   const salePrice = vehicle.salePrice ? Number(vehicle.salePrice) : null
   const isPortrait = branding.labelOrientation === 'portrait'
+  const isImported = !!vehicle.externalId
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const vx = vehicle as any
@@ -111,6 +112,8 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
           .feat-item { font-size: 11px; color: #334155; display: flex; align-items: flex-start; gap: 3px; line-height: 1.3; }
           .feat-check { color: var(--accent); font-weight: 800; flex-shrink: 0; }
           .feat-more { font-size: 9px; color: #94a3b8; margin-top: 1px; }
+          .feat-flat { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 1px; }
+          .feat-flat-items { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 10px; margin-top: 2px; }
           .ftr { flex-shrink: 0; border-top: 2px solid var(--accent); padding: 5px 10px; display: flex; align-items: center; justify-content: center; gap: 16px; background: #f8fafc; }
           .ftr-item { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 500; color: #475569; }
           .ftr-icon { color: var(--accent); width: 12px; height: 12px; flex-shrink: 0; }
@@ -152,20 +155,37 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
             </div>
           )}
           <div className="features">
-            {categories.map(({ cat, meta, items }) => (
-              <div key={cat} className="feat-cat">
-                <div className="feat-cat-title">{meta.label}</div>
-                {items.slice(0, MAX_ITEMS).map((item) => (
-                  <div key={item} className="feat-item">
-                    <span className="feat-check">✓</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-                {items.length > MAX_ITEMS && (
-                  <div className="feat-more">+{items.length - MAX_ITEMS} ďalších</div>
+            {isImported ? (
+              <div className="feat-flat">
+                <div className="feat-cat-title">Výbava</div>
+                <div className="feat-flat-items">
+                  {vehicle.features.slice(0, MAX_ITEMS * 4).map((item) => (
+                    <div key={item} className="feat-item">
+                      <span className="feat-check">✓</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                {vehicle.features.length > MAX_ITEMS * 4 && (
+                  <div className="feat-more">+{vehicle.features.length - MAX_ITEMS * 4} ďalších</div>
                 )}
               </div>
-            ))}
+            ) : (
+              categories.map(({ cat, meta, items }) => (
+                <div key={cat} className="feat-cat">
+                  <div className="feat-cat-title">{meta.label}</div>
+                  {items.slice(0, MAX_ITEMS).map((item) => (
+                    <div key={item} className="feat-item">
+                      <span className="feat-check">✓</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                  {items.length > MAX_ITEMS && (
+                    <div className="feat-more">+{items.length - MAX_ITEMS} ďalších</div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
           <div className="ftr">
             {branding.contactPhone && <span className="ftr-item"><PhoneIcon />{branding.contactPhone}</span>}
@@ -215,6 +235,8 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
         .feat-item { font-size: 12px; color: #334155; display: flex; align-items: flex-start; gap: 3px; line-height: 1.3; }
         .feat-check { color: var(--accent); font-weight: 800; flex-shrink: 0; }
         .feat-more { font-size: 9px; color: #94a3b8; margin-top: 1px; }
+        .feat-flat { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 2px; }
+        .feat-flat-items { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 10px; margin-top: 2px; }
         .ftr { flex-shrink: 0; border-top: 2px solid var(--accent); padding: 5px 10px; display: flex; align-items: center; justify-content: center; gap: 24px; background: #f8fafc; }
         .ftr-item { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; color: #475569; }
         .ftr-icon { color: var(--accent); width: 13px; height: 13px; flex-shrink: 0; }
@@ -261,20 +283,37 @@ export default async function VehicleLabelPage({ params }: { params: Promise<{ i
             </div>
           </div>
           <div className="col-right">
-            {categories.map(({ cat, meta, items }) => (
-              <div key={cat} className="feat-cat">
-                <div className="feat-cat-title">{meta.label}</div>
-                {items.slice(0, MAX_ITEMS).map((item) => (
-                  <div key={item} className="feat-item">
-                    <span className="feat-check">✓</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-                {items.length > MAX_ITEMS && (
-                  <div className="feat-more">+{items.length - MAX_ITEMS} ďalších</div>
+            {isImported ? (
+              <div className="feat-flat">
+                <div className="feat-cat-title">Výbava</div>
+                <div className="feat-flat-items">
+                  {vehicle.features.slice(0, MAX_ITEMS * 4).map((item) => (
+                    <div key={item} className="feat-item">
+                      <span className="feat-check">✓</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                {vehicle.features.length > MAX_ITEMS * 4 && (
+                  <div className="feat-more">+{vehicle.features.length - MAX_ITEMS * 4} ďalších</div>
                 )}
               </div>
-            ))}
+            ) : (
+              categories.map(({ cat, meta, items }) => (
+                <div key={cat} className="feat-cat">
+                  <div className="feat-cat-title">{meta.label}</div>
+                  {items.slice(0, MAX_ITEMS).map((item) => (
+                    <div key={item} className="feat-item">
+                      <span className="feat-check">✓</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                  {items.length > MAX_ITEMS && (
+                    <div className="feat-more">+{items.length - MAX_ITEMS} ďalších</div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
         <div className="ftr">
