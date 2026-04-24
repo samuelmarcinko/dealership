@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users,
   Activity, Hash, ShieldCheck, Armchair, MonitorPlay, Car, Wrench, Check,
-  ExternalLink, Thermometer,
+  Thermometer,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
@@ -264,19 +264,6 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   <div className="mb-3">
                     <InquiryModal vehicleTitle={vehicle.title} />
                   </div>
-                )}
-
-                {/* Link na autobazar.sk pre importované */}
-                {isImported && veh.externalUrl && (
-                  <Link
-                    href={veh.externalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 rounded-xl text-sm font-medium transition-colors mb-3"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Zobraziť na autobazar.sk
-                  </Link>
                 )}
 
                 <CompareButton

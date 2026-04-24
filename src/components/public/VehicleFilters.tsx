@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { fuelTypeLabel, transmissionLabel, formatPrice } from '@/lib/utils'
+import { fuelTypeLabel, transmissionLabel, bodyTypeLabel, formatPrice, formatMileage } from '@/lib/utils'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   currentParams: Record<string, string | undefined>
   yearDbMin: number
   yearDbMax: number
+  mileageDbMax: number
 }
 
 const FUEL_OPTIONS = [
@@ -28,6 +29,19 @@ const TRANSMISSION_OPTIONS = [
   { value: 'AUTOMATIC', label: 'Automat' },
   { value: 'SEMI_AUTOMATIC', label: 'Semi-automat' },
 ]
+
+const BODY_OPTIONS = [
+  { value: 'HATCHBACK', label: 'Hatchback' },
+  { value: 'SEDAN', label: 'Sedan' },
+  { value: 'ESTATE', label: 'Kombi' },
+  { value: 'SUV', label: 'SUV' },
+  { value: 'COUPE', label: 'Kupé' },
+  { value: 'CONVERTIBLE', label: 'Kabriolet' },
+  { value: 'VAN', label: 'Van / Dodávka' },
+  { value: 'PICKUP', label: 'Pick-up' },
+]
+
+const MILEAGE_STEP = 5000
 
 const PRICE_MIN = 0
 const PRICE_MAX = 200000
@@ -342,7 +356,7 @@ function DualRange({
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDbMax }: Props) {
+export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDbMax, mileageDbMax }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
@@ -351,10 +365,13 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
   const [priceMax, setPriceMax] = useState(parseInt(currentParams.maxPrice ?? String(PRICE_MAX)))
   const [yearMin, setYearMin] = useState(parseInt(currentParams.minYear ?? String(yearDbMin)))
   const [yearMax, setYearMax] = useState(parseInt(currentParams.maxYear ?? String(yearDbMax)))
+  const [mileageMin, setMileageMin] = useState(parseInt(currentParams.minMileage ?? '0'))
+  const [mileageMax, setMileageMax] = useState(parseInt(currentParams.maxMileage ?? String(mileageDbMax)))
 
   const selectedMakes = currentParams.make ? currentParams.make.split(',').filter(Boolean) : []
   const selectedFuels = currentParams.fuelType ? currentParams.fuelType.split(',').filter(Boolean) : []
   const selectedTransmissions = currentParams.transmission ? currentParams.transmission.split(',').filter(Boolean) : []
+  const selectedBodyTypes = currentParams.bodyType ? currentParams.bodyType.split(',').filter(Boolean) : []
 
   function buildUrl(updates: Record<string, string | undefined>) {
     const params = new URLSearchParams()
@@ -388,11 +405,20 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
     }), { scroll: false })
   }
 
+  function commitMileageRange(newMin: number, newMax: number) {
+    router.push(buildUrl({
+      minMileage: newMin > 0 ? String(newMin) : undefined,
+      maxMileage: newMax < mileageDbMax ? String(newMax) : undefined,
+    }), { scroll: false })
+  }
+
   function clearAll() {
     setPriceMin(PRICE_MIN)
     setPriceMax(PRICE_MAX)
     setYearMin(yearDbMin)
     setYearMax(yearDbMax)
+    setMileageMin(0)
+    setMileageMax(mileageDbMax)
     router.push(pathname, { scroll: false })
   }
 
@@ -459,6 +485,14 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
           onClear={() => updateFilter('transmission', undefined)}
         />
 
+        <MultiSelectFilter
+          label="Karoséria"
+          options={BODY_OPTIONS}
+          selected={selectedBodyTypes}
+          onToggle={(v) => toggleMulti('bodyType', selectedBodyTypes, v)}
+          onClear={() => updateFilter('bodyType', undefined)}
+        />
+
         {/* Cena */}
         <div className="space-y-1">
           <Label>Cena (€)</Label>
@@ -482,6 +516,19 @@ export default function VehicleFilters({ makes, currentParams, yearDbMin, yearDb
             onChangeMax={setYearMax}
             onCommit={commitYearRange}
             formatFn={String}
+          />
+        </div>
+
+        {/* Najazdené km */}
+        <div className="space-y-1">
+          <Label>Najazdené (km)</Label>
+          <DualRange
+            min={0} max={mileageDbMax} step={MILEAGE_STEP}
+            valueMin={mileageMin} valueMax={mileageMax}
+            onChangeMin={setMileageMin}
+            onChangeMax={setMileageMax}
+            onCommit={commitMileageRange}
+            formatFn={formatMileage}
           />
         </div>
 

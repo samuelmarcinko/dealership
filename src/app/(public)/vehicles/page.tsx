@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import VehicleCard from '@/components/public/VehicleCard'
 import VehicleFilters from '@/components/public/VehicleFilters'
 import type { PublicVehicle } from '@/types'
-import { FuelType, TransmissionType } from '@prisma/client'
+import { FuelType, TransmissionType, BodyType } from '@prisma/client'
 
 export const metadata: Metadata = {
   title: 'Vozidlá',
@@ -14,13 +14,16 @@ export const metadata: Metadata = {
 export const revalidate = 30
 
 interface SearchParams {
-  make?: string        // comma-separated, e.g. "BMW,Audi"
-  fuelType?: string    // comma-separated
+  make?: string         // comma-separated, e.g. "BMW,Audi"
+  fuelType?: string     // comma-separated
   transmission?: string // comma-separated
+  bodyType?: string     // comma-separated
   minPrice?: string
   maxPrice?: string
   minYear?: string
   maxYear?: string
+  minMileage?: string
+  maxMileage?: string
 }
 
 async function getVehicles(params: SearchParams): Promise<{
@@ -28,6 +31,7 @@ async function getVehicles(params: SearchParams): Promise<{
   makes: string[]
   yearDbMin: number
   yearDbMax: number
+  mileageDbMax: number
 }> {
   const NON_SOLD = { status: { not: 'SOLD' as const } }
   const where: Record<string, unknown> = { ...NON_SOLD }
@@ -48,6 +52,16 @@ async function getVehicles(params: SearchParams): Promise<{
     if (vals.length === 1) where.transmission = vals[0]
     else if (vals.length > 1) where.transmission = { in: vals }
   }
+  if (params.bodyType) {
+    const vals = params.bodyType.split(',').filter((b) => Object.values(BodyType).includes(b as BodyType)) as BodyType[]
+    if (vals.length === 1) where.bodyType = vals[0]
+    else if (vals.length > 1) where.bodyType = { in: vals }
+  }
+
+  const mileageFilter: Record<string, number> = {}
+  if (params.minMileage) mileageFilter.gte = parseInt(params.minMileage)
+  if (params.maxMileage) mileageFilter.lte = parseInt(params.maxMileage)
+  if (Object.keys(mileageFilter).length) where.mileage = mileageFilter
 
   const priceFilter: Record<string, number> = {}
   if (params.minPrice) priceFilter.gte = parseFloat(params.minPrice)
@@ -74,7 +88,7 @@ async function getVehicles(params: SearchParams): Promise<{
     prisma.vehicle.aggregate({
       where: NON_SOLD,
       _min: { year: true },
-      _max: { year: true },
+      _max: { year: true, mileage: true },
     }),
   ])
 
@@ -90,6 +104,7 @@ async function getVehicles(params: SearchParams): Promise<{
     makes: makesRaw.map((m) => m.make),
     yearDbMin: yearStats._min.year ?? 1990,
     yearDbMax: yearStats._max.year ?? currentYear,
+    mileageDbMax: Math.ceil((yearStats._max.mileage ?? 300000) / 10000) * 10000,
   }
 }
 
@@ -99,7 +114,7 @@ export default async function VehiclesPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const { vehicles, makes, yearDbMin, yearDbMax } = await getVehicles(params)
+  const { vehicles, makes, yearDbMin, yearDbMax, mileageDbMax } = await getVehicles(params)
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -122,6 +137,7 @@ export default async function VehiclesPage({
               currentParams={params as Record<string, string | undefined>}
               yearDbMin={yearDbMin}
               yearDbMax={yearDbMax}
+              mileageDbMax={mileageDbMax}
             />
           </aside>
 
