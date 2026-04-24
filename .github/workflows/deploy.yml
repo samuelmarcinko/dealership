@@ -78,16 +78,20 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            cd /srv/tenants/demo_bazar
 
-            echo "Pulling latest image…"
-            docker compose pull
+            deploy_tenant() {
+              local tenant=$1
+              local container=$2
+              echo "=== Deploying $tenant ==="
+              cd /srv/tenants/$tenant
+              docker compose pull
+              docker compose up -d --force-recreate --remove-orphans
+              sleep 5
+              docker exec $container npx prisma migrate deploy
+              echo "=== $tenant deployed ✓ ==="
+            }
 
-            echo "Recreating container…"
-            docker compose up -d --force-recreate --remove-orphans
+            deploy_tenant demo_bazar demo_bazar-dealership-1
+            deploy_tenant autobazar_bt autobazar_bt-dealership-1
 
-            echo "Waiting for health check…"
-            sleep 5
-            docker compose ps
-
-            echo "Deployment complete ✓"
+            echo "All deployments complete ✓"

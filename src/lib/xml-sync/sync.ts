@@ -3,12 +3,14 @@
  *
  * Fetches the configured XML feed, parses it, and upserts vehicles into the DB.
  * – Vehicles missing from the feed are marked SOLD (only if they were imported)
- * – Images are additive: new URLs are appended, existing ones are preserved
+ * – Images are fully replaced on each sync for imported vehicles (CDN signed URLs change)
  * – A simple mutex prevents concurrent syncs
  */
 
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { parseXmlFeed } from './parser'
+import { generateVehicleSlug } from '@/lib/slug'
 
 export interface SyncResult {
   success: boolean
@@ -103,70 +105,97 @@ export async function runXmlSync(): Promise<SyncResult> {
     const syncedExternalIds: string[] = []
 
     for (const v of parsed) {
-      // Upsert vehicle
-      const saved = await prisma.vehicle.upsert({
+      const sharedData = {
+        title: v.title,
+        make: v.make,
+        model: v.model,
+        variant: v.variant ?? null,
+        year: v.year,
+        price: v.price,
+        mileage: v.mileage,
+        fuelType: v.fuelType,
+        transmission: v.transmission,
+        bodyType: v.bodyType ?? null,
+        engineCapacity: v.engineCapacity ?? null,
+        power: v.power ?? null,
+        color: v.color ?? null,
+        doors: v.doors ?? null,
+        seats: v.seats ?? null,
+        vin: v.vin ?? null,
+        driveType: v.driveType ?? null,
+        emissionStandard: v.emissionStandard ?? null,
+        externalUrl: v.externalUrl ?? null,
+        description: v.description ?? null,
+        features: v.features,
+        extraParams: v.extraParams ? (v.extraParams as Prisma.InputJsonValue) : Prisma.JsonNull,
+        status: v.status,
+        importedAt: syncedAt,
+      }
+
+      // Generate slug only on create (not on update — slug stays stable)
+      const existing = await prisma.vehicle.findUnique({
         where: { externalId: v.externalId },
-        update: {
-          title: v.title,
-          make: v.make,
-          model: v.model,
-          variant: v.variant ?? null,
-          year: v.year,
-          price: v.price,
-          mileage: v.mileage,
-          fuelType: v.fuelType,
-          transmission: v.transmission,
-          bodyType: v.bodyType ?? null,
-          engineCapacity: v.engineCapacity ?? null,
-          power: v.power ?? null,
-          color: v.color ?? null,
-          doors: v.doors ?? null,
-          seats: v.seats ?? null,
-          description: v.description ?? null,
-          features: v.features,
-          status: v.status,
-          importedAt: syncedAt,
-        },
-        create: {
-          externalId: v.externalId,
-          title: v.title,
-          make: v.make,
-          model: v.model,
-          variant: v.variant ?? null,
-          year: v.year,
-          price: v.price,
-          mileage: v.mileage,
-          fuelType: v.fuelType,
-          transmission: v.transmission,
-          bodyType: v.bodyType ?? null,
-          engineCapacity: v.engineCapacity ?? null,
-          power: v.power ?? null,
-          color: v.color ?? null,
-          doors: v.doors ?? null,
-          seats: v.seats ?? null,
-          description: v.description ?? null,
-          features: v.features,
-          status: v.status,
-          importedAt: syncedAt,
-        },
+        select: { id: true, slug: true },
       })
 
-      // Sync images (additive – never delete existing)
+      let saved: { id: string }
+      if (existing) {
+        saved = await prisma.vehicle.update({
+          where: { externalId: v.externalId },
+          data: sharedData,
+          select: { id: true },
+        })
+      } else {
+        const slug = await generateVehicleSlug(v.title)
+        saved = await prisma.vehicle.create({
+          data: { ...sharedData, externalId: v.externalId, slug },
+          select: { id: true },
+        })
+      }
+
+      // Sync images: fully replace on each sync
+      // (CDN signed URLs change on each feed fetch — compare by path only)
       if (v.imageUrls.length > 0) {
         const existingImages = await prisma.vehicleImage.findMany({
           where: { vehicleId: saved.id },
-          select: { url: true },
+          select: { id: true, url: true },
         })
-        const existingUrls = new Set(existingImages.map((i) => i.url))
-        const newUrls = v.imageUrls.filter((url) => !existingUrls.has(url))
 
+        // Compare by path (without query string) to avoid churning on token changes
+        const stripQuery = (url: string) => url.split('?')[0]
+        const existingPaths = new Map(existingImages.map(i => [stripQuery(i.url), i.id]))
+        const newPaths = new Set(v.imageUrls.map(stripQuery))
+
+        // Delete images no longer in feed
+        const toDelete = existingImages
+          .filter(i => !newPaths.has(stripQuery(i.url)))
+          .map(i => i.id)
+        if (toDelete.length > 0) {
+          await prisma.vehicleImage.deleteMany({ where: { id: { in: toDelete } } })
+        }
+
+        // Update URL (token refresh) for existing images still in feed
+        for (const newUrl of v.imageUrls) {
+          const path = stripQuery(newUrl)
+          const existingId = existingPaths.get(path)
+          if (existingId) {
+            await prisma.vehicleImage.update({
+              where: { id: existingId },
+              data: { url: newUrl },
+            })
+          }
+        }
+
+        // Add new images not yet in DB
+        const newUrls = v.imageUrls.filter(url => !existingPaths.has(stripQuery(url)))
+        const currentCount = existingImages.length - toDelete.length
         for (let i = 0; i < newUrls.length; i++) {
           await prisma.vehicleImage.create({
             data: {
               vehicleId: saved.id,
               url: newUrls[i],
-              isPrimary: existingImages.length === 0 && i === 0,
-              sortOrder: existingImages.length + i,
+              isPrimary: currentCount === 0 && i === 0,
+              sortOrder: currentCount + i,
             },
           })
         }

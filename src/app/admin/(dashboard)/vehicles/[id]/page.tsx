@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import VehicleForm from '@/components/admin/VehicleForm'
 import SellVehicleButton from '@/components/admin/SellVehicleButton'
 import PrintLabelButton from '@/components/admin/PrintLabelButton'
+import ImportedVehicleView from '@/components/admin/ImportedVehicleView'
 
-export const metadata: Metadata = { title: 'Upraviť vozidlo' }
+export const metadata: Metadata = { title: 'Detail vozidla' }
 
 export default async function EditVehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -37,6 +38,8 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
 
   if (!vehicle) notFound()
 
+  const isImported = !!vehicle.externalId
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -45,21 +48,25 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
             <ArrowLeft className="h-4 w-4" />
             Späť na ponuku
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">Upraviť vozidlo</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isImported ? 'Importované vozidlo' : 'Upraviť vozidlo'}
+          </h1>
           <p className="text-slate-500 text-sm mt-1">{vehicle.title}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <PrintLabelButton vehicleId={vehicle.id} />
-          <Button
-            type="submit"
-            form="vehicle-form"
-            className="bg-orange-500 hover:bg-orange-600 text-white gap-2"
-          >
-            <Save className="h-4 w-4" />
-            Uložiť zmeny
-          </Button>
-          {vehicle.status !== 'SOLD' && (
+          {!isImported && (
+            <Button
+              type="submit"
+              form="vehicle-form"
+              className="bg-orange-500 hover:bg-orange-600 text-white gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Uložiť zmeny
+            </Button>
+          )}
+          {!isImported && vehicle.status !== 'SOLD' && (
             <SellVehicleButton
               vehicleId={vehicle.id}
               vehicleTitle={vehicle.title}
@@ -95,7 +102,10 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
         </div>
       )}
 
-      <VehicleForm vehicle={vehicle} topMakes={topMakes} equipmentItems={equipmentItems} />
+      {isImported
+        ? <ImportedVehicleView vehicle={vehicle} />
+        : <VehicleForm vehicle={vehicle} topMakes={topMakes} equipmentItems={equipmentItems} />
+      }
     </div>
   )
 }

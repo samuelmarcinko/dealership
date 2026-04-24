@@ -2,7 +2,11 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users, Activity, Hash, ShieldCheck, Armchair, MonitorPlay, Car, Wrench, Check } from 'lucide-react'
+import {
+  ArrowLeft, Fuel, Gauge, Settings, Calendar, Zap, Palette, DoorOpen, Users,
+  Activity, Hash, ShieldCheck, Armchair, MonitorPlay, Car, Wrench, Check,
+  ExternalLink, Thermometer,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +24,24 @@ import {
   vehicleStatusLabel,
 } from '@/lib/utils'
 import type { PublicVehicle } from '@/types'
+
+interface ExtraParams {
+  consumptionUrban?: string
+  consumptionRural?: string
+  consumptionCombined?: string
+  co2?: string
+  tireSize?: string
+  maxSpeed?: string
+  acceleration?: string
+  additionalInfo?: string[]
+  airConditioning?: string
+  parkingSensors?: string
+  heatedSeats?: string
+  electricWindows?: string
+  airbags?: string
+  xenon?: string
+  radio?: string
+}
 
 async function getVehicle(idOrSlug: string) {
   return prisma.vehicle.findFirst({
@@ -52,15 +74,12 @@ function FeatureSection({ icon: Icon, title, items, isFirst }: FeatureSectionPro
   if (items.length === 0) return null
   return (
     <div className={isFirst ? '' : 'mt-6 pt-6 border-t border-slate-100'}>
-      {/* Category header */}
       <div className="flex items-center gap-2.5 mb-4">
         <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 shrink-0">
           <Icon className="h-3.5 w-3.5 text-slate-500" />
         </div>
         <h3 className="font-semibold text-slate-800 text-sm">{title}</h3>
       </div>
-
-      {/* Items — responsive 2-col grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
         {items.map((feature, i) => (
           <div key={i} className="flex items-start gap-2 min-w-0">
@@ -79,15 +98,18 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   if (!vehicle) notFound()
 
-  // Related vehicles: same make, not sold, not this vehicle
+  const isImported = !!vehicle.externalId
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const veh = vehicle as any
+  const extra: ExtraParams = veh.extraParams ?? {}
+
+  // Related vehicles
   let relatedRaw = await prisma.vehicle.findMany({
     where: { make: vehicle.make, status: { not: 'SOLD' }, id: { not: vehicle.id } },
     include: { images: { where: { isPrimary: true }, take: 1 } },
     orderBy: { createdAt: 'desc' },
     take: 3,
   })
-
-  // Fallback: if no same-make vehicles, take any 3 available vehicles
   if (relatedRaw.length === 0) {
     relatedRaw = await prisma.vehicle.findMany({
       where: { status: { not: 'SOLD' }, id: { not: vehicle.id } },
@@ -119,10 +141,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     vehicle.status === 'AVAILABLE' ? 'success' :
     vehicle.status === 'RESERVED' ? 'warning' : 'error'
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const veh = vehicle as any
   const MONTHS_SK = ['Jan','Feb','Mar','Apr','Máj','Jún','Júl','Aug','Sep','Okt','Nov','Dec']
 
+  // ── Specs table — base + imported extras ─────────────────────────────────
   const specs = [
     { icon: Calendar, label: 'Rok výroby', value: String(vehicle.year) },
     { icon: Gauge, label: 'Najazdené', value: formatMileage(vehicle.mileage) },
@@ -137,24 +158,35 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     ...(vehicle.vin ? [{ icon: Hash, label: 'VIN', value: vehicle.vin }] : []),
     ...(veh.stkMonth && veh.stkYear ? [{ icon: ShieldCheck, label: 'Platnosť STK', value: `${MONTHS_SK[veh.stkMonth - 1]} ${veh.stkYear}` }] : []),
     ...(veh.ekMonth && veh.ekYear ? [{ icon: ShieldCheck, label: 'Platnosť EK', value: `${MONTHS_SK[veh.ekMonth - 1]} ${veh.ekYear}` }] : []),
+    // Imported-only extras
+    ...(isImported && veh.driveType ? [{ icon: Car, label: 'Pohon', value: veh.driveType }] : []),
+    ...(isImported && veh.emissionStandard ? [{ icon: ShieldCheck, label: 'Emisná norma', value: veh.emissionStandard }] : []),
+    ...(isImported && extra.consumptionCombined ? [{ icon: Fuel, label: 'Spotreba (komb.)', value: `${extra.consumptionCombined} l/100km` }] : []),
+    ...(isImported && extra.co2 ? [{ icon: Thermometer, label: 'Emisie CO₂', value: `${extra.co2} g/km` }] : []),
+    ...(isImported && extra.tireSize ? [{ icon: Activity, label: 'Pneumatiky', value: extra.tireSize }] : []),
+    ...(isImported && extra.maxSpeed ? [{ icon: Gauge, label: 'Max. rýchlosť', value: `${extra.maxSpeed} km/h` }] : []),
+    ...(isImported && extra.acceleration ? [{ icon: Zap, label: 'Zrýchlenie 0–100', value: `${extra.acceleration} s` }] : []),
   ]
 
   const hasSalePrice = vehicle.salePrice != null && Number(vehicle.salePrice) > 0
 
-  const otherItems = [...(vehicle.otherFeatures ?? []), ...(vehicle.features ?? [])]
+  // ── Features: imported = single flat list, manual = categorized sections ──
+  const importedFeatures: string[] = isImported ? (vehicle.features ?? []) : []
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const v = vehicle as any
-  const featureSections = [
-    { icon: ShieldCheck, title: 'Bezpečnosť',   items: v.safetyFeatures ?? [] },
-    { icon: Armchair,    title: 'Komfort',       items: v.comfortFeatures ?? [] },
-    { icon: MonitorPlay, title: 'Multimédiá',    items: v.multimediaFeatures ?? [] },
-    { icon: Car,         title: 'Exteriér',      items: v.exteriorFeatures ?? [] },
+  const otherItems = [...(vehicle.otherFeatures ?? []), ...(vehicle.features ?? [])]
+  const featureSections = isImported ? [] : [
+    { icon: ShieldCheck, title: 'Bezpečnosť',   items: veh.safetyFeatures ?? [] },
+    { icon: Armchair,    title: 'Komfort',       items: veh.comfortFeatures ?? [] },
+    { icon: MonitorPlay, title: 'Multimédiá',    items: veh.multimediaFeatures ?? [] },
+    { icon: Car,         title: 'Exteriér',      items: veh.exteriorFeatures ?? [] },
     { icon: Wrench,      title: 'Ďalšia výbava', items: otherItems },
-    { icon: Zap,         title: 'EV / Hybrid',   items: v.evFeatures ?? [] },
+    { icon: Zap,         title: 'EV / Hybrid',   items: veh.evFeatures ?? [] },
   ].filter(s => s.items.length > 0)
 
-  const hasFeatures = featureSections.length > 0
+  const hasFeatures = isImported ? importedFeatures.length > 0 : featureSections.length > 0
+
+  // Spotreba v meste / mimo mesta pre importované
+  const hasConsumptionDetail = isImported && (extra.consumptionUrban || extra.consumptionRural || extra.consumptionCombined)
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -169,15 +201,14 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         </Link>
 
         <div className="flex flex-col gap-6">
-          {/* 2-column grid: mobile = 1 col (Gallery → Sidebar → Content), desktop = 2 col */}
           <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] lg:items-start gap-6">
 
-            {/* Gallery — desktop: col 1 row 1 */}
+            {/* Gallery */}
             <div className="min-w-0 lg:col-start-1 lg:row-start-1">
               <VehicleGallery images={vehicle.images} videos={vehicle.videos} title={vehicle.title} />
             </div>
 
-            {/* Sidebar — mobile: 2nd (after gallery), desktop: col 2 spanning both rows */}
+            {/* Sidebar */}
             <div className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-20 lg:self-start">
               <div className="bg-white rounded-xl border border-slate-100 p-6">
                 <div className="flex items-center justify-between gap-3 mb-1">
@@ -197,7 +228,6 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   <p className="text-slate-500 text-sm mb-3">{vehicle.variant}</p>
                 )}
 
-                {/* Price — with or without discount */}
                 {hasSalePrice ? (
                   <div className="mb-6">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -235,6 +265,20 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                     <InquiryModal vehicleTitle={vehicle.title} />
                   </div>
                 )}
+
+                {/* Link na autobazar.sk pre importované */}
+                {isImported && veh.externalUrl && (
+                  <Link
+                    href={veh.externalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 rounded-xl text-sm font-medium transition-colors mb-3"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Zobraziť na autobazar.sk
+                  </Link>
+                )}
+
                 <CompareButton
                   vehicle={{
                     id: vehicle.id,
@@ -247,20 +291,84 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
 
-            {/* Features + Description — mobile: 3rd, desktop: col 1 row 2 */}
+            {/* Features + Description */}
             <div className="flex flex-col gap-6 min-w-0 lg:col-start-1 lg:row-start-2">
+
+              {/* Doplňujúce info badges (importované) */}
+              {isImported && extra.additionalInfo && extra.additionalInfo.length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-100 p-6">
+                  <h2 className="font-semibold text-slate-900 text-lg mb-3">Doplňujúce informácie</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {extra.additionalInfo.map((info, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-full border border-blue-100">
+                        <Check className="h-3.5 w-3.5" />
+                        {info}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Spotreba paliva (importované) */}
+              {hasConsumptionDetail && (
+                <div className="bg-white rounded-xl border border-slate-100 p-6">
+                  <h2 className="font-semibold text-slate-900 text-lg mb-4">Spotreba paliva</h2>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    {extra.consumptionUrban && (
+                      <div className="bg-slate-50 rounded-xl p-4">
+                        <p className="text-xs text-slate-500 mb-1">V meste</p>
+                        <p className="text-2xl font-bold text-slate-900">{extra.consumptionUrban}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">l/100km</p>
+                      </div>
+                    )}
+                    {extra.consumptionRural && (
+                      <div className="bg-slate-50 rounded-xl p-4">
+                        <p className="text-xs text-slate-500 mb-1">Mimo mesta</p>
+                        <p className="text-2xl font-bold text-slate-900">{extra.consumptionRural}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">l/100km</p>
+                      </div>
+                    )}
+                    {extra.consumptionCombined && (
+                      <div className="bg-slate-50 rounded-xl p-4">
+                        <p className="text-xs text-slate-500 mb-1">Kombinovaná</p>
+                        <p className="text-2xl font-bold text-primary">{extra.consumptionCombined}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">l/100km</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Výbava */}
               {hasFeatures && (
                 <div className="bg-white rounded-xl border border-slate-100 p-6">
-                  <h2 className="font-semibold text-slate-900 text-lg mb-5">Výbava</h2>
-                  {featureSections.map((s, i) => (
-                    <FeatureSection
-                      key={s.title}
-                      icon={s.icon}
-                      title={s.title}
-                      items={s.items}
-                      isFirst={i === 0}
-                    />
-                  ))}
+                  <h2 className="font-semibold text-slate-900 text-lg mb-5">
+                    Výbava
+                    {isImported && importedFeatures.length > 0 && (
+                      <span className="ml-2 text-sm font-normal text-slate-400">({importedFeatures.length} položiek)</span>
+                    )}
+                  </h2>
+
+                  {isImported ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                      {importedFeatures.map((feature, i) => (
+                        <div key={i} className="flex items-start gap-2 min-w-0">
+                          <Check className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                          <span className="text-sm text-slate-600 leading-snug">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    featureSections.map((s, i) => (
+                      <FeatureSection
+                        key={s.title}
+                        icon={s.icon}
+                        title={s.title}
+                        items={s.items}
+                        isFirst={i === 0}
+                      />
+                    ))
+                  )}
                 </div>
               )}
 
@@ -276,7 +384,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          {/* Related vehicles — full width below */}
+          {/* Related vehicles */}
           {relatedVehicles.length > 0 && (
             <div>
               <h2 className="font-semibold text-slate-900 text-lg mb-4">Podobné vozidlá</h2>

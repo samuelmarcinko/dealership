@@ -124,6 +124,10 @@ model Vehicle {
   otherFeatures       String[]         @default([])
   evFeatures          String[]         @default([])
   vin             String?
+  driveType       String?
+  emissionStandard String?
+  externalUrl     String?
+  extraParams     Json?
   stkMonth        Int?
   stkYear         Int?
   ekMonth         Int?
