@@ -92,7 +92,8 @@ export default function MediaLibrary({ initialFiles }: Props) {
   }
 
   async function handleCopy(url: string) {
-    await navigator.clipboard.writeText(url)
+    const fullUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url
+    await navigator.clipboard.writeText(fullUrl)
     toast('success', 'URL skopírovaná')
   }
 

@@ -218,7 +218,7 @@ export default async function VehiclesPage({
         <div className="flex flex-col lg:flex-row gap-8 lg:items-start">
 
           {/* Filters sidebar — sticky on desktop */}
-          <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-6">
+          <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-24 lg:self-start">
             <VehicleFilters
               makes={makes}
               currentParams={params as Record<string, string | undefined>}
