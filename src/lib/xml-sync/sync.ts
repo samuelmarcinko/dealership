@@ -19,6 +19,34 @@ export interface SyncResult {
   syncedAt: Date
 }
 
+// ── Feed request headers ──────────────────────────────────────────────────
+// Feed providers (autobazar.sk among them) sit behind anti-bot protection that
+// resets the TCP connection for unrecognised User-Agents. A browser-like set of
+// headers is required for the export endpoint to answer at all.
+const FEED_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  Accept: 'application/xml,text/xml,application/xhtml+xml,*/*;q=0.8',
+  'Accept-Language': 'sk-SK,sk;q=0.9,cs;q=0.8,en;q=0.7',
+}
+
+// ── Error formatting ──────────────────────────────────────────────────────
+// fetch() rejects with a bare "fetch failed"; the actionable detail (ECONNRESET,
+// ENOTFOUND, certificate errors…) lives on err.cause. Surface it so the admin
+// panel shows something diagnosable.
+function describeError(err: unknown): string {
+  if (!(err instanceof Error)) return 'Unknown error'
+
+  const cause = err.cause
+  if (cause && typeof cause === 'object' && 'code' in cause) {
+    return `${err.message} (${String((cause as { code: unknown }).code)})`
+  }
+  if (cause instanceof Error && cause.message) {
+    return `${err.message}: ${cause.message}`
+  }
+  return err.message
+}
+
 // ── Mutex ─────────────────────────────────────────────────────────────────
 let syncing = false
 
@@ -82,7 +110,7 @@ export async function runXmlSync(): Promise<SyncResult> {
     // 2. Fetch XML
     const response = await fetch(feedUrl, {
       signal: AbortSignal.timeout(30_000),
-      headers: { 'User-Agent': 'AutoBazar-SyncBot/2.0' },
+      headers: FEED_HEADERS,
     })
 
     if (!response.ok) {
@@ -224,8 +252,8 @@ export async function runXmlSync(): Promise<SyncResult> {
     console.log(`[XML Sync] ${message}`)
     return { success: true, count, message, syncedAt }
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('[XML Sync] Error:', message)
+    const message = describeError(err)
+    console.error('[XML Sync] Error:', message, err)
     await setSyncStatus('error', message)
     return { success: false, count: 0, message, syncedAt }
   } finally {
