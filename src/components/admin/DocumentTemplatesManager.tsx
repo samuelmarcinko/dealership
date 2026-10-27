@@ -1,428 +1,229 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast'
+import { cn } from '@/lib/utils'
 import {
-  FileText, Upload, Trash2, ToggleLeft, ToggleRight, Info,
-  ChevronDown, ChevronUp, User, Building2, Users, Handshake,
+  FileText, Plus, Pencil, Trash2, Eye, EyeOff,
+  ArrowUp, ArrowDown, HandCoins, PackageCheck, Files,
 } from 'lucide-react'
 
-interface Template {
+export interface TemplateRow {
   id: string
   name: string
   description: string | null
-  originalName: string
+  context: 'INTAKE' | 'SALE' | 'BOTH'
+  customerType: 'PERSON' | 'COMPANY' | null
   isActive: boolean
-  isConsignment: boolean
-  customerType: string | null   // null | 'PERSON' | 'COMPANY'
   sortOrder: number
-  createdAt: string | Date
 }
 
-interface Props {
-  initialTemplates: Template[]
+const CONTEXT_META = {
+  INTAKE: { label: 'Pri prevzatí', icon: PackageCheck, className: 'bg-blue-100 text-blue-700' },
+  SALE: { label: 'Pri predaji', icon: HandCoins, className: 'bg-green-100 text-green-700' },
+  BOTH: { label: 'Vždy', icon: Files, className: 'bg-purple-100 text-purple-700' },
+} as const
+
+const CUSTOMER_TYPE_LABEL: Record<string, string> = {
+  PERSON: 'Fyzická osoba',
+  COMPANY: 'Firma / Živnostník',
 }
 
-const VARIABLES = [
-  { group: 'Klient (kupujúci)', vars: [
-    '{klient_meno}', '{klient_priezvisko}', '{klient_cele_meno}',
-    '{klient_firma}', '{klient_nazov}',
-    '{klient_ico}', '{klient_dic}', '{klient_ic_dph}',
-    '{klient_telefon}', '{klient_email}', '{klient_adresa}',
-  ]},
-  { group: 'Vozidlo', vars: [
-    '{vozidlo_titul}', '{vozidlo_znacka}', '{vozidlo_model}', '{vozidlo_variant}',
-    '{vozidlo_rok}', '{vozidlo_vin}', '{vozidlo_farba}', '{vozidlo_km}',
-    '{vozidlo_palivo}', '{vozidlo_prevodovka}', '{vozidlo_karoseria}',
-    '{vozidlo_objem}', '{vozidlo_vykon}',
-  ]},
-  { group: 'Predaj', vars: [
-    '{predaj_cena}', '{predaj_cena_cislo}', '{predaj_datum}', '{predaj_poznamka}',
-  ]},
-  { group: 'Predajca (z Nastavení)', vars: [
-    '{predajca_nazov}', '{predajca_adresa}', '{predajca_telefon}',
-    '{predajca_email}', '{predajca_ico}', '{predajca_dic}',
-  ]},
-  { group: 'Komitent (komisný predaj)', vars: [
-    '{komitent_meno}', '{komitent_priezvisko}', '{komitent_cele_meno}',
-    '{komitent_firma}', '{komitent_nazov}',
-    '{komitent_ico}', '{komitent_dic}', '{komitent_ic_dph}',
-    '{komitent_telefon}', '{komitent_email}', '{komitent_adresa}',
-  ]},
-  { group: 'Komisia', vars: ['{komisia_sadzba}', '{komisia_odmena}'] },
-  { group: 'Ostatné', vars: ['{datum_dnes}'] },
-]
-
-type CustomerType = null | 'PERSON' | 'COMPANY'
-
-const CUSTOMER_TYPE_OPTIONS: { value: CustomerType; label: string; badge: string; icon: React.ElementType }[] = [
-  { value: null,      label: 'Všetci zákazníci', badge: 'bg-slate-100 text-slate-600 border-slate-200',    icon: Users },
-  { value: 'PERSON',  label: 'Fyzická osoba',    badge: 'bg-blue-100 text-blue-700 border-blue-200',       icon: User },
-  { value: 'COMPANY', label: 'Firma / Živnostník', badge: 'bg-purple-100 text-purple-700 border-purple-200', icon: Building2 },
-]
-
-function CustomerTypeBadge({ type }: { type: CustomerType }) {
-  const opt = CUSTOMER_TYPE_OPTIONS.find(o => o.value === type) ?? CUSTOMER_TYPE_OPTIONS[0]
-  const Icon = opt.icon
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${opt.badge}`}>
-      <Icon className="h-3 w-3" />
-      {opt.label}
-    </span>
-  )
-}
-
-export default function DocumentTemplatesManager({ initialTemplates }: Props) {
+export default function DocumentTemplatesManager({
+  initialTemplates,
+}: {
+  initialTemplates: TemplateRow[]
+}) {
+  const router = useRouter()
   const { toast } = useToast()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [templates, setTemplates] = useState(initialTemplates)
+  const [busyId, setBusyId] = useState<string | null>(null)
 
-  const [templates, setTemplates] = useState<Template[]>(initialTemplates)
-  const [uploading, setUploading] = useState(false)
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [customerType, setCustomerType] = useState<CustomerType>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [showVars, setShowVars] = useState(false)
-
-  async function handleUpload(e: React.FormEvent) {
-    e.preventDefault()
-    if (!selectedFile || !name.trim()) return
-    setUploading(true)
+  async function patch(id: string, data: Partial<TemplateRow>) {
+    setBusyId(id)
     try {
-      const fd = new FormData()
-      fd.append('file', selectedFile)
-      fd.append('name', name.trim())
-      if (description.trim()) fd.append('description', description.trim())
-      if (customerType) fd.append('customerType', customerType)
-
-      const res = await fetch('/api/documents/templates', { method: 'POST', body: fd })
+      const res = await fetch(`/api/documents/templates/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
       const json = await res.json()
-      if (!res.ok) { toast('error', json.error ?? 'Nastala chyba'); return }
-
-      setTemplates((prev) => [...prev, json.data])
-      setName('')
-      setDescription('')
-      setCustomerType(null)
-      setSelectedFile(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      toast('success', 'Šablóna nahraná')
-    } catch {
-      toast('error', 'Nastala chyba pri nahrávaní')
+      if (!res.ok) throw new Error(json.error ?? 'Uloženie zlyhalo')
+      setTemplates((prev) => prev.map((t) => (t.id === id ? { ...t, ...data } : t)))
+    } catch (err) {
+      toast('error', err instanceof Error ? err.message : 'Uloženie zlyhalo')
     } finally {
-      setUploading(false)
+      setBusyId(null)
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Naozaj odstrániť túto šablónu?')) return
-    const res = await fetch(`/api/documents/templates/${id}`, { method: 'DELETE' })
-    if (!res.ok) { toast('error', 'Nepodarilo sa odstrániť'); return }
-    setTemplates((prev) => prev.filter((t) => t.id !== id))
-    toast('success', 'Šablóna odstránená')
+  async function remove(t: TemplateRow) {
+    if (!confirm(`Naozaj zmazať šablónu „${t.name}“?\n\nUž vygenerované dokumenty zostanú v archíve.`)) return
+    setBusyId(t.id)
+    try {
+      const res = await fetch(`/api/documents/templates/${t.id}`, { method: 'DELETE' })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error ?? 'Mazanie zlyhalo')
+      setTemplates((prev) => prev.filter((x) => x.id !== t.id))
+      toast('success', 'Šablóna zmazaná')
+    } catch (err) {
+      toast('error', err instanceof Error ? err.message : 'Mazanie zlyhalo')
+    } finally {
+      setBusyId(null)
+    }
   }
 
-  async function toggleActive(t: Template) {
-    const res = await fetch(`/api/documents/templates/${t.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: !t.isActive }),
-    })
-    if (!res.ok) { toast('error', 'Nastala chyba'); return }
-    const json = await res.json()
-    setTemplates((prev) => prev.map((x) => x.id === t.id ? json.data : x))
-  }
+  async function move(index: number, dir: -1 | 1) {
+    const target = index + dir
+    if (target < 0 || target >= templates.length) return
+    const reordered = [...templates]
+    const [item] = reordered.splice(index, 1)
+    reordered.splice(target, 0, item)
+    setTemplates(reordered.map((t, i) => ({ ...t, sortOrder: i })))
 
-  async function toggleConsignment(t: Template) {
-    const res = await fetch(`/api/documents/templates/${t.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isConsignment: !t.isConsignment }),
-    })
-    if (!res.ok) { toast('error', 'Nastala chyba'); return }
-    const json = await res.json()
-    setTemplates((prev) => prev.map((x) => x.id === t.id ? json.data : x))
-    toast('success', t.isConsignment ? 'Zmenené na štandardnú zmluvu' : 'Zmenené na komisnú zmluvu')
-  }
-
-  async function updateCustomerType(t: Template, value: CustomerType) {
-    const res = await fetch(`/api/documents/templates/${t.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customerType: value }),
-    })
-    if (!res.ok) { toast('error', 'Nastala chyba'); return }
-    const json = await res.json()
-    setTemplates((prev) => prev.map((x) => x.id === t.id ? json.data : x))
-    toast('success', 'Typ zákazníka aktualizovaný')
+    await Promise.all(
+      reordered.map((t, i) =>
+        fetch(`/api/documents/templates/${t.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sortOrder: i }),
+        }),
+      ),
+    )
+    router.refresh()
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Šablóny dokumentov</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Nahrajte .docx šablóny s premennými — pri predaji sa automaticky použije zmluva pre daný typ zákazníka.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Šablóny zmlúv</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Zmluvy a dokumenty, ktoré sa ponúknu pri prevzatí vozidla do komisie a pri predaji.
+          </p>
+        </div>
+        <Link href="/admin/documents/new">
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nová šablóna
+          </Button>
+        </Link>
       </div>
 
-      {/* Upload form */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
-              <Upload className="h-4 w-4 text-orange-600" />
-            </span>
-            Nahrať novú šablónu
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleUpload} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="tpl-name">Názov šablóny *</Label>
-                <Input
-                  id="tpl-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Kúpno-predajná zmluva"
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="tpl-desc">
-                  Popis <span className="text-slate-400 font-normal text-xs">— nepovinný</span>
-                </Label>
-                <Input
-                  id="tpl-desc"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Krátky popis šablóny"
-                />
-              </div>
-            </div>
-
-            {/* Customer type selector — full-width, visually prominent */}
-            <div className="space-y-1.5">
-              <Label>Pre koho je táto zmluva? *</Label>
-              <div className="grid grid-cols-3 gap-3">
-                {CUSTOMER_TYPE_OPTIONS.map((opt) => {
-                  const Icon = opt.icon
-                  const selected = customerType === opt.value
-                  return (
-                    <button
-                      key={String(opt.value)}
-                      type="button"
-                      onClick={() => setCustomerType(opt.value)}
-                      className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
-                        selected
-                          ? 'border-orange-500 bg-orange-50 text-orange-800'
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 shrink-0 ${selected ? 'text-orange-600' : 'text-slate-400'}`} />
-                      <span className="leading-tight text-left">{opt.label}</span>
-                      {selected && (
-                        <span className="ml-auto w-2 h-2 rounded-full bg-orange-500 shrink-0" />
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-              <p className="text-xs text-slate-400">
-                „Všetci zákazníci" — zmluva sa použije pre každého kupujúceho, ak neexistuje špecifickejšia zmluva.
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>Súbor (.docx) *</Label>
-              <div
-                className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-orange-300 hover:bg-orange-50/50 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                {selectedFile ? (
-                  <p className="text-sm font-medium text-slate-700">{selectedFile.name}</p>
-                ) : (
-                  <>
-                    <p className="text-sm text-slate-600 font-medium">Kliknite pre výber súboru</p>
-                    <p className="text-xs text-slate-400 mt-1">Len .docx — max 20 MB</p>
-                  </>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  className="hidden"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-                />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={!selectedFile || !name.trim() || uploading}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              {uploading ? 'Nahrávam...' : 'Nahrať šablónu'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Variables reference */}
-      <Card>
-        <CardHeader className="py-4">
-          <button
-            type="button"
-            className="flex items-center justify-between w-full text-left"
-            onClick={() => setShowVars((v) => !v)}
-          >
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Info className="h-4 w-4 text-blue-600" />
-              </span>
-              Dostupné premenné
-            </CardTitle>
-            {showVars ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-          </button>
-        </CardHeader>
-        {showVars && (
-          <CardContent className="pt-4">
-            <p className="text-sm text-slate-500 mb-4">
-              Vložte tieto premenné do vášho <strong>.docx</strong> dokumentu presne ako sú napísané (vrátane zložených zátvoriek).
-              Pri generovaní sa automaticky nahradia skutočnými dátami.
+      {templates.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <FileText className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-600 font-medium">Zatiaľ nemáte žiadne šablóny</p>
+            <p className="text-sm text-slate-500 mt-1 mb-5 max-w-md mx-auto">
+              Vytvorte šablónu od nuly, alebo nahrajte existujúcu zmluvu z Wordu a upravte ju.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {VARIABLES.map((group) => (
-                <div key={group.group}>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{group.group}</p>
-                  <div className="space-y-1">
-                    {group.vars.map((v) => (
-                      <code
-                        key={v}
-                        className="block text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded font-mono"
-                      >
-                        {v}
-                      </code>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Link href="/admin/documents/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Vytvoriť prvú šablónu
+              </Button>
+            </Link>
           </CardContent>
-        )}
-      </Card>
-
-      {/* Template list */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center">
-              <FileText className="h-4 w-4 text-green-600" />
-            </span>
-            Nahrané šablóny
-            <span className="ml-1 text-sm font-normal text-slate-400">({templates.length})</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {templates.length === 0 ? (
-            <p className="px-6 py-8 text-center text-slate-400 text-sm">Zatiaľ žiadne šablóny. Nahrajte prvú.</p>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {templates.map((t) => (
-                <div key={t.id} className="flex items-start gap-4 px-6 py-4">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${t.isActive ? 'bg-green-100' : 'bg-slate-100'}`}>
-                    <FileText className={`h-4 w-4 ${t.isActive ? 'text-green-600' : 'text-slate-400'}`} />
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Zoznam šablón</CardTitle>
+            <CardDescription>
+              Poradie určuje, v akom poradí sa dokumenty ponúkajú a tlačia.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="divide-y divide-slate-100 p-0">
+            {templates.map((t, index) => {
+              const meta = CONTEXT_META[t.context]
+              const Icon = meta.icon
+              return (
+                <div
+                  key={t.id}
+                  className={cn(
+                    'flex items-center gap-4 px-6 py-4 transition-opacity',
+                    busyId === t.id && 'opacity-50 pointer-events-none',
+                    !t.isActive && 'bg-slate-50/60',
+                  )}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      onClick={() => move(index, -1)}
+                      disabled={index === 0}
+                      className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-25"
+                      title="Posunúť vyššie"
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => move(index, 1)}
+                      disabled={index === templates.length - 1}
+                      className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-25"
+                      title="Posunúť nižšie"
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
+
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className={`font-medium text-sm ${t.isActive ? 'text-slate-900' : 'text-slate-400'}`}>{t.name}</p>
-                      <CustomerTypeBadge type={t.customerType as CustomerType} />
-                      {t.isConsignment && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border bg-purple-100 text-purple-700 border-purple-200">
-                          <Handshake className="h-3 w-3" />
-                          Komis
+                      <span className={cn('font-medium', t.isActive ? 'text-slate-900' : 'text-slate-500')}>
+                        {t.name}
+                      </span>
+                      <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium', meta.className)}>
+                        <Icon className="h-3 w-3" />
+                        {meta.label}
+                      </span>
+                      {t.customerType && (
+                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600">
+                          {CUSTOMER_TYPE_LABEL[t.customerType]}
+                        </span>
+                      )}
+                      {!t.isActive && (
+                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-200 text-slate-600">
+                          Neaktívna
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 truncate mt-0.5">{t.originalName}</p>
-                    {t.description && <p className="text-xs text-slate-400 truncate">{t.description}</p>}
-
-                    {/* Inline customer type change */}
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <span className="text-xs text-slate-400">Pre:</span>
-                      {CUSTOMER_TYPE_OPTIONS.map((opt) => {
-                        const Icon = opt.icon
-                        const current = (t.customerType ?? null) === opt.value
-                        return (
-                          <button
-                            key={String(opt.value)}
-                            type="button"
-                            onClick={() => !current && updateCustomerType(t, opt.value)}
-                            disabled={current}
-                            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border transition-colors ${
-                              current
-                                ? opt.badge + ' cursor-default'
-                                : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600 bg-white'
-                            }`}
-                            title={current ? 'Aktuálne nastavenie' : `Zmeniť na: ${opt.label}`}
-                          >
-                            <Icon className="h-3 w-3" />
-                            {opt.label}
-                          </button>
-                        )
-                      })}
-                    </div>
+                    {t.description && (
+                      <p className="text-sm text-slate-500 mt-0.5 truncate">{t.description}</p>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
-                      type="button"
-                      onClick={() => toggleConsignment(t)}
-                      className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
-                        t.isConsignment
-                          ? 'bg-purple-50 text-purple-700 hover:bg-purple-100'
-                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                      }`}
-                      title={t.isConsignment ? 'Prepnúť na štandardnú' : 'Prepnúť na komisnú'}
-                    >
-                      <Handshake className="h-3.5 w-3.5" />
-                      {t.isConsignment ? 'Komis' : 'Štandard'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleActive(t)}
-                      className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
-                        t.isActive
-                          ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                      }`}
+                      onClick={() => patch(t.id, { isActive: !t.isActive })}
                       title={t.isActive ? 'Deaktivovať' : 'Aktivovať'}
+                      className="p-2 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
                     >
-                      {t.isActive
-                        ? <><ToggleRight className="h-3.5 w-3.5" />Aktívna</>
-                        : <><ToggleLeft className="h-3.5 w-3.5" />Neaktívna</>
-                      }
+                      {t.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                     </button>
+                    <Link
+                      href={`/admin/documents/${t.id}`}
+                      className="p-2 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      title="Upraviť"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Link>
                     <button
-                      type="button"
-                      onClick={() => handleDelete(t.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Odstrániť"
+                      onClick={() => remove(t)}
+                      title="Zmazať"
+                      className="p-2 rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              )
+            })}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

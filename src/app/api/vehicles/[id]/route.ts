@@ -32,6 +32,10 @@ const updateSchema = z.object({
   otherFeatures: z.array(z.string()).optional(),
   evFeatures: z.array(z.string()).optional(),
   vin: z.string().max(17).nullable().optional(),
+  licensePlate: z.string().max(20).nullable().optional(),
+  firstRegistration: z.string().nullable().optional(),
+  registrationDocNumber: z.string().max(40).nullable().optional(),
+  declaredMileage: z.number().int().min(0).nullable().optional(),
   stkMonth: z.number().int().min(1).max(12).nullable().optional(),
   stkYear: z.number().int().min(1900).max(2100).nullable().optional(),
   ekMonth: z.number().int().min(1).max(12).nullable().optional(),
@@ -43,6 +47,17 @@ const updateSchema = z.object({
   customCategoryFeatures: z.record(z.array(z.string())).optional(),
   defects: z.array(z.string()).optional(),
 })
+
+/** Dátum prvej registrácie chodí z formulára ako text. */
+function toVehicleData<T extends { firstRegistration?: string | null }>(input: T) {
+  const { firstRegistration, ...rest } = input
+  return {
+    ...rest,
+    ...(firstRegistration !== undefined
+      ? { firstRegistration: firstRegistration ? new Date(firstRegistration) : null }
+      : {}),
+  }
+}
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -78,7 +93,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const vehicle = await prisma.vehicle.update({
       where: { id },
-      data: { ...parsed.data, ...slugUpdate },
+      data: { ...toVehicleData(parsed.data), ...slugUpdate },
     })
 
     return NextResponse.json({ data: vehicle })

@@ -138,26 +138,24 @@ CONTACT_EMAIL=...
 - Po predaji: krok 2 — generovanie DOCX dokumentov (zmluvy)
 - Vozidlo sa automaticky presunie do "Predané vozidlá"
 
-### Šablóny zmlúv (DOCX)
-- Admin nahrá `.docx` šablónu s premennými `{klient_meno}`, `{vozidlo_vin}` atď.
-- Pri predaji sa automaticky dosadia dáta klienta + vozidla
-- Generovanie: `docxtemplater` + `pizzip` (in-memory, žiadne systémové závislosti)
-- Výstup: `.docx` na stiahnutie priamo v modali predaja
+### Zmluvy a dokumenty
+- Šablóna = **HTML v databáze** (`DocumentTemplate.content`), nie súbor na disku
+- Admin ju píše v editore (`ContractEditor`, TipTap) alebo naimportuje existujúci `.docx` (`mammoth`)
+- Šablóna má `context` (INTAKE = pri prevzatí do komisie / SALE = pri predaji / BOTH) a voliteľný filter `customerType`
+- `customFields` = polia, ktoré systém nepozná (provízia, počet kľúčov, rodné číslo) — doplnia sa pri generovaní
+- Generovanie má **dva vstupné body**: detail vozidla (komitent) a predajný modal (kupujúci)
+- Sprievodca: výber dokumentov → doplnenie polí → ručná úprava textu → uloženie do archívu → tlač
+- Výstup je **tlačová stránka** `/admin/tlac/dokumenty?ids=…` → Print → PDF (žiadna PDF knižnica)
+- Finálne znenie sa archivuje v `GeneratedDocument` vrátane úprav
 
-**Dostupné premenné v šablónach:**
-```
-Klient:    {klient_meno} {klient_priezvisko} {klient_cele_meno} {klient_firma}
-           {klient_nazov} {klient_ico} {klient_dic} {klient_ic_dph}
-           {klient_telefon} {klient_email} {klient_adresa}
-Vozidlo:   {vozidlo_titul} {vozidlo_znacka} {vozidlo_model} {vozidlo_variant}
-           {vozidlo_rok} {vozidlo_vin} {vozidlo_farba} {vozidlo_km}
-           {vozidlo_palivo} {vozidlo_prevodovka} {vozidlo_karoseria}
-           {vozidlo_objem} {vozidlo_vykon}
-Predaj:    {predaj_cena} {predaj_cena_cislo} {predaj_datum} {predaj_poznamka}
-Predajca:  {predajca_nazov} {predajca_adresa} {predajca_telefon}
-           {predajca_email} {predajca_ico} {predajca_dic}
-Ostatné:   {datum_dnes}
-```
+**Zoznam premenných má jediný zdroj:** `src/lib/documents/placeholders.ts`
+(`PLACEHOLDER_GROUPS` pre UI aj `buildPlaceholderValues` pre dosadzovanie).
+Nový údaj sa pridáva len tam — admin UI aj generovanie ho prevezmú automaticky.
+Premenné nevypisuj do dokumentácie ručne, rozídu sa.
+
+Skupiny: `klient_*` (strana podpisujúca daný dokument — podľa kontextu komitent
+alebo kupujúci), `komitent_*`, `vozidlo_*`, `predaj_*`, `komisia_*`,
+`predajca_*` (z Nastavení), `datum_dnes`, `miesto`.
 
 ### Zákazníci
 - Fyzická osoba (meno, priezvisko) alebo Firma (IČO, DIČ, IČ DPH)

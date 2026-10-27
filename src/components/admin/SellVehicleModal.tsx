@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import DocumentWizard from '@/components/admin/DocumentWizard'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
 import {
   X, Search, User, Building2, CheckCircle, Loader2, DollarSign,
-  FileText, Download, ArrowRight, Handshake,
+  ArrowRight, Handshake,
 } from 'lucide-react'
 import { customerDisplayName, customerShortInfo } from '@/lib/customer'
 
@@ -22,16 +23,6 @@ interface Customer {
   ico?: string | null
   phone?: string | null
   email?: string | null
-}
-
-interface Template {
-  id: string
-  name: string
-  description: string | null
-  originalName: string
-  isActive: boolean
-  isConsignment: boolean
-  customerType: string | null
 }
 
 interface Props {
@@ -65,8 +56,6 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
   )
   const [submitting, setSubmitting] = useState(false)
 
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [downloading, setDownloading] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/customers')
@@ -118,18 +107,9 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
 
       toast('success', `Vozidlo bolo predané — ${customerDisplayName(selected!)}`)
 
-      // Load active templates and switch to documents step
-      // NOTE: router.refresh() is intentionally NOT called here — it would cause
-      // the parent to re-render the vehicle as SOLD and unmount this modal.
-      // Refresh happens in handleFinish when the user explicitly closes the modal.
-      const tplRes = await fetch('/api/documents/templates')
-      const tplJson = await tplRes.json()
-      const active = (tplJson.data ?? []).filter((t: Template) =>
-        t.isActive &&
-        (!t.customerType || t.customerType === selected!.type) &&
-        (isConsignment ? t.isConsignment : !t.isConsignment)
-      )
-      setTemplates(active)
+      // Dokumenty si načíta sprievodca sám.
+      // NOTE: router.refresh() tu zámerne nevoláme — parent by vozidlo
+      // prekreslil ako SOLD a modal by sa odpojil. Refresh je v handleFinish.
       setStep('documents')
     } catch {
       toast('error', 'Nastala chyba')
@@ -138,31 +118,6 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
     }
   }, [selectedId, soldPrice, soldAt, soldNote, commissionRate, isConsignment, vehicleId, selected, router, toast])
 
-  async function handleDownload(templateId: string, templateName: string) {
-    setDownloading(templateId)
-    try {
-      const res = await fetch(`/api/documents/generate?vehicleId=${vehicleId}&templateId=${templateId}`)
-      if (!res.ok) {
-        const json = await res.json()
-        toast('error', json.error ?? 'Nastala chyba pri generovaní')
-        return
-      }
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      const disposition = res.headers.get('Content-Disposition') ?? ''
-      const match = disposition.match(/filename="([^"]+)"/)
-      a.download = match?.[1] ?? `${templateName}.docx`
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch {
-      toast('error', 'Nastala chyba pri sťahovaní')
-    } finally {
-      setDownloading(null)
-    }
-  }
-
   function handleFinish() {
     onClose()
     router.push('/admin/sold')
@@ -170,7 +125,7 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+      <div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col ${step === 'documents' ? 'max-w-5xl' : 'max-w-lg'}`}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
@@ -421,8 +376,7 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
         {/* ── STEP 2: Documents ── */}
         {step === 'documents' && (
           <>
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-              {/* Success banner */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
               <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
                 <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
                 <div>
@@ -433,60 +387,12 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
                 </div>
               </div>
 
-              {templates.length === 0 ? (
-                <div className="text-center py-6">
-                  <FileText className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-                  <p className="text-slate-500 text-sm font-medium">Žiadne aktívne šablóny dokumentov</p>
-                  <p className="text-slate-400 text-xs mt-1">
-                    Pridajte ich v{' '}
-                    <a href="/admin/documents" className="text-orange-500 hover:underline">
-                      Šablóny dokumentov
-                    </a>
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm text-slate-600 font-medium">Stiahnite vygenerované dokumenty:</p>
-                  <div className="space-y-2">
-                    {templates.map((t) => (
-                      <div
-                        key={t.id}
-                        className="flex items-center justify-between p-3.5 border border-slate-200 rounded-xl hover:border-orange-200 hover:bg-orange-50/30 transition-colors"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
-                            <FileText className="h-4 w-4 text-slate-500" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium text-slate-900 text-sm truncate">{t.name}</p>
-                            {t.description && (
-                              <p className="text-xs text-slate-400 truncate">{t.description}</p>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={downloading === t.id}
-                          onClick={() => handleDownload(t.id, t.name)}
-                          className="shrink-0 ml-3 gap-1.5 border-orange-200 text-orange-600 hover:bg-orange-50"
-                        >
-                          {downloading === t.id
-                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            : <Download className="h-3.5 w-3.5" />
-                          }
-                          Stiahnuť
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+              <DocumentWizard vehicleId={vehicleId} party="buyer" />
             </div>
 
             <div className="px-6 py-4 border-t border-slate-100">
-              <Button onClick={handleFinish} className="w-full bg-orange-500 hover:bg-orange-600 text-white gap-2">
-                Prejsť na predané vozidlá
+              <Button onClick={handleFinish} variant="outline" className="w-full gap-2">
+                Hotovo — prejsť na predané vozidlá
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
