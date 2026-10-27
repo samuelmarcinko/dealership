@@ -32,6 +32,10 @@ const vehicleSchema = z.object({
   otherFeatures: z.array(z.string()).default([]),
   evFeatures: z.array(z.string()).default([]),
   vin: z.string().max(17).nullable().optional(),
+  licensePlate: z.string().max(20).nullable().optional(),
+  firstRegistration: z.string().nullable().optional(),
+  registrationDocNumber: z.string().max(40).nullable().optional(),
+  declaredMileage: z.number().int().min(0).nullable().optional(),
   stkMonth: z.number().int().min(1).max(12).nullable().optional(),
   stkYear: z.number().int().min(1900).max(2100).nullable().optional(),
   ekMonth: z.number().int().min(1).max(12).nullable().optional(),
@@ -43,6 +47,17 @@ const vehicleSchema = z.object({
   customCategoryFeatures: z.record(z.array(z.string())).optional(),
   defects: z.array(z.string()).default([]),
 })
+
+/** Dátum prvej registrácie chodí z formulára ako text. */
+function toVehicleData<T extends { firstRegistration?: string | null }>(input: T) {
+  const { firstRegistration, ...rest } = input
+  return {
+    ...rest,
+    ...(firstRegistration !== undefined
+      ? { firstRegistration: firstRegistration ? new Date(firstRegistration) : null }
+      : {}),
+  }
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
@@ -77,7 +92,7 @@ export async function POST(req: NextRequest) {
     }
 
     const slug = await generateVehicleSlug(parsed.data.title)
-    const vehicle = await prisma.vehicle.create({ data: { ...parsed.data, slug } })
+    const vehicle = await prisma.vehicle.create({ data: { ...toVehicleData(parsed.data), slug } })
     return NextResponse.json({ data: vehicle }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/vehicles]', err)

@@ -352,6 +352,12 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       otherFeatures: features.OTHER,
       evFeatures: features.EV,
       vin: (data.get('vin') as string) || null,
+      licensePlate: (data.get('licensePlate') as string) || null,
+      firstRegistration: (data.get('firstRegistration') as string) || null,
+      registrationDocNumber: (data.get('registrationDocNumber') as string) || null,
+      declaredMileage: data.get('declaredMileage')
+        ? parseInt(data.get('declaredMileage') as string)
+        : null,
       stkMonth: stkMonth ? parseInt(stkMonth) : null,
       stkYear:  stkYear  ? parseInt(stkYear)  : null,
       ekMonth:  ekMonth  ? parseInt(ekMonth)  : null,
@@ -611,6 +617,58 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
                 maxLength={17}
                 className="uppercase"
               />
+            </div>
+          </div>
+
+          {/* Údaje do zmlúv */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4 space-y-4">
+            <p className="text-sm font-medium text-slate-700">
+              Údaje do zmlúv
+              <span className="text-slate-400 font-normal text-xs ml-1">— nepovinné</span>
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="licensePlate">Evidenčné číslo (ŠPZ)</Label>
+                <Input
+                  id="licensePlate"
+                  name="licensePlate"
+                  defaultValue={v0?.licensePlate ?? ''}
+                  placeholder="napr. PO123AB"
+                  className="uppercase"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="firstRegistration">Dátum prvej registrácie</Label>
+                <Input
+                  id="firstRegistration"
+                  name="firstRegistration"
+                  type="date"
+                  defaultValue={
+                    v0?.firstRegistration
+                      ? new Date(v0.firstRegistration).toISOString().slice(0, 10)
+                      : ''
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="registrationDocNumber">Číslo technického preukazu</Label>
+                <Input
+                  id="registrationDocNumber"
+                  name="registrationDocNumber"
+                  defaultValue={v0?.registrationDocNumber ?? ''}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="declaredMileage">Stav tachometra podľa vyhlásenia majiteľa</Label>
+                <Input
+                  id="declaredMileage"
+                  name="declaredMileage"
+                  type="number"
+                  min={0}
+                  defaultValue={v0?.declaredMileage ?? ''}
+                  placeholder="km"
+                />
+              </div>
             </div>
           </div>
 

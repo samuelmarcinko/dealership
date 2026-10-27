@@ -26,8 +26,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin', request.url))
     }
 
-    // MANAGER: allowlist — only Dashboard, Zákazníci, Komisný predaj, Ponuka vozidiel, Predané vozidlá
-    const MANAGER_ALLOWED_PREFIXES = ['/admin/customers', '/admin/consignors', '/admin/vehicles', '/admin/sold']
+    // MANAGER: allowlist — Dashboard, Zákazníci, Komisný predaj, Ponuka vozidiel,
+    // Predané vozidlá a tlač dokumentov (zmluvy potrebuje pri predaji; šablóny
+    // v /admin/documents upravovať nemôže)
+    const MANAGER_ALLOWED_PREFIXES = ['/admin/customers', '/admin/consignors', '/admin/vehicles', '/admin/sold', '/admin/tlac']
     if (
       session.role === 'MANAGER' &&
       pathname !== '/admin' &&

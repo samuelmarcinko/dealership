@@ -14,8 +14,22 @@ const schema = z.object({
   phone: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   address: z.string().optional(),
+  birthDate: z.string().optional(),
+  idCardNumber: z.string().optional(),
+  bankAccount: z.string().optional(),
   note: z.string().optional(),
 })
+
+/** Dátum narodenia chodí z formulára ako text; prázdna hodnota znamená „nevyplnené“. */
+function toCustomerData<T extends { birthDate?: string }>(input: T) {
+  const { birthDate, ...rest } = input
+  return {
+    ...rest,
+    ...(birthDate !== undefined
+      ? { birthDate: birthDate ? new Date(birthDate) : null }
+      : {}),
+  }
+}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionFromRequest(req)
@@ -47,7 +61,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.errors[0]?.message ?? 'Neplatné dáta' }, { status: 400 })
     }
-    const customer = await prisma.customer.update({ where: { id }, data: parsed.data })
+    const customer = await prisma.customer.update({ where: { id }, data: toCustomerData(parsed.data) })
     return NextResponse.json({ data: customer })
   } catch (err) {
     console.error('[PUT /api/customers/:id]', err)

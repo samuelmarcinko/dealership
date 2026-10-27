@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import VehicleForm from '@/components/admin/VehicleForm'
 import SellVehicleButton from '@/components/admin/SellVehicleButton'
+import GenerateDocumentsButton from '@/components/admin/GenerateDocumentsButton'
 import PrintLabelButton from '@/components/admin/PrintLabelButton'
 import ImportedVehicleView from '@/components/admin/ImportedVehicleView'
 
@@ -56,6 +57,20 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
 
         <div className="flex items-center gap-2">
           <PrintLabelButton vehicleId={vehicle.id} />
+          {vehicle.isConsignment && vehicle.consignorId && (
+            <GenerateDocumentsButton
+              vehicleId={vehicle.id}
+              party="consignor"
+              label="Zmluvy ku komisii"
+            />
+          )}
+          {vehicle.status === 'SOLD' && vehicle.buyerId && (
+            <GenerateDocumentsButton
+              vehicleId={vehicle.id}
+              party="buyer"
+              label="Zmluvy k predaju"
+            />
+          )}
           {!isImported && (
             <Button
               type="submit"

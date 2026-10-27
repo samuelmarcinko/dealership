@@ -21,6 +21,9 @@ interface CustomerData {
   phone?: string | null
   email?: string | null
   address?: string | null
+  birthDate?: string | Date | null
+  idCardNumber?: string | null
+  bankAccount?: string | null
   note?: string | null
 }
 
@@ -207,6 +210,44 @@ export default function CustomerForm({ initialData, isConsignor = false }: Props
             placeholder="Hlavná 1, 010 01 Žilina"
           />
         </div>
+
+        {/* Údaje potrebné do zmlúv */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="birthDate">Dátum narodenia</Label>
+            <Input
+              id="birthDate"
+              name="birthDate"
+              type="date"
+              defaultValue={
+                initialData?.birthDate
+                  ? new Date(initialData.birthDate).toISOString().slice(0, 10)
+                  : ''
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="idCardNumber">Číslo OP</Label>
+            <Input
+              id="idCardNumber"
+              name="idCardNumber"
+              defaultValue={initialData?.idCardNumber ?? ''}
+              placeholder="AB123456"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bankAccount">Číslo účtu / IBAN</Label>
+            <Input
+              id="bankAccount"
+              name="bankAccount"
+              defaultValue={initialData?.bankAccount ?? ''}
+              placeholder="SK00 0000 0000 0000 0000 0000"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-slate-500">
+          Tieto údaje sa dopĺňajú do zmlúv. Nie sú povinné.
+        </p>
       </div>
 
       {/* Note */}
