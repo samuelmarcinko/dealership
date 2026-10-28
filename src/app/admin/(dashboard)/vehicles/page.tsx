@@ -35,7 +35,10 @@ export default async function AdminVehiclesPage({
 }) {
   const sp = await searchParams
   const q = sp.q?.trim() || undefined
-  const statusFilter = sp.status === 'AVAILABLE' || sp.status === 'RESERVED' ? sp.status : undefined
+  const statusFilter =
+    sp.status === 'AVAILABLE' || sp.status === 'RESERVED' || sp.status === 'ARCHIVED'
+      ? sp.status
+      : undefined
   const fuelFilter = sp.fuelType && Object.values(FuelType).includes(sp.fuelType as FuelType)
     ? sp.fuelType as FuelType
     : undefined
@@ -101,9 +104,10 @@ export default async function AdminVehiclesPage({
             defaultValue={sp.status ?? ''}
             className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
-            <option value="">Všetky stavy</option>
+            <option value="">Všetky v ponuke</option>
             <option value="AVAILABLE">Dostupné</option>
             <option value="RESERVED">Rezervované</option>
+            <option value="ARCHIVED">Stiahnuté z ponuky</option>
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
@@ -180,7 +184,11 @@ export default async function AdminVehiclesPage({
               ) : (
                 vehicles.map((vehicle) => {
                   const statusVariant =
-                    vehicle.status === 'AVAILABLE' ? 'success' : 'warning'
+                    vehicle.status === 'AVAILABLE'
+                      ? 'success'
+                      : vehicle.status === 'ARCHIVED'
+                        ? 'secondary'
+                        : 'warning'
                   return (
                     <TableRow key={vehicle.id}>
                       <TableCell>

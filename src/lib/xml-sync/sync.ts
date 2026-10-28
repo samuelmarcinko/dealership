@@ -2,7 +2,8 @@
  * XML Sync – core logic
  *
  * Fetches the configured XML feed, parses it, and upserts vehicles into the DB.
- * – Vehicles missing from the feed are marked SOLD (only if they were imported)
+ * – Vehicles missing from the feed are marked ARCHIVED (never SOLD — a sale is
+ *   only ever recorded through the “Predať vozidlo” action)
  * – Images are fully replaced on each sync for imported vehicles (CDN signed URLs change)
  * – A simple mutex prevents concurrent syncs
  */
@@ -163,14 +164,18 @@ export async function runXmlSync(): Promise<SyncResult> {
       // Generate slug only on create (not on update — slug stays stable)
       const existing = await prisma.vehicle.findUnique({
         where: { externalId: v.externalId },
-        select: { id: true, slug: true },
+        select: { id: true, slug: true, soldAt: true },
       })
+
+      // Vozidlo s evidovaným predajom si stav drží. Inak by ho feed, v ktorom
+      // ešte visí, pri najbližšej synchronizácii vrátil späť do ponuky.
+      const { status: _feedStatus, ...dataWithoutStatus } = sharedData
 
       let saved: { id: string }
       if (existing) {
         saved = await prisma.vehicle.update({
           where: { externalId: v.externalId },
-          data: sharedData,
+          data: existing.soldAt ? dataWithoutStatus : sharedData,
           select: { id: true },
         })
       } else {
@@ -233,7 +238,12 @@ export async function runXmlSync(): Promise<SyncResult> {
       count++
     }
 
-    // 5. Mark vanished imported vehicles as SOLD
+    // 5. Vozidlá, ktoré z feedu zmizli, stiahnuť z ponuky.
+    //
+    // Zámerne NIE ako predané: zmiznutie z feedu znamená len to, že vozidlo už
+    // majiteľ neponúka — mohol ho predať mimo portálu, stiahnuť, alebo si to
+    // rozmyslel. Označiť to ako predaj by nafúklo tržby o sumy, ktoré bazár
+    // nikdy neinkasoval. Predaj zaznamenáva výhradne tlačidlo „Predať vozidlo“.
     if (syncedExternalIds.length > 0) {
       await prisma.vehicle.updateMany({
         where: {
@@ -241,7 +251,7 @@ export async function runXmlSync(): Promise<SyncResult> {
           NOT: { externalId: null },
           status: { in: ['AVAILABLE', 'RESERVED'] },
         },
-        data: { status: 'SOLD' },
+        data: { status: 'ARCHIVED' },
       })
     }
 

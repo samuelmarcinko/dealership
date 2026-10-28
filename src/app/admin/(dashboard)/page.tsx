@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
 import { formatPrice, formatMileage, fuelTypeLabel, vehicleStatusLabel } from '@/lib/utils'
+import { SOLD_VEHICLE_WHERE, saleRevenue } from '@/lib/sales'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 
@@ -37,7 +38,7 @@ async function getSalesStats() {
   ])
 
   const thisMonthSold = thisMonthVehicles.length
-  const thisMonthRevenue = thisMonthVehicles.reduce((s, v) => s + Number(v.soldPrice ?? v.price ?? 0), 0)
+  const thisMonthRevenue = thisMonthVehicles.reduce((s, v) => s + saleRevenue(v), 0)
   const thisMonthAvgPrice = thisMonthSold > 0 ? thisMonthRevenue / thisMonthSold : 0
   const thisMonthConsignmentSold = thisMonthVehicles.filter(v => v.isConsignment).length
   const thisMonthConsignmentRevenue = thisMonthVehicles.filter(v => v.isConsignment).reduce((s, v) => s + Number(v.commissionAmount ?? 0), 0)
@@ -56,7 +57,7 @@ async function getSalesStats() {
     if (!v.soldAt) continue
     const m = v.soldAt.getMonth()
     monthlyData[m].sold++
-    monthlyData[m].revenue += Number(v.soldPrice ?? v.price ?? 0)
+    monthlyData[m].revenue += saleRevenue(v)
     if (v.isConsignment) {
       monthlyData[m].consignmentSold++
       monthlyData[m].consignmentRevenue += Number(v.commissionAmount ?? 0)
@@ -99,7 +100,7 @@ async function getStats() {
     prisma.vehicle.count(),
     prisma.vehicle.count({ where: { status: 'AVAILABLE' } }),
     prisma.vehicle.count({ where: { status: 'RESERVED' } }),
-    prisma.vehicle.count({ where: { status: 'SOLD' } }),
+    prisma.vehicle.count({ where: SOLD_VEHICLE_WHERE }),
     prisma.user.count(),
     prisma.vehicle.findMany({
       orderBy: { createdAt: 'desc' },
@@ -120,9 +121,9 @@ async function getStats() {
       where: { viewedAt: { gte: thirtyDaysAgo } },
       orderBy: { _count: { id: 'desc' } },
     }),
-    prisma.vehicle.count({ where: { isConsignment: true, status: { not: 'SOLD' } } }),
-    prisma.vehicle.count({ where: { isConsignment: true, status: 'SOLD' } }),
-    prisma.vehicle.aggregate({ where: { isConsignment: true, status: 'SOLD' }, _sum: { commissionAmount: true } }),
+    prisma.vehicle.count({ where: { isConsignment: true, status: { in: ['AVAILABLE', 'RESERVED'] } } }),
+    prisma.vehicle.count({ where: { isConsignment: true, ...SOLD_VEHICLE_WHERE } }),
+    prisma.vehicle.aggregate({ where: { isConsignment: true, ...SOLD_VEHICLE_WHERE }, _sum: { commissionAmount: true } }),
   ])
 
   // Fetch vehicle details for top viewed
@@ -574,7 +575,7 @@ export default async function DashboardPage() {
                   </div>
                 )
 
-                if (v.status === 'SOLD') {
+                if (v.status === 'SOLD' || v.status === 'ARCHIVED') {
                   return (
                     <div key={v.id} className="flex items-center px-6 py-3 opacity-60 cursor-default">
                       {inner}

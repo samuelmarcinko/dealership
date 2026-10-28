@@ -13,7 +13,9 @@ export async function POST(
 
   const vehicle = await prisma.vehicle.findUnique({ where: { id } })
   if (!vehicle) return NextResponse.json({ error: 'Vozidlo nenájdené' }, { status: 404 })
-  if (vehicle.status !== 'SOLD') return NextResponse.json({ error: 'Vozidlo nie je predané' }, { status: 400 })
+  if (vehicle.status !== 'SOLD' && vehicle.status !== 'ARCHIVED') {
+    return NextResponse.json({ error: 'Vozidlo nie je predané ani stiahnuté z ponuky' }, { status: 400 })
+  }
 
   const restored = await prisma.vehicle.update({
     where: { id },

@@ -9,6 +9,7 @@ import { formatPrice, fuelTypeLabel } from '@/lib/utils'
 import { customerDisplayName } from '@/lib/customer'
 import { TrendingUp, Car, Euro, Calendar, User, Building2 } from 'lucide-react'
 import RestoreVehicleButton from '@/components/admin/RestoreVehicleButton'
+import { SOLD_VEHICLE_WHERE, saleRevenue } from '@/lib/sales'
 
 export const metadata: Metadata = { title: 'Predané vozidlá' }
 
@@ -25,7 +26,7 @@ export default async function SoldVehiclesPage({
   const [vehicles, makes] = await Promise.all([
     prisma.vehicle.findMany({
       where: {
-        status: 'SOLD',
+        ...SOLD_VEHICLE_WHERE,
         ...(makeFilter && { make: { equals: makeFilter, mode: 'insensitive' } }),
         ...(fromFilter || toFilter
           ? { soldAt: { ...(fromFilter && { gte: fromFilter }), ...(toFilter && { lte: toFilter }) } }
@@ -38,14 +39,14 @@ export default async function SoldVehiclesPage({
       orderBy: { soldAt: 'desc' },
     }),
     prisma.vehicle.findMany({
-      where: { status: 'SOLD' },
+      where: SOLD_VEHICLE_WHERE,
       select: { make: true },
       distinct: ['make'],
       orderBy: { make: 'asc' },
     }),
   ])
 
-  const totalRevenue = vehicles.reduce((s, v) => s + Number(v.soldPrice ?? v.price), 0)
+  const totalRevenue = vehicles.reduce((s, v) => s + saleRevenue(v), 0)
   const avgPrice = vehicles.length > 0 ? totalRevenue / vehicles.length : 0
 
   return (

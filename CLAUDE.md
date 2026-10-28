@@ -135,8 +135,21 @@ CONTACT_EMAIL=...
 
 ### Predaj vozidla
 - Modal: výber zákazníka + predajná cena + dátum + poznámka
-- Po predaji: krok 2 — generovanie DOCX dokumentov (zmluvy)
-- Vozidlo sa automaticky presunie do "Predané vozidlá"
+- Po predaji: krok 2 — sprievodca generovaním zmlúv
+- Vozidlo sa presunie do „Predané vozidlá“
+
+**Za predaj sa počíta výhradne predaj cez tlačidlo „Predať vozidlo“.**
+Rozpoznávacím znakom je `soldAt` — nastavuje ho len `/api/vehicles/[id]/sell`.
+Definícia žije v `src/lib/sales.ts` (`SOLD_VEHICLE_WHERE`, `isRealSale`,
+`saleRevenue`); zoznamy aj štatistiky ju musia používať, nie `status === 'SOLD'`.
+
+Vozidlo, ktoré zmizlo z XML feedu (alebo ho feed označil za `sold`/`inactive`),
+dostáva stav `ARCHIVED` — „Stiahnuté z ponuky“. Nie je to predaj: majiteľ ho
+mohol predať mimo portálu alebo si to rozmyslel. Označovať to ako predaj by
+nafukovalo tržby o sumy, ktoré bazár nikdy neinkasoval.
+
+Feed tiež nikdy neprepíše stav vozidla, ktoré už má `soldAt` — inak by predané
+vozidlo, ktoré v feede ešte visí, skočilo späť do ponuky.
 
 ### Zmluvy a dokumenty
 - Šablóna = **HTML v databáze** (`DocumentTemplate.content`), nie súbor na disku
@@ -188,10 +201,11 @@ alebo kupujúci), `komitent_*`, `vozidlo_*`, `predaj_*`, `komisia_*`,
 
 ```
 User              — admin používatelia (ADMIN | EDITOR)
-Vehicle           — vozidlá (+ safetyFeatures, comfortFeatures, otherFeatures)
+Vehicle           — vozidlá (status: AVAILABLE | RESERVED | SOLD | ARCHIVED)
 VehicleImage      — fotky vozidiel
 Customer          — zákazníci (PERSON | COMPANY)
-DocumentTemplate  — .docx šablóny zmlúv
+DocumentTemplate  — šablóny zmlúv (HTML v DB)
+GeneratedDocument — archív vygenerovaných dokumentov
 TenantSettings    — key-value store pre branding/nastavenia
 CustomPage        — vlastné stránky (Page Builder)
 ```

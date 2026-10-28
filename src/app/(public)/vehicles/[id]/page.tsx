@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { PUBLIC_VEHICLE_STATUSES } from '@/lib/sales'
 import { Badge } from '@/components/ui/badge'
 import VehicleGallery from '@/components/public/VehicleGallery'
 import VehicleCard from '@/components/public/VehicleCard'
@@ -105,14 +106,14 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   // Related vehicles
   let relatedRaw = await prisma.vehicle.findMany({
-    where: { make: vehicle.make, status: { not: 'SOLD' }, id: { not: vehicle.id } },
+    where: { make: vehicle.make, status: { in: [...PUBLIC_VEHICLE_STATUSES] }, id: { not: vehicle.id } },
     include: { images: { where: { isPrimary: true }, take: 1 } },
     orderBy: { createdAt: 'desc' },
     take: 3,
   })
   if (relatedRaw.length === 0) {
     relatedRaw = await prisma.vehicle.findMany({
-      where: { status: { not: 'SOLD' }, id: { not: vehicle.id } },
+      where: { status: { in: [...PUBLIC_VEHICLE_STATUSES] }, id: { not: vehicle.id } },
       include: { images: { where: { isPrimary: true }, take: 1 } },
       orderBy: { createdAt: 'desc' },
       take: 3,
