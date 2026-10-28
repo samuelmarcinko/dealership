@@ -59,6 +59,7 @@ export function vehicleStatusLabel(s: string): string {
     AVAILABLE: 'Dostupné',
     RESERVED: 'Rezervované',
     SOLD: 'Predané',
+    ARCHIVED: 'Stiahnuté z ponuky',
   }
   return map[s] ?? s
 }
@@ -68,6 +69,7 @@ export function vehicleStatusColor(s: string): string {
     AVAILABLE: 'bg-green-100 text-green-800',
     RESERVED: 'bg-yellow-100 text-yellow-800',
     SOLD: 'bg-red-100 text-red-800',
+    ARCHIVED: 'bg-slate-200 text-slate-700',
   }
   return map[s] ?? 'bg-gray-100 text-gray-800'
 }

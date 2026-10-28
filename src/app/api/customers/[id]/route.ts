@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
+import { SOLD_VEHICLE_WHERE } from '@/lib/sales'
 
 const schema = z.object({
   type: z.enum(['PERSON', 'COMPANY']).optional(),
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     where: { id },
     include: {
       vehicles: {
-        where: { status: 'SOLD' },
+        where: SOLD_VEHICLE_WHERE,
         include: { images: { where: { isPrimary: true }, take: 1 } },
         orderBy: { soldAt: 'desc' },
       },

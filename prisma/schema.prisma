@@ -21,6 +21,9 @@ enum VehicleStatus {
   AVAILABLE
   RESERVED
   SOLD
+  // Stiahnuté z ponuky – zmizlo z XML feedu alebo ho feed označil ako neaktívne.
+  // Nie je to predaj: do predaných vozidiel ani do tržieb sa nezapočítava.
+  ARCHIVED
 }
 
 enum FuelType {

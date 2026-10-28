@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { customerDisplayName } from '@/lib/customer'
 import { formatPrice, vehicleStatusLabel, fuelTypeLabel, formatMileage } from '@/lib/utils'
+import { isRealSale } from '@/lib/sales'
 import SellVehicleButton from '@/components/admin/SellVehicleButton'
 import PrintLabelButton from '@/components/admin/PrintLabelButton'
 
@@ -31,10 +32,10 @@ export default async function ConsignorsPage() {
 
   const totalVehicles = consignors.reduce((sum, c) => sum + c.consignedVehicles.length, 0)
   const activeVehicles = consignors.reduce(
-    (sum, c) => sum + c.consignedVehicles.filter(v => v.status !== 'SOLD').length, 0
+    (sum, c) => sum + c.consignedVehicles.filter(v => !isRealSale(v)).length, 0
   )
   const soldVehicles = consignors.reduce(
-    (sum, c) => sum + c.consignedVehicles.filter(v => v.status === 'SOLD').length, 0
+    (sum, c) => sum + c.consignedVehicles.filter(v => isRealSale(v)).length, 0
   )
   const totalEarnings = consignors.reduce(
     (sum, c) => sum + c.consignedVehicles.reduce(
@@ -114,8 +115,8 @@ export default async function ConsignorsPage() {
       ) : (
         <div className="space-y-5">
           {consignors.map((c) => {
-            const cActive = c.consignedVehicles.filter(v => v.status !== 'SOLD').length
-            const cSold = c.consignedVehicles.filter(v => v.status === 'SOLD').length
+            const cActive = c.consignedVehicles.filter(v => !isRealSale(v)).length
+            const cSold = c.consignedVehicles.filter(v => isRealSale(v)).length
             const cEarnings = c.consignedVehicles.reduce(
               (s, v) => s + (v.commissionAmount != null ? Number(v.commissionAmount) : 0), 0
             )
@@ -183,7 +184,7 @@ export default async function ConsignorsPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                     {c.consignedVehicles.map((v) => {
                       const statusVariant = v.status === 'AVAILABLE' ? 'success' : v.status === 'RESERVED' ? 'warning' : 'error'
-                      const isSold = v.status === 'SOLD'
+                      const isSold = isRealSale(v)
                       return (
                         <div
                           key={v.id}

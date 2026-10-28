@@ -285,7 +285,9 @@ function mapGenericItemToVehicle(item: Record<string, unknown>): ParsedVehicle |
   const STATUS_MAP: Record<string, VehicleStatus> = {
     active: 'AVAILABLE', aktívny: 'AVAILABLE', aktivny: 'AVAILABLE', available: 'AVAILABLE',
     reserved: 'RESERVED', rezervovaný: 'RESERVED', rezervovany: 'RESERVED',
-    sold: 'SOLD', predaný: 'SOLD', predany: 'SOLD', inactive: 'SOLD',
+    // Feed hovorí len to, že vozidlo už nie je v ponuke. Predaj cez systém
+    // sa zaznamenáva výhradne tlačidlom „Predať vozidlo“, preto ARCHIVED.
+    sold: 'ARCHIVED', predaný: 'ARCHIVED', predany: 'ARCHIVED', inactive: 'ARCHIVED',
   }
 
   const features: string[] = []

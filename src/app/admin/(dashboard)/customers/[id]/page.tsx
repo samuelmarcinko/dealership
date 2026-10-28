@@ -13,6 +13,7 @@ import SellVehicleButton from '@/components/admin/SellVehicleButton'
 import PrintLabelButton from '@/components/admin/PrintLabelButton'
 import { customerDisplayName } from '@/lib/customer'
 import { formatPrice, vehicleStatusLabel, fuelTypeLabel, formatMileage } from '@/lib/utils'
+import { SOLD_VEHICLE_WHERE, isRealSale } from '@/lib/sales'
 
 export const metadata: Metadata = { title: 'Upraviť zákazníka' }
 
@@ -22,7 +23,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
     where: { id },
     include: {
       vehicles: {
-        where: { status: 'SOLD' },
+        where: SOLD_VEHICLE_WHERE,
         include: { images: { where: { isPrimary: true }, take: 1 } },
         orderBy: { soldAt: 'desc' },
       },
@@ -154,7 +155,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
                     )}
                   </CardTitle>
                 </div>
-                {customer.consignedVehicles.some(v => v.status === 'SOLD' && v.commissionAmount != null) && (
+                {customer.consignedVehicles.some(v => isRealSale(v) && v.commissionAmount != null) && (
                   <span className="flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded-md">
                     <TrendingUp className="h-3 w-3" />
                     {formatPrice(
@@ -214,7 +215,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
                               )}
                             </div>
                           </div>
-                          {v.status === 'SOLD' && (v.soldAt || v.commissionAmount != null) && (
+                          {isRealSale(v) && (v.soldAt || v.commissionAmount != null) && (
                             <div className="flex items-center gap-3 flex-wrap pt-1 border-t border-slate-200">
                               {v.soldAt && (
                                 <span className="flex items-center gap-1 text-xs text-slate-500">
@@ -231,7 +232,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
                             </div>
                           )}
                         </div>
-                        {v.status !== 'SOLD' && (
+                        {!isRealSale(v) && (
                           <div className="flex items-center gap-2">
                             <Button asChild variant="outline" size="sm" className="h-8 text-xs">
                               <Link href={`/admin/vehicles/${v.id}`}>
@@ -251,7 +252,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
                             />
                           </div>
                         )}
-                        {v.status === 'SOLD' && (
+                        {isRealSale(v) && (
                           <div className="flex items-center gap-2">
                             <Button asChild variant="outline" size="sm" className="h-8 text-xs">
                               <Link href={`/admin/vehicles/${v.id}`}>

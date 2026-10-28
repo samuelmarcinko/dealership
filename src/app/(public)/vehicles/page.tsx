@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { PUBLIC_VEHICLE_STATUSES } from '@/lib/sales'
 import VehicleCard from '@/components/public/VehicleCard'
 import VehicleFilters from '@/components/public/VehicleFilters'
 import type { PublicVehicle } from '@/types'
@@ -32,7 +33,7 @@ interface SearchParams {
 }
 
 async function getVehicles(params: SearchParams) {
-  const NON_SOLD = { status: { not: 'SOLD' as const } }
+  const NON_SOLD = { status: { in: [...PUBLIC_VEHICLE_STATUSES] } }
   const where: Record<string, unknown> = { ...NON_SOLD }
 
   if (params.make) {

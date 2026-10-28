@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
-    "db:seed:documents": "node prisma/seed-documents.js"
+    "db:seed:documents": "node prisma/seed-documents.js",
+    "db:fix-false-sold": "node prisma/fix-false-sold.js"
   },
   "dependencies": {
     "@craftjs/core": "^0.2.12",
