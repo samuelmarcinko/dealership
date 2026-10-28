@@ -246,8 +246,6 @@ const GDPR = `
 
 <p style="text-align: justify">Osobné údaje bude prevádzkovateľ spracúvať a uschovávať odo dňa zadania objednávky. Následne bude ďalšie spracovanie podliehať zákonu č. 395/2002 Z. z. o archívoch a registratúrach a o doplnení niektorých zákonov v znení neskorších predpisov.</p>
 
-<p style="text-align: justify">V prípade, že nedôjde k realizácii sprostredkovania predaja, osobné údaje dotknutej osoby budú zlikvidované, ak ich ďalšie uchovávanie nevyžaduje osobitný právny predpis.</p>
-
 <p>S úctou</p>
 
 <p>V {miesto}, dňa {datum_dnes}</p>
