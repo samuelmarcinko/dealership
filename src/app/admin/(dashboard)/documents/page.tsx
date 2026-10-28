@@ -11,8 +11,6 @@ export default async function DocumentsPage() {
       id: true,
       name: true,
       description: true,
-      context: true,
-      customerType: true,
       isActive: true,
       sortOrder: true,
     },

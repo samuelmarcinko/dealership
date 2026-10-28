@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Building2, Palette, LayoutGrid, ImageIcon, Search, Megaphone, Phone, ChevronDown } from 'lucide-react'
+import { Building2, Palette, LayoutGrid, ImageIcon, Search, Megaphone, Phone, ChevronDown, Handshake } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import BrandingForm from '@/components/admin/BrandingForm'
 import ContactSettingsForm from '@/components/admin/ContactSettingsForm'
@@ -10,8 +10,9 @@ import HeroSettingsForm from '@/components/admin/HeroSettingsForm'
 import HomepageSettingsForm from '@/components/admin/HomepageSettingsForm'
 import HomepageSeoSettingsForm from '@/components/admin/HomepageSeoSettingsForm'
 import BannerSettingsForm from '@/components/admin/BannerSettingsForm'
+import SalesSettingsForm from '@/components/admin/SalesSettingsForm'
 
-type Tab = 'firma' | 'vzhled' | 'homepage'
+type Tab = 'firma' | 'predaj' | 'vzhled' | 'homepage'
 
 interface Props {
   settings: Record<string, string>
@@ -19,6 +20,7 @@ interface Props {
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'firma', label: 'Firma', icon: Building2 },
+  { id: 'predaj', label: 'Predaj', icon: Handshake },
   { id: 'vzhled', label: 'Vzhľad', icon: Palette },
   { id: 'homepage', label: 'Domovská stránka', icon: LayoutGrid },
 ]
@@ -106,6 +108,18 @@ export default function SettingsTabs({ settings }: Props) {
             icon={Phone}
           >
             <ContactSettingsForm settings={settings} />
+          </CollapsibleSection>
+        </div>
+      )}
+
+      {activeTab === 'predaj' && (
+        <div className="space-y-6">
+          <CollapsibleSection
+            title="Komisný predaj"
+            description="Oddelená evidencia vozidiel prijatých od majiteľov — komitenti a provízie."
+            icon={Handshake}
+          >
+            <SalesSettingsForm settings={settings} />
           </CollapsibleSection>
         </div>
       )}

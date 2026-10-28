@@ -1,6 +1,9 @@
 /**
  * Vzorové zmluvy pre autobazár.
  *
+ * Slúžia ako východiskový obsah — klient si ich v admine upraví, prípadne
+ * nahradí vlastnými cez „Načítať z Wordu“.
+ *
  * Spustenie na VPS:
  *   docker compose exec dealership node prisma/seed-documents.js
  *
@@ -219,8 +222,6 @@ const TEMPLATES = [
     name: 'Zmluva o sprostredkovaní predaja',
     description: 'Podpisuje sa pri prevzatí vozidla do komisie',
     content: SPROSTREDKOVATELSKA,
-    context: 'INTAKE',
-    customerType: null,
     customFields: SPROSTREDKOVATELSKA_FIELDS,
     sortOrder: 0,
   },
@@ -228,8 +229,6 @@ const TEMPLATES = [
     name: 'Preberací protokol',
     description: 'Zoznam prevzatých dokladov a príslušenstva',
     content: PROTOKOL,
-    context: 'INTAKE',
-    customerType: null,
     customFields: PROTOKOL_FIELDS,
     sortOrder: 1,
   },
@@ -237,8 +236,6 @@ const TEMPLATES = [
     name: 'Informačná povinnosť (GDPR)',
     description: 'Poučenie o spracúvaní osobných údajov',
     content: GDPR,
-    context: 'BOTH',
-    customerType: 'PERSON',
     customFields: [],
     sortOrder: 2,
   },

@@ -10,10 +10,11 @@ interface Props {
   userEmail: string
   userRole: string
   businessName: string
+  consignmentEnabled: boolean
   children: React.ReactNode
 }
 
-export default function AdminShell({ userName, userEmail, userRole, businessName, children }: Props) {
+export default function AdminShell({ userName, userEmail, userRole, businessName, consignmentEnabled, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
 
@@ -42,6 +43,7 @@ export default function AdminShell({ userName, userEmail, userRole, businessName
           userEmail={userEmail}
           userRole={userRole}
           businessName={businessName}
+          consignmentEnabled={consignmentEnabled}
           onClose={() => setSidebarOpen(false)}
         />
       </div>

@@ -12,6 +12,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { prisma } from '@/lib/prisma'
+import { getTenantSettings } from '@/lib/tenant'
+import { isConsignmentEnabled } from '@/lib/features'
 import DeleteVehicleButton from '@/components/admin/DeleteVehicleButton'
 import { formatPrice, formatMileage, vehicleStatusLabel, fuelTypeLabel } from '@/lib/utils'
 import { FuelType, VehicleStatus } from '@prisma/client'
@@ -42,7 +44,9 @@ export default async function AdminVehiclesPage({
   const fuelFilter = sp.fuelType && Object.values(FuelType).includes(sp.fuelType as FuelType)
     ? sp.fuelType as FuelType
     : undefined
-  const consignmentFilter = sp.consignment === '1' ? true : undefined
+  const settings = await getTenantSettings()
+  const consignmentEnabled = isConsignmentEnabled(settings)
+  const consignmentFilter = consignmentEnabled && sp.consignment === '1' ? true : undefined
 
   const vehicles = await prisma.vehicle.findMany({
     where: {
@@ -122,17 +126,19 @@ export default async function AdminVehiclesPage({
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-slate-600">Zdroj</label>
-          <select
-            name="consignment"
-            defaultValue={sp.consignment ?? ''}
-            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-          >
-            <option value="">Všetky</option>
-            <option value="1">Len komis</option>
-          </select>
-        </div>
+        {consignmentEnabled && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-slate-600">Zdroj</label>
+            <select
+              name="consignment"
+              defaultValue={sp.consignment ?? ''}
+              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+              <option value="">Všetky</option>
+              <option value="1">Len komis</option>
+            </select>
+          </div>
+        )}
         <button
           type="submit"
           className="h-9 px-4 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-md transition-colors"
