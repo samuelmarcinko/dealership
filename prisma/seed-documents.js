@@ -22,81 +22,121 @@ const SPROSTREDKOVATELSKA = `
 <h1>Zmluva o sprostredkovaní predaja motorového vozidla</h1>
 <p style="text-align: center">uzavretá podľa § 774 a nasl. zákona č. 40/1964 Zb. Občiansky zákonník v znení neskorších predpisov</p>
 
+<h2>I. Zmluvné strany</h2>
+
 <h3>Sprostredkovateľ</h3>
-<p>{predajca_nazov}, {predajca_adresa}<br>IČO: {predajca_ico} &nbsp;&nbsp; DIČ: {predajca_dic} &nbsp;&nbsp; IČ DPH: {predajca_ic_dph}<br>telefón: {predajca_telefon} &nbsp;&nbsp; e-mail: {predajca_email}<br>(ďalej len „sprostredkovateľ“)</p>
+<p>{predajca_nazov}<br>
+so sídlom / miestom podnikania: {predajca_adresa}<br>
+IČO: {predajca_ico} &nbsp;&nbsp;|&nbsp;&nbsp; DIČ: {predajca_dic} &nbsp;&nbsp;|&nbsp;&nbsp; IČ DPH: {predajca_ic_dph}<br>
+telefón: {predajca_telefon} &nbsp;&nbsp;|&nbsp;&nbsp; e-mail: {predajca_email}<br>
+(ďalej len „sprostredkovateľ“)</p>
 
 <h3>Záujemca</h3>
-<p>{klient_nazov}<br>bydlisko: {klient_adresa}<br>dátum narodenia: {klient_datum_narodenia} &nbsp;&nbsp; rodné číslo: {rodne_cislo}<br>číslo OP: {klient_op} &nbsp;&nbsp; telefón: {klient_telefon}<br>číslo účtu (IBAN): {klient_ucet}<br>(ďalej len „záujemca“)</p>
+<p>{klient_nazov}<br>
+bydlisko / sídlo: {klient_adresa}<br>
+dátum narodenia: {klient_datum_narodenia} &nbsp;&nbsp;|&nbsp;&nbsp; rodné číslo: {rodne_cislo}<br>
+číslo občianskeho preukazu: {klient_op}<br>
+IČO: {klient_ico} &nbsp;&nbsp;|&nbsp;&nbsp; DIČ: {klient_dic} &nbsp;&nbsp;|&nbsp;&nbsp; IČ DPH: {klient_ic_dph}<br>
+telefón: {klient_telefon} &nbsp;&nbsp;|&nbsp;&nbsp; e-mail: {klient_email}<br>
+číslo účtu (IBAN) na poukázanie kúpnej ceny: {klient_ucet}<br>
+(ďalej len „záujemca“)</p>
 
-<h2>I. Predmet zmluvy</h2>
+<h2>II. Predmet zmluvy</h2>
 <ol>
-<li>Sprostredkovateľ sa zaväzuje, že bude vyvíjať činnosť smerujúcu k tomu, aby záujemca mal príležitosť uzavrieť kúpnu zmluvu s treťou osobou na predaj predmetu sprostredkovania, ktorého výlučným vlastníkom, prípadne bezpodielovým spoluvlastníkom, je záujemca.</li>
+<li>Sprostredkovateľ sa zaväzuje vyvíjať činnosť smerujúcu k tomu, aby záujemca mal príležitosť uzavrieť kúpnu zmluvu s treťou osobou na predaj vozidla uvedeného v ods. 2 tohto článku (ďalej len „vozidlo“).</li>
 <li>Predmetom sprostredkovania je motorové vozidlo:</li>
 </ol>
 
 <table>
 <tbody>
-<tr><td><strong>Značka a model</strong></td><td>{vozidlo_znacka} {vozidlo_model} {vozidlo_variant}</td></tr>
+<tr><td><strong>Výrobná značka a model</strong></td><td>{vozidlo_znacka} {vozidlo_model} {vozidlo_variant}</td></tr>
+<tr><td><strong>Druh vozidla</strong></td><td>{vozidlo_karoseria}</td></tr>
 <tr><td><strong>Rok výroby</strong></td><td>{vozidlo_rok}</td></tr>
 <tr><td><strong>Dátum prvej registrácie</strong></td><td>{vozidlo_prva_registracia}</td></tr>
 <tr><td><strong>VIN / číslo karosérie</strong></td><td>{vozidlo_vin}</td></tr>
 <tr><td><strong>Evidenčné číslo</strong></td><td>{vozidlo_ecv}</td></tr>
-<tr><td><strong>Číslo technického preukazu</strong></td><td>{vozidlo_cislo_tp}</td></tr>
-<tr><td><strong>Stav tachometra podľa odometra</strong></td><td>{vozidlo_km}</td></tr>
-<tr><td><strong>Stav tachometra podľa vyhlásenia majiteľa</strong></td><td>{vozidlo_km_vyhlasenie}</td></tr>
-<tr><td><strong>Farba</strong></td><td>{vozidlo_farba}</td></tr>
+<tr><td><strong>Číslo osvedčenia o evidencii</strong></td><td>{vozidlo_cislo_tp}</td></tr>
 <tr><td><strong>Palivo / prevodovka</strong></td><td>{vozidlo_palivo} / {vozidlo_prevodovka}</td></tr>
-<tr><td><strong>Známe závady</strong></td><td>{vozidlo_zavady}</td></tr>
+<tr><td><strong>Farba</strong></td><td>{vozidlo_farba}</td></tr>
+<tr><td><strong>Stav tachometra podľa odometra</strong></td><td>{vozidlo_km}</td></tr>
+<tr><td><strong>Stav tachometra podľa vyhlásenia záujemcu</strong></td><td>{vozidlo_km_vyhlasenie}</td></tr>
+<tr><td><strong>Známe vady a poškodenia</strong></td><td>{vozidlo_zavady}</td></tr>
 </tbody>
 </table>
 
 <ol start="3">
-<li>Záujemca žiada, aby vozidlo bolo odpredané najmenej za cenu <strong>{min_cena} €</strong>, slovom {min_cena_slovom}. Záujemca sa zaväzuje súčasne s podpisom tejto zmluvy podpísať návrh budúcej kúpnej zmluvy s touto cenovou podmienkou.</li>
-<li>Vozidlo zostáva vlastníctvom záujemcu až do uzavretia kúpnej zmluvy o predaji vozidla s treťou osobou.</li>
+<li>Záujemca žiada, aby vozidlo bolo odpredané najmenej za cenu <strong>{min_cena} €</strong>, slovom {min_cena_slovom}. Záujemca sa zaväzuje súčasne s podpisom tejto zmluvy podpísať návrh budúcej kúpnej zmluvy s touto cenovou podmienkou. Návrh je platný počas trvania tejto zmluvy.</li>
+<li>Vozidlo zostáva vo vlastníctve záujemcu až do uzavretia kúpnej zmluvy s treťou osobou.</li>
+<li>Podpisom tejto zmluvy obidvomi zmluvnými stranami sa súčasne potvrdzuje, že záujemca odovzdal vozidlo sprostredkovateľovi. Doklady a príslušenstvo odovzdané spolu s vozidlom sú uvedené v preberacom protokole, ktorý tvorí neoddeliteľnú prílohu tejto zmluvy.</li>
 </ol>
 
-<h2>II. Práva a povinnosti zmluvných strán</h2>
+<h2>III. Vyhlásenia záujemcu</h2>
+<p>Záujemca vyhlasuje, že:</p>
 <ol>
-<li>Záujemca sa zaväzuje poskytnúť sprostredkovateľovi všetky doklady nevyhnutné na splnenie účelu tejto zmluvy (technický preukaz, osvedčenie o evidencii, doklad o poistení, osvedčenie o STK a EK, splnomocnenie).</li>
-<li>Záujemca sa zaväzuje poskytnúť sprostredkovateľovi úplné a presné informácie o predmete sprostredkovania, najmä ho upozorniť na všetky právne, technické a iné vady a nedostatky vozidla.</li>
-<li>Záujemca zodpovedá za správnosť údaja o stave odometra uvedeného v čl. I tejto zmluvy. V prípade, že sa po predaji preukáže nezhoda skutočného počtu najazdených kilometrov s údajom uvedeným pri podpise tejto zmluvy, záujemca sa zaväzuje vrátiť kupujúcemu plnú kúpnu cenu do 14 dní odo dňa, keď bol na túto skutočnosť písomne upozornený.</li>
-<li>Záujemca vyhlasuje, že si je vedomý právnych následkov zatajenia skrytých vád a poškodení vozidla. Je si vedomý, že nepravdivé údaje o vadách vozidla môžu mať za následok neplatnosť kúpnej zmluvy, odstúpenie od zmluvy, prípadne zľavu z ceny vozidla.</li>
-<li>Záujemca touto zmluvou splnomocňuje sprostredkovateľa na uzavretie a podpis kúpnej zmluvy o predaji vozidla uvedeného v čl. I vo svojom mene.</li>
-<li>Záujemca touto zmluvou splnomocňuje sprostredkovateľa na prevzatie kúpnej ceny od kupujúceho. Sprostredkovateľ je povinný odovzdať kúpnu cenu zníženú o dohodnutú odmenu a náklady podľa čl. III na účet záujemcu uvedený v záhlaví tejto zmluvy, a to najneskôr do siedmich dní odo dňa obdržania platby od kupujúceho. V prípade predaja cez leasingovú spoločnosť najneskôr do štrnástich dní od uzavretia kúpnej zmluvy.</li>
-<li>Sprostredkovateľ sa zaväzuje bez zbytočného odkladu oznámiť záujemcovi okolnosti dôležité pre jeho rozhodovanie o uzavretí kúpnej zmluvy.</li>
+<li>je výlučným vlastníkom vozidla, prípadne je vozidlo v bezpodielovom spoluvlastníctve manželov a na jeho predaj má výslovný súhlas manžela, resp. manželky;</li>
+<li>vozidlo nie je zaťažené záložným právom, zabezpečovacím prevodom práva, leasingom, exekúciou ani iným právom tretej osoby, ktoré by bránilo jeho prevodu, a nie je predmetom súdneho alebo správneho konania;</li>
+<li>vozidlo ani jeho časti nepochádzajú z trestnej činnosti, identifikačné údaje vozidla neboli pozmenené a doklady k vozidlu sú pravé a platné;</li>
+<li>stav tachometra uvedený v čl. II zodpovedá skutočnému počtu najazdených kilometrov. V prípade, že sa po predaji preukáže nezhoda, záujemca sa zaväzuje vrátiť kupujúcemu plnú kúpnu cenu do <strong>14 dní</strong> odo dňa, keď bol na túto skutočnosť písomne upozornený;</li>
+<li>sprostredkovateľa oboznámil so všetkými jemu známymi právnymi, technickými a inými vadami a poškodeniami vozidla. Záujemca si je vedomý právnych následkov zatajenia skrytých vád — nepravdivé údaje o stave vozidla môžu mať za následok neplatnosť kúpnej zmluvy, odstúpenie od nej, prípadne zľavu z kúpnej ceny, a zodpovednosť za škodu tým vzniknutú znáša záujemca.</li>
+</ol>
+
+<h2>IV. Povinnosti záujemcu</h2>
+<ol>
+<li>Poskytnúť sprostredkovateľovi všetky doklady potrebné na splnenie účelu tejto zmluvy, najmä osvedčenie o evidencii, doklad o povinnom zmluvnom poistení, osvedčenie o technickej a emisnej kontrole a splnomocnenie.</li>
+<li>Vysporiadať do dňa predaja vozidla všetky poplatky a povinnosti stanovené všeobecne záväznými právnymi predpismi, najmä povinné zmluvné poistenie.</li>
+<li>Uhradiť sprostredkovateľovi odmenu a náklady riadne a včas podľa čl. VII tejto zmluvy.</li>
+<li>Bezodkladne písomne oznámiť sprostredkovateľovi každú okolnosť, ktorá má vplyv na predaj vozidla, najmä ak vozidlo predá alebo prisľúbi inej osobe mimo tejto zmluvy.</li>
+</ol>
+
+<h2>V. Povinnosti sprostredkovateľa</h2>
+<ol>
+<li>Vyvíjať činnosť smerujúcu k predaju vozidla, najmä zabezpečiť jeho prezentáciu a inzerciu.</li>
+<li>Bez zbytočného odkladu oznámiť záujemcovi okolnosti dôležité pre jeho rozhodovanie o uzavretí kúpnej zmluvy.</li>
+<li>Odovzdať záujemcovi kúpnu cenu zníženú o dohodnutú odmenu a náklady podľa čl. VII, a to na účet uvedený v čl. I tejto zmluvy, najneskôr do <strong>7 dní</strong> odo dňa obdržania platby od kupujúceho. V prípade predaja prostredníctvom leasingovej spoločnosti najneskôr do <strong>14 dní</strong> odo dňa uzavretia kúpnej zmluvy.</li>
 <li>Sprostredkovateľ neručí za splnenie záväzkov tretích osôb, s ktorými sprostredkoval uzavretie kúpnej zmluvy.</li>
-<li>Podpisom tejto zmluvy obidvomi stranami sa súčasne potvrdzuje, že záujemca odovzdal predmetné vozidlo sprostredkovateľovi. Sprostredkovateľ potvrdzuje, že spolu s vozidlom prevzal aj doklady a príslušenstvo, ktoré sú uvedené v preberacom protokole.</li>
-<li>Sprostredkovateľ nezodpovedá za škody, ktoré vzniknú na vozidle počas jeho parkovania v priestoroch sprostredkovateľa alebo počas skúšobnej jazdy, a to najmä za škody spôsobené prírodným živlom, vandalizmom, požiarom alebo obdobnou udalosťou. Sprostredkovateľ zodpovedá len za škody, ktoré sú kryté poistením autobazára.</li>
-<li>Záujemca vyhlasuje, že na sprostredkovanie predaja vozidla a na jeho predaj má výslovný súhlas manžela, resp. manželky, ak je vozidlo v bezpodielovom spoluvlastníctve manželov.</li>
+<li>Sprostredkovateľ nezodpovedá za škody vzniknuté na vozidle počas jeho parkovania v priestoroch sprostredkovateľa ani počas skúšobnej jazdy, najmä za škody spôsobené prírodným živlom, vandalizmom, požiarom, krádežou alebo obdobnou udalosťou. Sprostredkovateľ zodpovedá za škodu v rozsahu, v akom je krytá poistením autobazára.</li>
 </ol>
 
-<h2>III. Odmena sprostredkovateľa, termíny</h2>
+<h2>VI. Splnomocnenie</h2>
 <ol>
-<li>Sprostredkovateľovi vzniká nárok na odmenu, ak je na základe jeho činnosti uzavretá kúpna zmluva s treťou osobou.</li>
+<li>Záujemca týmto splnomocňuje sprostredkovateľa na uzavretie a podpis kúpnej zmluvy o predaji vozidla uvedeného v čl. II vo svojom mene, za cenu najmenej vo výške podľa čl. II ods. 3.</li>
+<li>Záujemca týmto splnomocňuje sprostredkovateľa na prevzatie kúpnej ceny od kupujúceho, s povinnosťou naložiť s ňou spôsobom podľa čl. V ods. 3.</li>
+<li>Splnomocnenie podľa tohto článku zaniká zánikom tejto zmluvy.</li>
+</ol>
+
+<h2>VII. Odmena sprostredkovateľa a náklady</h2>
+<ol>
+<li>Sprostredkovateľovi vzniká nárok na odmenu uzavretím kúpnej zmluvy s treťou osobou na základe jeho činnosti.</li>
 <li>Zmluvné strany sa dohodli na odmene vo výške <strong>{provizia} €</strong> vrátane DPH.</li>
-<li>Odmena je splatná pri vysporiadaní kúpnej ceny spôsobom uvedeným v čl. II ods. 6 tejto zmluvy.</li>
-<li>V dohodnutej odmene nie sú zahrnuté náklady na prípravu vozidla na predaj, najmä umytie vozidla, hĺbkové čistenie a tepovanie, tankovanie a doplnenie prevádzkových kvapalín. Tieto náklady budú uvedené samostatne vo vyúčtovaní za sprostredkovanie predaja.</li>
-<li>Sprostredkovateľovi vzniká nárok účtovať stojné vo výške <strong>{stojne_den} €</strong> za každý deň státia vozidla. V tomto poplatku sú zahrnuté všetky úkony spojené s bežnou údržbou vozidla.</li>
-<li>Táto zmluva sa uzatvára na dobu neurčitú, najmenej však na {doba_trvania} dní odo dňa jej účinnosti.</li>
-<li>Záujemca môže trvanie zmluvy ukončiť aj pred uplynutím dohodnutej doby s tým, že uhradí sprostredkovateľovi odstupné vo výške <strong>{odstupne} €</strong>.</li>
-<li>Ak nedôjde k realizácii predaja z dôvodov na strane záujemcu, uhradí záujemca sprostredkovateľovi jednorazový servisný poplatok vo výške <strong>{servisny_poplatok} €</strong> za prípravu vozidla na predaj, jeho inzerciu a prezentáciu. Tento poplatok neobsahuje náklady podľa ods. 4 tohto článku.</li>
-<li>Záujemca nemôže zrušiť túto zmluvu, ak už došlo k realizácii predaja, alebo ak za vozidlo už bola zložená záloha a očakáva sa poukázanie kúpnej ceny.</li>
-<li>Ak kupujúci odstúpi od kúpnej zmluvy, alebo bude kúpna zmluva zrušená v dôsledku nesprávnych skutočností, nezodpovedajúceho počtu najazdených kilometrov alebo nepravdivých informácií o technickom a právnom stave vozidla zo strany záujemcu, odmena sprostredkovateľa sa nevracia.</li>
+<li>Odmena je splatná pri vysporiadaní kúpnej ceny spôsobom podľa čl. V ods. 3 tejto zmluvy; sprostredkovateľ je oprávnený započítať ju proti kúpnej cene.</li>
+<li>V dohodnutej odmene <strong>nie sú zahrnuté</strong> náklady na prípravu vozidla na predaj, najmä umytie vozidla, hĺbkové čistenie a tepovanie, tankovanie a doplnenie prevádzkových kvapalín, drobné opravy a fotodokumentácia. Tieto náklady sa uvádzajú samostatne vo vyúčtovaní za sprostredkovanie predaja a uhrádza ich záujemca.</li>
+<li>Sprostredkovateľ je oprávnený účtovať stojné vo výške <strong>{stojne_den} €</strong> za každý deň státia vozidla. V tomto poplatku sú zahrnuté úkony spojené s bežnou údržbou vozidla počas jeho umiestnenia u sprostredkovateľa.</li>
+<li>Ak kupujúci odstúpi od kúpnej zmluvy alebo bude kúpna zmluva zrušená v dôsledku nesprávnych skutočností, nezodpovedajúceho počtu najazdených kilometrov alebo nepravdivých informácií o technickom či právnom stave vozidla poskytnutých záujemcom, nárok sprostredkovateľa na odmenu zostáva zachovaný a už vyplatená odmena sa nevracia.</li>
 </ol>
 
-<h2>IV. Ochrana osobných údajov</h2>
+<h2>VIII. Trvanie a ukončenie zmluvy</h2>
 <ol>
-<li>Záujemca berie na vedomie, že osobné údaje uvedené v tejto zmluve môžu byť predmetom spracúvania sprostredkovateľom po nevyhnutnú zákonnú dobu, a to na účely vedenia účtovníctva podľa zákona č. 431/2002 Z. z. o účtovníctve v znení neskorších predpisov.</li>
-<li>Bližšie informácie o spracúvaní osobných údajov sú uvedené v samostatnom dokumente „Informačná povinnosť“, ktorý tvorí prílohu tejto zmluvy.</li>
+<li>Táto zmluva sa uzatvára na dobu neurčitú, najmenej však na <strong>{doba_trvania} dní</strong> odo dňa nadobudnutia jej účinnosti.</li>
+<li>Záujemca môže trvanie zmluvy ukončiť aj pred uplynutím doby podľa ods. 1 s tým, že uhradí sprostredkovateľovi odstupné vo výške <strong>{odstupne} €</strong>.</li>
+<li>Ak nedôjde k realizácii predaja z dôvodov na strane záujemcu, uhradí záujemca sprostredkovateľovi jednorazový servisný poplatok vo výške <strong>{servisny_poplatok} €</strong> za prípravu vozidla na predaj, jeho inzerciu a prezentáciu. Tento poplatok nezahŕňa náklady podľa čl. VII ods. 4.</li>
+<li>Záujemca nemôže túto zmluvu zrušiť, ak už došlo k realizácii predaja, alebo ak za vozidlo bola zložená záloha a očakáva sa poukázanie kúpnej ceny.</li>
+<li>Ukončenie zmluvy musí mať písomnú formu. Po jej ukončení si záujemca prevezme vozidlo a doklady do 7 dní; do prevzatia je sprostredkovateľ oprávnený účtovať stojné podľa čl. VII ods. 5.</li>
 </ol>
 
-<h2>V. Záverečné ustanovenia</h2>
+<h2>IX. Ochrana osobných údajov</h2>
+<ol>
+<li>Záujemca berie na vedomie, že jeho osobné údaje uvedené v tejto zmluve sprostredkovateľ spracúva na účel plnenia tejto zmluvy podľa čl. 6 ods. 1 písm. b) Nariadenia Európskeho parlamentu a Rady (EÚ) 2016/679 (GDPR) a na účel vedenia účtovníctva podľa zákona č. 431/2002 Z. z. o účtovníctve v znení neskorších predpisov.</li>
+<li>Podrobné informácie o spracúvaní osobných údajov sú uvedené v dokumente „Informačná povinnosť“, ktorý tvorí prílohu tejto zmluvy.</li>
+</ol>
+
+<h2>X. Záverečné ustanovenia</h2>
 <ol>
 <li>Táto zmluva nadobúda platnosť a účinnosť dňom jej podpisu obidvomi zmluvnými stranami.</li>
-<li>Zmluvu je možné meniť len na základe vzájomnej dohody zmluvných strán vo forme písomných dodatkov.</li>
-<li>Vzťahy neupravené touto zmluvou sa riadia príslušnými ustanoveniami Občianskeho zákonníka.</li>
+<li>Zmluvu možno meniť a dopĺňať len písomnými dodatkami podpísanými obidvomi zmluvnými stranami.</li>
+<li>Vzťahy neupravené touto zmluvou sa riadia príslušnými ustanoveniami Občianskeho zákonníka a ďalších všeobecne záväzných právnych predpisov Slovenskej republiky.</li>
 <li>Zmluva je vyhotovená v dvoch rovnopisoch, po jednom pre každú zmluvnú stranu.</li>
-<li>Zmluvné strany po prečítaní tejto zmluvy vyhlasujú, že súhlasia s jej obsahom, že bola spísaná na základe pravdivých údajov a ich slobodnej vôle, a že nebola uzavretá za nápadne nevýhodných podmienok ani v tiesni. Na dôkaz toho pripájajú svoje podpisy.</li>
+<li>Neoddeliteľnou súčasťou tejto zmluvy je preberací protokol a informačná povinnosť k spracúvaniu osobných údajov.</li>
+<li>Zmluvné strany vyhlasujú, že si zmluvu pred podpisom prečítali, jej obsahu porozumeli a súhlasia s ním, že bola spísaná na základe pravdivých údajov a ich slobodnej a vážnej vôle, a že nebola uzavretá v tiesni ani za nápadne nevýhodných podmienok. Na dôkaz toho pripájajú svoje podpisy.</li>
 </ol>
 
 <p>V {miesto}, dňa {datum_dnes}</p>
@@ -116,8 +156,8 @@ const SPROSTREDKOVATELSKA_FIELDS = [
   { key: 'min_cena', label: 'Minimálna predajná cena (€)', type: 'number', defaultValue: '' },
   { key: 'min_cena_slovom', label: 'Minimálna predajná cena slovom', type: 'text', defaultValue: '' },
   { key: 'provizia', label: 'Odmena sprostredkovateľa (€ s DPH)', type: 'number', defaultValue: '50' },
-  { key: 'stojne_den', label: 'Stojné za deň (€)', type: 'number', defaultValue: '0' },
-  { key: 'doba_trvania', label: 'Minimálna doba trvania (dni)', type: 'number', defaultValue: '30' },
+  { key: 'stojne_den', label: 'Stojné za deň státia (€)', type: 'number', defaultValue: '0' },
+  { key: 'doba_trvania', label: 'Minimálna doba trvania zmluvy (dni)', type: 'number', defaultValue: '30' },
   { key: 'odstupne', label: 'Odstupné pri predčasnom ukončení (€)', type: 'number', defaultValue: '100' },
   { key: 'servisny_poplatok', label: 'Servisný poplatok pri nerealizovaní predaja (€)', type: 'number', defaultValue: '300' },
 ]

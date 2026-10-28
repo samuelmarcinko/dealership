@@ -12,7 +12,7 @@ import {
   Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Table as TableIcon, Rows3, Columns3, Trash2,
-  Scissors, Undo2, Redo2, RemoveFormatting, Braces,
+  Scissors, Undo2, Redo2, RemoveFormatting, Braces, Code2, Eye,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PLACEHOLDER_GROUPS } from '@/lib/documents/placeholders'
@@ -101,6 +101,8 @@ export default function ContractEditor({
   value, onChange, showVariables = true, minHeight = 500,
 }: Props) {
   const [varsOpen, setVarsOpen] = useState(false)
+  const [mode, setMode] = useState<'visual' | 'html'>('visual')
+  const [htmlDraft, setHtmlDraft] = useState('')
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -126,12 +128,73 @@ export default function ContractEditor({
     setVarsOpen(false)
   }, [editor])
 
+  function openHtml() {
+    if (!editor) return
+    setHtmlDraft(editor.getHTML())
+    setVarsOpen(false)
+    setMode('html')
+  }
+
+  function openVisual() {
+    if (!editor) return
+    // setContent emituje update, takže sa onChange zavolá s normalizovaným HTML
+    editor.commands.setContent(htmlDraft)
+    setMode('visual')
+  }
+
   if (!editor) return null
 
   const inTable = editor.isActive('table')
 
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-orange-400 focus-within:border-orange-400 transition-all">
+      {/* ── Prepínač Vizuálne / HTML ── */}
+      <div className="flex items-center gap-1 px-2 pt-2 bg-slate-50 border-b border-slate-200">
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); if (mode !== 'visual') openVisual() }}
+          className={cn(
+            'px-3 py-1.5 text-xs font-medium rounded-t-md border border-b-0 -mb-px transition-colors',
+            mode === 'visual'
+              ? 'bg-white border-slate-200 text-slate-800'
+              : 'bg-transparent border-transparent text-slate-500 hover:text-slate-800',
+          )}
+        >
+          <Eye className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
+          Vizuálne
+        </button>
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); if (mode !== 'html') openHtml() }}
+          className={cn(
+            'px-3 py-1.5 text-xs font-medium rounded-t-md border border-b-0 -mb-px transition-colors',
+            mode === 'html'
+              ? 'bg-white border-slate-200 text-slate-800'
+              : 'bg-transparent border-transparent text-slate-500 hover:text-slate-800',
+          )}
+        >
+          <Code2 className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
+          HTML
+        </button>
+      </div>
+
+      {mode === 'html' ? (
+        <div className="bg-white">
+          <textarea
+            value={htmlDraft}
+            onChange={(e) => { setHtmlDraft(e.target.value); onChange(e.target.value) }}
+            spellCheck={false}
+            className="w-full font-mono text-xs leading-relaxed p-4 border-0 focus:outline-none resize-y bg-white text-slate-800"
+            style={{ minHeight }}
+          />
+          <p className="px-4 py-2.5 text-[11px] text-slate-500 border-t border-slate-100 bg-slate-50">
+            Po prepnutí späť na <strong>Vizuálne</strong> sa HTML načíta do editora. Zachovajú sa
+            nadpisy, odseky, zoznamy, tabuľky, odkazy, zarovnanie a zalomenie strany — ostatné
+            značky a štýly editor odstráni.
+          </p>
+        </div>
+      ) : (
+      <>
       <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-slate-200 bg-slate-50">
         <ToolBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="Tučné">
           <Bold className="h-4 w-4" />
@@ -277,6 +340,8 @@ export default function ContractEditor({
           <EditorContent editor={editor} />
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }
