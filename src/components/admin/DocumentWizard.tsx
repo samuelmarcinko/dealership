@@ -27,22 +27,46 @@ interface PreparedDocument {
 
 type Step = 'select' | 'fields' | 'edit'
 
+export interface DraftSale {
+  customerId: string
+  soldPrice: number
+  soldAt?: string
+  soldNote?: string
+  commissionRate?: number | null
+}
+
 interface Props {
   vehicleId: string
   party: 'buyer' | 'consignor'
+  /**
+   * Rozpracovaný predaj — vozidlo ešte nie je predané. Zmluvy sa pripravia
+   * z týchto údajov a predaj sa potvrdí až v poslednom kroku.
+   */
+  draftSale?: DraftSale
+  /**
+   * Beží pred uložením dokumentov. V predajnom toku tu prebehne samotný
+   * predaj, takže zmluvy vzniknú len vtedy, keď sa predaj naozaj podaril.
+   */
+  onBeforeSave?: () => Promise<void>
+  /** Text potvrdzovacieho tlačidla v poslednom kroku. */
+  finishLabel?: string
+  /** Používateľ sa rozhodol nevygenerovať žiadnu zmluvu. */
+  onSkip?: () => void
+  skipLabel?: string
   /** Zavolá sa po otvorení tlače. */
   onDone?: () => void
 }
 
-export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
+export default function DocumentWizard({
+  vehicleId, party, draftSale, onBeforeSave, finishLabel, onSkip, skipLabel, onDone,
+}: Props) {
   const [step, setStep] = useState<Step>('select')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [templates, setTemplates] = useState<ApplicableTemplate[]>([])
-  const [customerId, setCustomerId] = useState<string | null>(null)
-  const [counterpartyName, setCounterpartyName] = useState('')
+  const [customerId, setCustomerId] = useState<string | null>(draftSale?.customerId ?? null)
   const [selected, setSelected] = useState<string[]>([])
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [documents, setDocuments] = useState<PreparedDocument[]>([])
@@ -53,17 +77,12 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch(
-          `/api/documents/applicable?vehicleId=${encodeURIComponent(vehicleId)}&party=${party}`,
-        )
+        const res = await fetch('/api/documents/templates?active=1')
         const json = await res.json()
         if (!res.ok) throw new Error(json.error ?? 'Šablóny sa nepodarilo načítať')
         if (cancelled) return
 
-        setTemplates(json.data.templates)
-        setCustomerId(json.data.counterparty.id)
-        setCounterpartyName(json.data.counterparty.name)
-        setSelected(json.data.templates.map((t: ApplicableTemplate) => t.id))
+        setTemplates(json.data ?? [])
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Načítanie zlyhalo')
       } finally {
@@ -71,7 +90,7 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
       }
     })()
     return () => { cancelled = true }
-  }, [vehicleId, party])
+  }, [])
 
   // Polia zo všetkých vybraných šablón, bez duplicít podľa kľúča
   const mergedFields = useMemo(() => {
@@ -109,6 +128,7 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
           party,
           templateIds: selected,
           fieldValues: values,
+          ...(draftSale ? { draftSale } : {}),
         }),
       })
       const json = await res.json()
@@ -124,7 +144,7 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
       setBusy(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mergedFields, fieldValues, selected, vehicleId, party])
+  }, [mergedFields, fieldValues, selected, vehicleId, party, draftSale])
 
   // ── Uloženie a tlač ──────────────────────────────────────────────────────
   async function finish() {
@@ -133,6 +153,10 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
     try {
       const values: Record<string, string> = {}
       for (const f of mergedFields) values[f.key] = fieldValue(f)
+
+      // V predajnom toku tu prebehne samotný predaj. Ak zlyhá, dokumenty
+      // sa neuložia a používateľ to vidí ako chybu.
+      await onBeforeSave?.()
 
       const res = await fetch('/api/documents/generated', {
         method: 'POST',
@@ -184,11 +208,15 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
     return (
       <div className="text-center py-10">
         <FileText className="h-9 w-9 text-slate-300 mx-auto mb-3" />
-        <p className="text-slate-600 font-medium">Žiadne použiteľné šablóny</p>
+        <p className="text-slate-600 font-medium">Žiadne aktívne šablóny</p>
         <p className="text-sm text-slate-500 mt-1">
-          V sekcii Šablóny zmlúv zatiaľ nie je žiadna aktívna šablóna pre{' '}
-          {party === 'consignor' ? 'prevzatie vozidla' : 'predaj'}.
+          Nahrajte zmluvy v sekcii Šablóny zmlúv a znova to skúste.
         </p>
+        {onSkip && (
+          <Button variant="outline" onClick={onSkip} className="mt-5">
+            {skipLabel ?? 'Pokračovať bez zmlúv'}
+          </Button>
+        )}
       </div>
     )
   }
@@ -205,12 +233,10 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
       {/* ── Krok 1: výber dokumentov ── */}
       {step === 'select' && (
         <>
-          <div>
-            <p className="text-sm text-slate-600">
-              Vyberte dokumenty pre{' '}
-              <span className="font-medium text-slate-900">{counterpartyName || 'zákazníka'}</span>.
-            </p>
-          </div>
+          <p className="text-sm text-slate-600">
+            Označte zmluvy, ktoré sa majú vygenerovať. Údaje o vozidle a zákazníkovi
+            sa doplnia automaticky.
+          </p>
 
           <div className="space-y-2">
             {templates.map((t) => (
@@ -239,14 +265,19 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
             ))}
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-between gap-3">
+            {onSkip ? (
+              <Button variant="outline" onClick={onSkip} disabled={busy}>
+                {skipLabel ?? 'Pokračovať bez zmlúv'}
+              </Button>
+            ) : <span />}
             <Button
               onClick={() => (mergedFields.length > 0 ? setStep('fields') : prepare())}
               disabled={selected.length === 0 || busy}
               className="gap-2"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-              Pokračovať
+              Pripraviť zmluvy
             </Button>
           </div>
         </>
@@ -316,7 +347,8 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
       {step === 'edit' && documents.length > 0 && (
         <>
           <p className="text-sm text-slate-600">
-            Text je doplnený o údaje. Čokoľvek v ňom môžete pred tlačou ešte upraviť.
+            Text je doplnený o údaje. Skontrolujte ho a čokoľvek v ňom ešte upravte —
+            až potom potvrďte.
           </p>
 
           {documents.length > 1 && (
@@ -361,7 +393,7 @@ export default function DocumentWizard({ vehicleId, party, onDone }: Props) {
             </Button>
             <Button onClick={finish} disabled={busy} className="gap-2">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
-              Uložiť a otvoriť tlač
+              {finishLabel ?? 'Uložiť a otvoriť tlač'}
             </Button>
           </div>
         </>

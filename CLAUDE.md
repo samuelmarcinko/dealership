@@ -134,11 +134,21 @@ CONTACT_EMAIL=...
 - Auto-generovaný URL slug z názvu
 
 ### Predaj vozidla
-- Modal: výber zákazníka + predajná cena + dátum + poznámka
-- Po predaji: krok 2 — sprievodca generovaním zmlúv
-- Vozidlo sa presunie do „Predané vozidlá“
+Poradie krokov v `SellVehicleModal`:
+1. výber zákazníka + predajná cena + dátum + poznámka — **nič sa zatiaľ neukladá**
+2. zaškrtnutie zmlúv, ktoré sa majú vygenerovať
+3. doplnenie polí, ktoré systém nepozná
+4. kontrola a ručná úprava textu zmlúv
+5. **potvrdenie** — až tu sa vozidlo označí ako predané a zmluvy sa uložia
 
-**Za predaj sa počíta výhradne predaj cez tlačidlo „Predať vozidlo“.**
+Predaj sa commituje až v poslednom kroku (`onBeforeSave` v `DocumentWizard`),
+takže zmluvy vzniknú len vtedy, keď predaj naozaj prejde, a rozpracovaný predaj
+sa dá kedykoľvek zrušiť bez stopy. Zmluvy sa pritom plnia z rozpracovaných
+údajov — `draftSale` v `/api/documents/prepare`.
+
+Kto nechce zmluvy, použije „Predať bez zmlúv“.
+
+**Za predaj sa počíta výhradne predaj potvrdený v tomto toku.**
 Rozpoznávacím znakom je `soldAt` — nastavuje ho len `/api/vehicles/[id]/sell`.
 Definícia žije v `src/lib/sales.ts` (`SOLD_VEHICLE_WHERE`, `isRealSale`,
 `saleRevenue`); zoznamy aj štatistiky ju musia používať, nie `status === 'SOLD'`.
@@ -151,13 +161,24 @@ nafukovalo tržby o sumy, ktoré bazár nikdy neinkasoval.
 Feed tiež nikdy neprepíše stav vozidla, ktoré už má `soldAt` — inak by predané
 vozidlo, ktoré v feede ešte visí, skočilo späť do ponuky.
 
+### Komisný predaj (voliteľný)
+Zapína sa v Nastaveniach → Predaj. Prepínač je `consignment_enabled`,
+predvolene zapnutý; čítaj ho cez `isConsignmentEnabled()` z `src/lib/features.ts`.
+
+Pri vypnutí sa skryje sekcia Komisný predaj, filter „Zdroj“ v ponuke vozidiel,
+komisná sekcia vo formulári vozidla aj komisné štatistiky, a provízia sa
+nepočíta ani keby ju klient poslal. Vozidlá zostanú v jednej spoločnej ponuke.
+Nič sa nemaže — po opätovnom zapnutí sú komitenti aj provízie späť.
+
 ### Zmluvy a dokumenty
 - Šablóna = **HTML v databáze** (`DocumentTemplate.content`), nie súbor na disku
 - Admin ju píše v editore (`ContractEditor`, TipTap) alebo naimportuje existujúci `.docx` (`mammoth`)
-- Šablóna má `context` (INTAKE = pri prevzatí do komisie / SALE = pri predaji / BOTH) a voliteľný filter `customerType`
+- Šablóny sa nefiltrujú podľa typu zákazníka ani kontextu — pri predaji sa ponúknu
+  všetky aktívne a používateľ si cez checkboxy vyberie, ktoré chce
 - `customFields` = polia, ktoré systém nepozná (provízia, počet kľúčov, rodné číslo) — doplnia sa pri generovaní
-- Generovanie má **dva vstupné body**: detail vozidla (komitent) a predajný modal (kupujúci)
-- Sprievodca: výber dokumentov → doplnenie polí → ručná úprava textu → uloženie do archívu → tlač
+- Generovanie má **dva vstupné body**: predajný modal (kupujúci) a detail vozidla
+  (komitent pri komisii, alebo opätovná tlač po predaji)
+- Sprievodca: výber dokumentov → doplnenie polí → ručná úprava textu → potvrdenie → tlač
 - Výstup je **tlačová stránka** `/admin/tlac/dokumenty?ids=…` → Print → PDF (žiadna PDF knižnica)
 - Finálne znenie sa archivuje v `GeneratedDocument` vrátane úprav
 

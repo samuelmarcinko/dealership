@@ -7,7 +7,10 @@ export async function GET(req: NextRequest) {
   const session = await getSessionFromRequest(req)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const onlyActive = req.nextUrl.searchParams.get('active') === '1'
+
   const templates = await prisma.documentTemplate.findMany({
+    where: onlyActive ? { isActive: true } : undefined,
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
   })
   return NextResponse.json({ data: templates })
@@ -26,14 +29,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { customFields, customerType, description, ...rest } = parsed.data
+    const { customFields, description, ...rest } = parsed.data
     const template = await prisma.documentTemplate.create({
-      data: {
-        ...rest,
-        description: description ?? null,
-        customerType: customerType ?? null,
-        customFields,
-      },
+      data: { ...rest, description: description ?? null, customFields },
     })
     return NextResponse.json({ data: template }, { status: 201 })
   } catch (err) {

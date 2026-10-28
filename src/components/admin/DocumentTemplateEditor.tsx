@@ -11,33 +11,16 @@ import { useToast } from '@/components/ui/toast'
 import ContractEditor from '@/components/admin/ContractEditor'
 import { cn } from '@/lib/utils'
 import type { CustomField } from '@/lib/documents/schema'
-import {
-  ArrowLeft, Save, Upload, Plus, Trash2, Loader2,
-  PackageCheck, HandCoins, Files,
-} from 'lucide-react'
+import { ArrowLeft, Save, Upload, Plus, Trash2, Loader2 } from 'lucide-react'
 
 export interface TemplateFormValue {
   id: string | null
   name: string
   description: string
   content: string
-  context: 'INTAKE' | 'SALE' | 'BOTH'
-  customerType: 'PERSON' | 'COMPANY' | null
   customFields: CustomField[]
   isActive: boolean
 }
-
-const CONTEXT_OPTIONS = [
-  { value: 'INTAKE', label: 'Pri prevzatí', hint: 'Komisia — podpisuje komitent', icon: PackageCheck },
-  { value: 'SALE', label: 'Pri predaji', hint: 'Podpisuje kupujúci', icon: HandCoins },
-  { value: 'BOTH', label: 'Vždy', hint: 'Ponúkne sa v oboch prípadoch', icon: Files },
-] as const
-
-const CUSTOMER_OPTIONS = [
-  { value: null, label: 'Všetci' },
-  { value: 'PERSON', label: 'Fyzická osoba' },
-  { value: 'COMPANY', label: 'Firma / Živnostník' },
-] as const
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
@@ -46,42 +29,6 @@ const FIELD_TYPES = [
   { value: 'date', label: 'Dátum' },
   { value: 'checkbox', label: 'Áno / Nie' },
 ] as const
-
-function Segmented<T extends string | null>({
-  options, value, onChange,
-}: {
-  options: readonly { value: T; label: string; hint?: string; icon?: React.ComponentType<{ className?: string }> }[]
-  value: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((opt) => {
-        const Icon = opt.icon
-        const active = opt.value === value
-        return (
-          <button
-            key={String(opt.value)}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className={cn(
-              'px-3 py-2 rounded-lg border text-left transition-colors',
-              active
-                ? 'border-orange-400 bg-orange-50 text-orange-800'
-                : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50',
-            )}
-          >
-            <span className="flex items-center gap-1.5 text-sm font-medium">
-              {Icon && <Icon className="h-3.5 w-3.5" />}
-              {opt.label}
-            </span>
-            {opt.hint && <span className="block text-[11px] text-slate-500 mt-0.5">{opt.hint}</span>}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
 
 export default function DocumentTemplateEditor({ initial }: { initial: TemplateFormValue }) {
   const router = useRouter()
@@ -127,8 +74,6 @@ export default function DocumentTemplateEditor({ initial }: { initial: TemplateF
         name: form.name.trim(),
         description: form.description.trim() || null,
         content: form.content,
-        context: form.context,
-        customerType: form.customerType,
         customFields: form.customFields,
         isActive: form.isActive,
       }
@@ -226,28 +171,6 @@ export default function DocumentTemplateEditor({ initial }: { initial: TemplateF
             </div>
           </div>
 
-          <div>
-            <Label>Kedy sa dokument ponúkne</Label>
-            <div className="mt-1.5">
-              <Segmented
-                options={CONTEXT_OPTIONS}
-                value={form.context}
-                onChange={(v) => set('context', v)}
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label>Pre koho</Label>
-            <div className="mt-1.5">
-              <Segmented
-                options={CUSTOMER_OPTIONS}
-                value={form.customerType}
-                onChange={(v) => set('customerType', v)}
-              />
-            </div>
-          </div>
-
           <label className="flex items-center gap-2 cursor-pointer w-fit">
             <input
               type="checkbox"
@@ -255,7 +178,7 @@ export default function DocumentTemplateEditor({ initial }: { initial: TemplateF
               onChange={(e) => set('isActive', e.target.checked)}
               className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
             />
-            <span className="text-sm text-slate-700">Aktívna — ponúkať pri generovaní</span>
+            <span className="text-sm text-slate-700">Aktívna — ponúkať pri predaji vozidla</span>
           </label>
         </CardContent>
       </Card>

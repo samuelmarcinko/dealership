@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Handshake, Save } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { getTenantSettings } from '@/lib/tenant'
+import { isConsignmentEnabled } from '@/lib/features'
 import { Button } from '@/components/ui/button'
 import VehicleForm from '@/components/admin/VehicleForm'
 import SellVehicleButton from '@/components/admin/SellVehicleButton'
@@ -15,7 +17,7 @@ export const metadata: Metadata = { title: 'Detail vozidla' }
 
 export default async function EditVehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [vehicle, topMakesRaw, equipmentItems] = await Promise.all([
+  const [vehicle, topMakesRaw, equipmentItems, settings] = await Promise.all([
     prisma.vehicle.findUnique({
       where: { id },
       include: {
@@ -34,8 +36,10 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
       where: { isActive: true },
       orderBy: [{ category: 'asc' }, { subcategory: 'asc' }, { sortOrder: 'asc' }, { name: 'asc' }],
     }),
+    getTenantSettings(),
   ])
   const topMakes = topMakesRaw.map((m) => m.make)
+  const consignmentEnabled = isConsignmentEnabled(settings)
 
   if (!vehicle) notFound()
 
@@ -57,7 +61,7 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
 
         <div className="flex items-center gap-2">
           <PrintLabelButton vehicleId={vehicle.id} />
-          {vehicle.isConsignment && vehicle.consignorId && (
+          {consignmentEnabled && vehicle.isConsignment && vehicle.consignorId && (
             <GenerateDocumentsButton
               vehicleId={vehicle.id}
               party="consignor"
@@ -100,7 +104,7 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
       </div>
 
       {/* Consignor infobox */}
-      {vehicle.isConsignment && vehicle.consignor && (
+      {consignmentEnabled && vehicle.isConsignment && vehicle.consignor && (
         <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-sm">
           <Handshake className="h-4 w-4 text-purple-600 shrink-0" />
           <span className="font-medium text-purple-800">Komisný predaj</span>
@@ -119,7 +123,7 @@ export default async function EditVehiclePage({ params }: { params: Promise<{ id
 
       {isImported
         ? <ImportedVehicleView vehicle={vehicle} />
-        : <VehicleForm vehicle={vehicle} topMakes={topMakes} equipmentItems={equipmentItems} />
+        : <VehicleForm vehicle={vehicle} topMakes={topMakes} equipmentItems={equipmentItems} consignmentEnabled={consignmentEnabled} />
       }
     </div>
   )

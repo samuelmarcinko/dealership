@@ -29,13 +29,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       )
     }
 
-    const { customFields, customerType, description, ...rest } = parsed.data
+    const { customFields, description, ...rest } = parsed.data
     const template = await prisma.documentTemplate.update({
       where: { id },
       data: {
         ...rest,
         ...(description !== undefined ? { description: description ?? null } : {}),
-        ...(customerType !== undefined ? { customerType: customerType ?? null } : {}),
         ...(customFields !== undefined ? { customFields } : {}),
       },
     })

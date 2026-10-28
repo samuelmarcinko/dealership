@@ -7,30 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
-import {
-  FileText, Plus, Pencil, Trash2, Eye, EyeOff,
-  ArrowUp, ArrowDown, HandCoins, PackageCheck, Files,
-} from 'lucide-react'
+import { FileText, Plus, Pencil, Trash2, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react'
 
 export interface TemplateRow {
   id: string
   name: string
   description: string | null
-  context: 'INTAKE' | 'SALE' | 'BOTH'
-  customerType: 'PERSON' | 'COMPANY' | null
   isActive: boolean
   sortOrder: number
-}
-
-const CONTEXT_META = {
-  INTAKE: { label: 'Pri prevzatí', icon: PackageCheck, className: 'bg-blue-100 text-blue-700' },
-  SALE: { label: 'Pri predaji', icon: HandCoins, className: 'bg-green-100 text-green-700' },
-  BOTH: { label: 'Vždy', icon: Files, className: 'bg-purple-100 text-purple-700' },
-} as const
-
-const CUSTOMER_TYPE_LABEL: Record<string, string> = {
-  PERSON: 'Fyzická osoba',
-  COMPANY: 'Firma / Živnostník',
 }
 
 export default function DocumentTemplatesManager({
@@ -139,10 +123,7 @@ export default function DocumentTemplatesManager({
             </CardDescription>
           </CardHeader>
           <CardContent className="divide-y divide-slate-100 p-0">
-            {templates.map((t, index) => {
-              const meta = CONTEXT_META[t.context]
-              const Icon = meta.icon
-              return (
+            {templates.map((t, index) => (
                 <div
                   key={t.id}
                   className={cn(
@@ -175,15 +156,6 @@ export default function DocumentTemplatesManager({
                       <span className={cn('font-medium', t.isActive ? 'text-slate-900' : 'text-slate-500')}>
                         {t.name}
                       </span>
-                      <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium', meta.className)}>
-                        <Icon className="h-3 w-3" />
-                        {meta.label}
-                      </span>
-                      {t.customerType && (
-                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600">
-                          {CUSTOMER_TYPE_LABEL[t.customerType]}
-                        </span>
-                      )}
                       {!t.isActive && (
                         <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-200 text-slate-600">
                           Neaktívna
@@ -219,8 +191,7 @@ export default function DocumentTemplatesManager({
                     </button>
                   </div>
                 </div>
-              )
-            })}
+            ))}
           </CardContent>
         </Card>
       )}

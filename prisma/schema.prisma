@@ -58,14 +58,6 @@ enum CustomerType {
   COMPANY
 }
 
-// Kedy sa dokument používa: pri prevzatí vozidla do komisie (s komitentom),
-// pri predaji (s kupujúcim), alebo v oboch prípadoch.
-enum DocumentContext {
-  INTAKE
-  SALE
-  BOTH
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────────────────────────────────────
@@ -216,19 +208,17 @@ model VehicleImage {
 }
 
 model DocumentTemplate {
-  id           String          @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
   description  String?
   // Telo zmluvy ako HTML so zástupnými premennými {klient_meno}
-  content      String          @db.Text
-  context      DocumentContext @default(SALE)
-  customerType CustomerType? // null = pre všetkých
+  content      String   @db.Text
   // Polia, ktoré sa dopĺňajú ručne pri generovaní (provízia, počet kľúčov…)
-  customFields Json            @default("[]")
-  isActive     Boolean         @default(true)
-  sortOrder    Int             @default(0)
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  customFields Json     @default("[]")
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   generated GeneratedDocument[]
 

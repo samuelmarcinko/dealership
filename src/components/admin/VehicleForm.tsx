@@ -29,6 +29,7 @@ interface Props {
   vehicle?: VehicleWithImages
   topMakes?: string[]
   equipmentItems?: EquipmentItem[]
+  consignmentEnabled?: boolean
 }
 
 interface LocalImage {
@@ -101,7 +102,7 @@ function initImages(vehicle?: VehicleWithImages): LocalImage[] {
     .map((img) => ({ id: img.id, url: img.url, isPrimary: img.isPrimary }))
 }
 
-export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [] }: Props) {
+export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [], consignmentEnabled = true }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -363,9 +364,11 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
       ekMonth:  ekMonth  ? parseInt(ekMonth)  : null,
       ekYear:   ekYear   ? parseInt(ekYear)   : null,
       status,
-      isConsignment,
-      consignorId: isConsignment ? consignorId : null,
-      commissionRate: isConsignment && commissionRate ? parseFloat(commissionRate) : null,
+      isConsignment: consignmentEnabled ? isConsignment : (v?.isConsignment ?? false),
+      consignorId: consignmentEnabled ? (isConsignment ? consignorId : null) : (v?.consignorId ?? null),
+      commissionRate: consignmentEnabled && isConsignment && commissionRate
+        ? parseFloat(commissionRate)
+        : null,
       customCategoryFeatures: customCatFeatures,
       defects,
     }
@@ -772,7 +775,8 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
         </CardContent>}
       </Card>
 
-      {/* ── Komisný predaj ── */}
+      {/* ── Komisný predaj (voliteľný – vypína sa v Nastaveniach) ── */}
+      {consignmentEnabled && (
       <Card>
         <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => toggleSection('consignment')}>
           <CardTitle className="text-base font-semibold flex items-center justify-between gap-2">
@@ -897,6 +901,7 @@ export default function VehicleForm({ vehicle, topMakes = [], equipmentItems = [
           )}
         </CardContent>}
       </Card>
+      )}
 
       {/* ── Videá ── */}
       <Card>

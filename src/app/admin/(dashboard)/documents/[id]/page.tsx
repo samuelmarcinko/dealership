@@ -11,8 +11,6 @@ const EMPTY: TemplateFormValue = {
   name: '',
   description: '',
   content: '',
-  context: 'SALE',
-  customerType: null,
   customFields: [],
   isActive: true,
 }
@@ -36,8 +34,6 @@ export default async function TemplateEditorPage({
         name: template.name,
         description: template.description ?? '',
         content: template.content,
-        context: template.context,
-        customerType: template.customerType,
         customFields: parseCustomFields(template.customFields),
         isActive: template.isActive,
       }}

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
+import { getTenantSettings } from '@/lib/tenant'
+import { isConsignmentEnabled } from '@/lib/features'
 
 const schema = z.object({
   buyerId: z.string().min(1),
@@ -30,9 +32,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Vozidlo je už predané' }, { status: 409 })
     }
 
-    const commissionRate = parsed.data.commissionRate ?? null
+    // Pri vypnutom komisnom predaji sa provízia nepočíta, aj keby ju klient poslal
+    const consignmentEnabled = isConsignmentEnabled(await getTenantSettings())
+    const commissionRate = consignmentEnabled ? (parsed.data.commissionRate ?? null) : null
     const commissionAmount =
-      vehicle.isConsignment && commissionRate != null
+      consignmentEnabled && vehicle.isConsignment && commissionRate != null
         ? (parsed.data.soldPrice * commissionRate) / 100
         : null
 

@@ -62,15 +62,22 @@ interface Props {
   userEmail: string
   userRole: string
   businessName: string
+  consignmentEnabled: boolean
   onClose?: () => void
 }
 
-export default function AdminSidebar({ userName, userEmail, userRole, businessName, onClose }: Props) {
-  const visibleNavItems = userRole === 'ADMIN'
+export default function AdminSidebar({ userName, userEmail, userRole, businessName, consignmentEnabled, onClose }: Props) {
+  const roleNavItems = userRole === 'ADMIN'
     ? navItems
     : userRole === 'MANAGER'
       ? navItems.filter(item => MANAGER_ALLOWED_HREFS.includes(item.href))
       : navItems.filter(item => !ADMIN_ONLY_HREFS.includes(item.href))
+
+  // Komisný predaj je voliteľný — pri vypnutí sa sekcia z navigácie skryje
+  const visibleNavItems = consignmentEnabled
+    ? roleNavItems
+    : roleNavItems.filter(item => item.href !== '/admin/consignors')
+
   const pathname = usePathname()
   const router = useRouter()
 
