@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
+import { getTenantSettings } from '@/lib/tenant'
+import { isConsignmentEnabled } from '@/lib/features'
 import { formatPrice, formatMileage, fuelTypeLabel, vehicleStatusLabel } from '@/lib/utils'
 import { SOLD_VEHICLE_WHERE, saleRevenue } from '@/lib/sales'
 
@@ -163,7 +165,8 @@ const sourceBadgeClass: Record<string, string> = {
 }
 
 export default async function DashboardPage() {
-  const [stats, salesStats] = await Promise.all([getStats(), getSalesStats()])
+  const [stats, salesStats, settings] = await Promise.all([getStats(), getSalesStats(), getTenantSettings()])
+  const consignmentEnabled = isConsignmentEnabled(settings)
   const { totalVehicles, available, reserved, sold, totalUsers, recentVehicles, topVehicles, totalViews, sourceBreakdown, consignmentActive, consignmentSold, consignmentRevenue } = stats
   const {
     thisMonthSold, thisMonthRevenue, thisMonthAvgPrice,
@@ -257,7 +260,7 @@ export default async function DashboardPage() {
               color: 'text-blue-600',
               bg: 'bg-blue-50',
             },
-            {
+            ...(consignmentEnabled ? [{
               label: 'Komisné predaje',
               value: thisMonthConsignmentSold,
               sub: thisMonthConsignmentSold === 0 ? 'žiadne' : `z ${thisMonthSold} celkových`,
@@ -272,7 +275,7 @@ export default async function DashboardPage() {
               icon: TrendingUp,
               color: 'text-violet-600',
               bg: 'bg-violet-50',
-            },
+            }] : []),
             {
               label: 'Nové vozidlá',
               value: thisMonthAdded,
@@ -385,7 +388,8 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Consignment stats */}
+      {/* Consignment stats – voliteľná sekcia */}
+      {consignmentEnabled && (
       <Card>
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-4">
@@ -412,6 +416,7 @@ export default async function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="analytics">

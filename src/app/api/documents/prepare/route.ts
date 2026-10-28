@@ -1,16 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 import { getTenantSettings } from '@/lib/tenant'
+import { isConsignmentEnabled } from '@/lib/features'
 import { buildPlaceholderValues, renderTemplate } from '@/lib/documents/placeholders'
-import { parseCustomFields } from '@/lib/documents/schema'
 
 const schema = z.object({
   vehicleId: z.string().min(1),
   party: z.enum(['buyer', 'consignor']),
   templateIds: z.array(z.string().min(1)).min(1, 'Vyberte aspoň jeden dokument'),
   fieldValues: z.record(z.string()).default({}),
+  /**
+   * Rozpracovaný predaj — vozidlo ešte nie je predané. Zmluvy sa pripravia
+   * z týchto údajov, aby si ich používateľ mohol skontrolovať ešte predtým,
+   * než predaj potvrdí.
+   */
+  draftSale: z
+    .object({
+      customerId: z.string().min(1),
+      soldPrice: z.number().positive(),
+      soldAt: z.string().datetime().optional(),
+      soldNote: z.string().optional(),
+      commissionRate: z.number().min(0).max(100).nullable().optional(),
+    })
+    .optional(),
 })
 
 /**
@@ -29,7 +44,7 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       )
     }
-    const { vehicleId, party, templateIds, fieldValues } = parsed.data
+    const { vehicleId, party, templateIds, fieldValues, draftSale } = parsed.data
 
     const [vehicle, templates, settings] = await Promise.all([
       prisma.vehicle.findUnique({
@@ -42,7 +57,30 @@ export async function POST(req: NextRequest) {
 
     if (!vehicle) return NextResponse.json({ error: 'Vozidlo nenájdené' }, { status: 404 })
 
-    const counterparty = party === 'consignor' ? vehicle.consignor : vehicle.buyer
+    // Pri rozpracovanom predaji ešte vozidlo kupujúceho priradeného nemá,
+    // preto ho doplníme z predaných údajov.
+    let source = vehicle
+    if (draftSale) {
+      const customer = await prisma.customer.findUnique({ where: { id: draftSale.customerId } })
+      if (!customer) return NextResponse.json({ error: 'Zákazník nenájdený' }, { status: 404 })
+
+      const rate = isConsignmentEnabled(settings) ? (draftSale.commissionRate ?? null) : null
+      source = {
+        ...vehicle,
+        buyer: customer,
+        buyerId: customer.id,
+        soldPrice: new Prisma.Decimal(draftSale.soldPrice),
+        soldAt: draftSale.soldAt ? new Date(draftSale.soldAt) : new Date(),
+        soldNote: draftSale.soldNote ?? null,
+        commissionRate: rate != null ? new Prisma.Decimal(rate) : null,
+        commissionAmount:
+          vehicle.isConsignment && rate != null
+            ? new Prisma.Decimal((draftSale.soldPrice * rate) / 100)
+            : null,
+      }
+    }
+
+    const counterparty = party === 'consignor' ? source.consignor : source.buyer
     if (!counterparty) {
       return NextResponse.json(
         {
@@ -55,7 +93,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const values = { ...buildPlaceholderValues({ vehicle, party, settings }), ...fieldValues }
+    const values = { ...buildPlaceholderValues({ vehicle: source, party, settings }), ...fieldValues }
 
     // Poradie podľa toho, ako ich používateľ vybral
     const byId = new Map(templates.map((t) => [t.id, t]))

@@ -3,12 +3,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { getTenantSettings } from '@/lib/tenant'
+import { isConsignmentEnabled } from '@/lib/features'
 import VehicleForm from '@/components/admin/VehicleForm'
 
 export const metadata: Metadata = { title: 'Nové vozidlo' }
 
 export default async function NewVehiclePage() {
-  const [topMakesRaw, equipmentItems] = await Promise.all([
+  const [topMakesRaw, equipmentItems, settings] = await Promise.all([
     prisma.vehicle.groupBy({
       by: ['make'],
       _count: { make: true },
@@ -19,8 +21,10 @@ export default async function NewVehiclePage() {
       where: { isActive: true },
       orderBy: [{ category: 'asc' }, { subcategory: 'asc' }, { sortOrder: 'asc' }, { name: 'asc' }],
     }),
+    getTenantSettings(),
   ])
   const topMakes = topMakesRaw.map((m) => m.make)
+  const consignmentEnabled = isConsignmentEnabled(settings)
 
   return (
     <div className="space-y-6">
@@ -31,7 +35,7 @@ export default async function NewVehiclePage() {
         </Link>
         <h1 className="text-2xl font-bold text-slate-900">Pridať vozidlo</h1>
       </div>
-      <VehicleForm topMakes={topMakes} equipmentItems={equipmentItems} />
+      <VehicleForm topMakes={topMakes} equipmentItems={equipmentItems} consignmentEnabled={consignmentEnabled} />
     </div>
   )
 }

@@ -2,7 +2,10 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { getTenantSettings } from '@/lib/tenant'
+import { isConsignmentEnabled } from '@/lib/features'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,6 +22,11 @@ import PrintLabelButton from '@/components/admin/PrintLabelButton'
 export const metadata: Metadata = { title: 'Komisný predaj' }
 
 export default async function ConsignorsPage() {
+  // Sekcia je voliteľná; pri vypnutom komisnom predaji sa na ňu nedá dostať
+  // ani priamym odkazom.
+  const settings = await getTenantSettings()
+  if (!isConsignmentEnabled(settings)) redirect('/admin/vehicles')
+
   const consignors = await prisma.customer.findMany({
     where: { consignedVehicles: { some: {} } },
     orderBy: { createdAt: 'desc' },

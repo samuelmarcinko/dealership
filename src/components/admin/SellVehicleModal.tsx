@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toast'
 import {
   X, Search, User, Building2, CheckCircle, Loader2, DollarSign,
-  ArrowRight, Handshake,
+  ArrowRight, Handshake, FileSignature,
 } from 'lucide-react'
 import { customerDisplayName, customerShortInfo } from '@/lib/customer'
 
@@ -41,6 +41,7 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
 
   // Step: 'sell' | 'documents'
   const [step, setStep] = useState<'sell' | 'documents'>('sell')
+  const [sold, setSold] = useState(false)
 
   const advertisedPrice = salePrice ?? listedPrice
 
@@ -85,38 +86,47 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
       toast('error', 'Zadajte platnú predajnú cenu')
       return
     }
+    // Vozidlo sa ešte nepredáva. Najprv si používateľ pripraví a skontroluje
+    // zmluvy; predaj sa potvrdí až v poslednom kroku.
+    setStep('documents')
+  }, [selectedId, soldPrice, toast])
+
+  /** Potvrdenie predaja — beží až po kontrole zmlúv. */
+  const commitSale = useCallback(async () => {
+    const price = parseFloat(soldPrice)
+    const rate = commissionRate ? parseFloat(commissionRate) : null
+
+    const res = await fetch(`/api/vehicles/${vehicleId}/sell`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        buyerId: selectedId,
+        soldPrice: price,
+        soldAt: new Date(soldAt).toISOString(),
+        soldNote: soldNote || undefined,
+        ...(isConsignment && rate != null ? { commissionRate: rate } : {}),
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok) throw new Error(json.error ?? 'Predaj sa nepodarilo dokončiť')
+
+    setSold(true)
+    toast('success', `Vozidlo predané — ${selected ? customerDisplayName(selected) : ''}`)
+  }, [soldPrice, commissionRate, vehicleId, selectedId, soldAt, soldNote, isConsignment, selected, toast])
+
+  /** Predaj bez generovania zmlúv. */
+  const sellWithoutDocuments = useCallback(async () => {
     setSubmitting(true)
     try {
-      const rate = commissionRate ? parseFloat(commissionRate) : null
-      const res = await fetch(`/api/vehicles/${vehicleId}/sell`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          buyerId: selectedId,
-          soldPrice: price,
-          soldAt: new Date(soldAt).toISOString(),
-          soldNote: soldNote || undefined,
-          ...(isConsignment && rate != null ? { commissionRate: rate } : {}),
-        }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        toast('error', json.error ?? 'Nastala chyba')
-        return
-      }
-
-      toast('success', `Vozidlo bolo predané — ${customerDisplayName(selected!)}`)
-
-      // Dokumenty si načíta sprievodca sám.
-      // NOTE: router.refresh() tu zámerne nevoláme — parent by vozidlo
-      // prekreslil ako SOLD a modal by sa odpojil. Refresh je v handleFinish.
-      setStep('documents')
-    } catch {
-      toast('error', 'Nastala chyba')
+      await commitSale()
+      onClose()
+      router.push('/admin/sold')
+    } catch (err) {
+      toast('error', err instanceof Error ? err.message : 'Nastala chyba')
     } finally {
       setSubmitting(false)
     }
-  }, [selectedId, soldPrice, soldAt, soldNote, commissionRate, isConsignment, vehicleId, selected, router, toast])
+  }, [commitSale, onClose, router, toast])
 
   function handleFinish() {
     onClose()
@@ -131,7 +141,7 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
-              {step === 'sell' ? 'Predaj vozidla' : 'Generovanie dokumentov'}
+              {step === 'sell' ? 'Predaj vozidla' : sold ? 'Zmluvy k predaju' : 'Zmluvy a potvrdenie predaja'}
             </h2>
             <p className="text-sm text-slate-500 truncate max-w-sm">{vehicleTitle}</p>
           </div>
@@ -363,7 +373,7 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
               >
                 {submitting
                   ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Spracovávam…</>
-                  : <><CheckCircle className="h-4 w-4 mr-2" />Potvrdiť predaj</>
+                  : <><ArrowRight className="h-4 w-4 mr-2" />Pokračovať na zmluvy</>
                 }
               </Button>
               <Button variant="outline" onClick={onClose} disabled={submitting}>
@@ -377,25 +387,53 @@ export default function SellVehicleModal({ vehicleId, vehicleTitle, listedPrice,
         {step === 'documents' && (
           <>
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-                <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
-                <div>
-                  <p className="font-semibold text-green-900 text-sm">Vozidlo úspešne predané</p>
-                  <p className="text-green-700 text-xs mt-0.5">
-                    Kupujúci: {selected ? customerDisplayName(selected) : '—'}
-                  </p>
+              {sold ? (
+                <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-green-900 text-sm">Vozidlo úspešne predané</p>
+                    <p className="text-green-700 text-xs mt-0.5">
+                      Kupujúci: {selected ? customerDisplayName(selected) : '—'}
+                    </p>
+                  </div>
                 </div>
+              ) : (
+                <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <FileSignature className="h-5 w-5 text-amber-600 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-amber-900 text-sm">Predaj zatiaľ nie je potvrdený</p>
+                    <p className="text-amber-700 text-xs mt-0.5">
+                      Pripravte a skontrolujte zmluvy — predaj sa dokončí až posledným krokom.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <DocumentWizard
+                vehicleId={vehicleId}
+                party="buyer"
+                draftSale={{
+                  customerId: selectedId!,
+                  soldPrice: parseFloat(soldPrice),
+                  soldAt: new Date(soldAt).toISOString(),
+                  soldNote: soldNote || undefined,
+                  commissionRate: isConsignment && commissionRate ? parseFloat(commissionRate) : null,
+                }}
+                onBeforeSave={commitSale}
+                finishLabel="Potvrdiť predaj a otvoriť tlač"
+                onSkip={sellWithoutDocuments}
+                skipLabel="Predať bez zmlúv"
+              />
+            </div>
+
+            {sold && (
+              <div className="px-6 py-4 border-t border-slate-100">
+                <Button onClick={handleFinish} variant="outline" className="w-full gap-2">
+                  Hotovo — prejsť na predané vozidlá
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
-
-              <DocumentWizard vehicleId={vehicleId} party="buyer" />
-            </div>
-
-            <div className="px-6 py-4 border-t border-slate-100">
-              <Button onClick={handleFinish} variant="outline" className="w-full gap-2">
-                Hotovo — prejsť na predané vozidlá
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+            )}
           </>
         )}
       </div>

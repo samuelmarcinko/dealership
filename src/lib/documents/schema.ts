@@ -13,8 +13,6 @@ export const templateInputSchema = z.object({
   name: z.string().min(1, 'Názov je povinný'),
   description: z.string().nullable().optional(),
   content: z.string().default(''),
-  context: z.enum(['INTAKE', 'SALE', 'BOTH']).default('SALE'),
-  customerType: z.enum(['PERSON', 'COMPANY']).nullable().optional(),
   customFields: z.array(customFieldSchema).default([]),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
