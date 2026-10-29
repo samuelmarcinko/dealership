@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const customFieldSchema = z.object({
   key: z.string().regex(/^[a-z0-9_]+$/, 'Kľúč môže obsahovať len malé písmená, číslice a _'),
   label: z.string().min(1, 'Popis poľa je povinný'),
-  type: z.enum(['text', 'number', 'date', 'checkbox', 'textarea']).default('text'),
+  type: z.enum(['text', 'number', 'amount', 'date', 'checkbox', 'textarea']).default('text'),
   defaultValue: z.string().optional().default(''),
 })
 

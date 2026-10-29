@@ -210,6 +210,54 @@ export function numberToSlovakWords(value: number): string {
   return parts.join('')
 }
 
+/** Suma s medzerami medzi tisíckami, napr. 15456 → „15 456“. */
+export function formatAmount(value: number): string {
+  return new Intl.NumberFormat('sk-SK', {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+/**
+ * Tvar slova „euro“ podľa počtu. Slovenčina skloňuje inak pri jednotke,
+ * pri dvoch až štyroch a od piatich vyššie.
+ */
+function euroWord(n: number): string {
+  if (n === 1) return 'euro'
+  if (n >= 2 && n <= 4) return 'eurá'
+  return 'eur'
+}
+
+function centWord(n: number): string {
+  if (n === 1) return 'cent'
+  if (n >= 2 && n <= 4) return 'centy'
+  return 'centov'
+}
+
+/**
+ * Suma slovom tak, ako sa píše do zmlúv:
+ *   15456    → „pätnásťtisícštyristopäťdesiatšesť eur“
+ *   1        → „jedno euro“
+ *   2500.50  → „dvetisícpäťsto eur a päťdesiat centov“
+ */
+export function amountToSlovakWords(value: number): string {
+  const total = Math.round(Math.abs(value) * 100)
+  const whole = Math.floor(total / 100)
+  const cents = total % 100
+
+  // Euro je stredný rod: „jedno euro“, „dve eurá“ — nie „jeden“/„dva“.
+  // Pri centoch (mužský rod) zostáva „jeden cent“, „dva centy“.
+  const wholeWords =
+    whole === 1 ? 'jedno' : whole === 2 ? 'dve' : numberToSlovakWords(whole)
+  let out = `${wholeWords} ${euroWord(whole)}`
+
+  if (cents > 0) {
+    const centWords = cents === 1 ? 'jeden' : numberToSlovakWords(cents)
+    out += ` a ${centWords} ${centWord(cents)}`
+  }
+  return out
+}
+
 // ── Dopĺňanie hodnôt ───────────────────────────────────────────────────────
 
 export type DocumentParty = 'buyer' | 'consignor'
@@ -292,7 +340,7 @@ export function buildPlaceholderValues(opts: {
 
     predaj_cena: money(soldPrice),
     predaj_cena_cislo: soldPrice != null ? String(soldPrice) : '',
-    predaj_cena_slovom: soldPrice != null ? `${numberToSlovakWords(soldPrice)} eur` : '',
+    predaj_cena_slovom: soldPrice != null ? amountToSlovakWords(soldPrice) : '',
     predaj_datum: date(vehicle.soldAt),
     predaj_poznamka: str(vehicle.soldNote),
 

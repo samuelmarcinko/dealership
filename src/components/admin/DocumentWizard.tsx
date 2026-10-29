@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import ContractEditor from '@/components/admin/ContractEditor'
 import { cn } from '@/lib/utils'
 import type { CustomField } from '@/lib/documents/schema'
+import { amountToSlovakWords, formatAmount } from '@/lib/documents/placeholders'
 import {
   FileText, Loader2, AlertCircle, ArrowRight, ArrowLeft, Printer, Check,
 } from 'lucide-react'
@@ -378,13 +379,27 @@ export default function DocumentWizard({
                     className="mt-1.5"
                   />
                 ) : (
-                  <Input
-                    id={`f-${f.key}`}
-                    type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
-                    value={fieldValue(f)}
-                    onChange={(e) => setFieldValues((v) => ({ ...v, [f.key]: e.target.value }))}
-                    className="mt-1.5"
-                  />
+                  <>
+                    <Input
+                      id={`f-${f.key}`}
+                      type={f.type === 'number' || f.type === 'amount' ? 'number' : f.type === 'date' ? 'date' : 'text'}
+                      inputMode={f.type === 'amount' ? 'decimal' : undefined}
+                      step={f.type === 'amount' ? '0.01' : undefined}
+                      value={fieldValue(f)}
+                      onChange={(e) => setFieldValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                      className="mt-1.5"
+                    />
+                    {f.type === 'amount' && (() => {
+                      const n = Number(fieldValue(f).replace(',', '.'))
+                      if (!fieldValue(f) || !Number.isFinite(n)) return null
+                      return (
+                        <p className="mt-1 text-[11px] text-slate-500">
+                          {formatAmount(n)} € — slovom{' '}
+                          <span className="text-slate-700">{amountToSlovakWords(n)}</span>
+                        </p>
+                      )
+                    })()}
+                  </>
                 )}
               </div>
             ))}

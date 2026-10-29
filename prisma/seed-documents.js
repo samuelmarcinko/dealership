@@ -154,13 +154,12 @@ telefón: {klient_telefon} &nbsp;&nbsp;|&nbsp;&nbsp; e-mail: {klient_email}<br>
 `.trim()
 
 const SPROSTREDKOVATELSKA_FIELDS = [
-  { key: 'min_cena', label: 'Minimálna predajná cena (€)', type: 'number', defaultValue: '' },
-  { key: 'min_cena_slovom', label: 'Minimálna predajná cena slovom', type: 'text', defaultValue: '' },
-  { key: 'provizia', label: 'Odmena sprostredkovateľa (€ s DPH)', type: 'number', defaultValue: '50' },
-  { key: 'stojne_den', label: 'Stojné za deň státia (€)', type: 'number', defaultValue: '0' },
+  { key: 'min_cena', label: 'Minimálna predajná cena', type: 'amount', defaultValue: '' },
+  { key: 'provizia', label: 'Odmena sprostredkovateľa (s DPH)', type: 'amount', defaultValue: '50' },
+  { key: 'stojne_den', label: 'Stojné za deň státia', type: 'amount', defaultValue: '0' },
   { key: 'doba_trvania', label: 'Minimálna doba trvania zmluvy (dni)', type: 'number', defaultValue: '30' },
-  { key: 'odstupne', label: 'Odstupné pri predčasnom ukončení (€)', type: 'number', defaultValue: '100' },
-  { key: 'servisny_poplatok', label: 'Servisný poplatok pri nerealizovaní predaja (€)', type: 'number', defaultValue: '300' },
+  { key: 'odstupne', label: 'Odstupné pri predčasnom ukončení', type: 'amount', defaultValue: '100' },
+  { key: 'servisny_poplatok', label: 'Servisný poplatok pri nerealizovaní predaja', type: 'amount', defaultValue: '300' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────
