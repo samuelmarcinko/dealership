@@ -283,6 +283,14 @@ export default function DocumentTemplateEditor({ initial }: { initial: TemplateF
               {field.key && (
                 <p className="w-full text-[11px] text-slate-500">
                   V texte použite <code className="font-mono text-orange-700">{`{${field.key}}`}</code>
+                  {field.type === 'checkbox' && (
+                    <>
+                      {' '}— doplní sa „Áno“ alebo „Nie“. Pre tabuľku so stĺpcami Áno/Nie použite
+                      {' '}<code className="font-mono text-orange-700">{`{${field.key}_ano}`}</code> a
+                      {' '}<code className="font-mono text-orange-700">{`{${field.key}_nie}`}</code>,
+                      {' '}do platného stĺpca sa vloží krížik.
+                    </>
+                  )}
                 </p>
               )}
             </div>

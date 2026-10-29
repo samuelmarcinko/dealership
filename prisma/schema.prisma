@@ -92,6 +92,7 @@ model Customer {
   note               String?             @db.Text
   // Údaje pre zmluvy
   birthDate          DateTime?
+  birthNumber        String?
   idCardNumber       String?
   bankAccount        String?
   isConsignor        Boolean             @default(false)
