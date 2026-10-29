@@ -16,6 +16,7 @@ const schema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   address: z.string().optional(),
   birthDate: z.string().optional(),
+  birthNumber: z.string().optional(),
   idCardNumber: z.string().optional(),
   bankAccount: z.string().optional(),
   note: z.string().optional(),

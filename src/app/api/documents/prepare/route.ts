@@ -6,6 +6,7 @@ import { getSessionFromRequest } from '@/lib/auth'
 import { getTenantSettings } from '@/lib/tenant'
 import { isConsignmentEnabled } from '@/lib/features'
 import { buildPlaceholderValues, renderTemplate } from '@/lib/documents/placeholders'
+import { parseCustomFields } from '@/lib/documents/schema'
 
 const schema = z.object({
   vehicleId: z.string().min(1),
@@ -93,7 +94,23 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const values = { ...buildPlaceholderValues({ vehicle: source, party, settings }), ...fieldValues }
+    // Zaškrtávacie polia dostanú navyše dvojicu {kľúč_ano} / {kľúč_nie} s krížikom
+    // v tom stĺpci, ktorý platí — pre tabuľky typu „Áno | Nie“ v preberacom protokole.
+    const derived: Record<string, string> = {}
+    for (const t of templates) {
+      for (const f of parseCustomFields(t.customFields)) {
+        if (f.type !== 'checkbox') continue
+        const yes = fieldValues[f.key] === 'Áno'
+        derived[`${f.key}_ano`] = yes ? 'X' : ''
+        derived[`${f.key}_nie`] = yes ? '' : 'X'
+      }
+    }
+
+    const values = {
+      ...buildPlaceholderValues({ vehicle: source, party, settings }),
+      ...fieldValues,
+      ...derived,
+    }
 
     // Poradie podľa toho, ako ich používateľ vybral
     const byId = new Map(templates.map((t) => [t.id, t]))

@@ -108,6 +108,23 @@ export default function DocumentWizard({
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
+  const checkboxFields = useMemo(
+    () => mergedFields.filter((f) => f.type === 'checkbox'),
+    [mergedFields],
+  )
+  const otherFields = useMemo(
+    () => mergedFields.filter((f) => f.type !== 'checkbox'),
+    [mergedFields],
+  )
+
+  function setAllCheckboxes(value: 'Áno' | 'Nie') {
+    setFieldValues((v) => {
+      const next = { ...v }
+      for (const f of checkboxFields) next[f.key] = value
+      return next
+    })
+  }
+
   function fieldValue(f: CustomField): string {
     return fieldValues[f.key] ?? f.defaultValue ?? (f.type === 'checkbox' ? 'Nie' : '')
   }
@@ -290,26 +307,69 @@ export default function DocumentWizard({
             Doplňte údaje, ktoré systém nepozná. Použijú sa vo všetkých vybraných dokumentoch.
           </p>
 
+          {checkboxFields.length > 0 && (
+            <div className="rounded-lg border border-slate-200 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-200">
+                <span className="text-xs font-medium text-slate-600">
+                  Odovzdané / prevzaté ({checkboxFields.filter((f) => fieldValue(f) === 'Áno').length} z {checkboxFields.length})
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setAllCheckboxes('Áno')}
+                    className="text-xs px-2 py-1 rounded text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+                  >
+                    Všetko áno
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllCheckboxes('Nie')}
+                    className="text-xs px-2 py-1 rounded text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+                  >
+                    Všetko nie
+                  </button>
+                </div>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {checkboxFields.map((f) => {
+                  const yes = fieldValue(f) === 'Áno'
+                  return (
+                    <div key={f.key} className="flex items-center gap-3 px-3 py-1.5">
+                      <span className="text-sm text-slate-700 flex-1 min-w-0">{f.label || f.key}</span>
+                      <div className="flex rounded-md border border-slate-200 overflow-hidden shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setFieldValues((v) => ({ ...v, [f.key]: 'Áno' }))}
+                          className={cn(
+                            'px-3 py-1 text-xs font-medium transition-colors',
+                            yes ? 'bg-green-600 text-white' : 'text-slate-500 hover:bg-slate-100',
+                          )}
+                        >
+                          Áno
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFieldValues((v) => ({ ...v, [f.key]: 'Nie' }))}
+                          className={cn(
+                            'px-3 py-1 text-xs font-medium border-l border-slate-200 transition-colors',
+                            !yes ? 'bg-slate-600 text-white' : 'text-slate-500 hover:bg-slate-100',
+                          )}
+                        >
+                          Nie
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
-            {mergedFields.map((f) => (
+            {otherFields.map((f) => (
               <div key={f.key} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
                 <Label htmlFor={`f-${f.key}`}>{f.label || f.key}</Label>
-                {f.type === 'checkbox' ? (
-                  <label className="mt-1.5 flex items-center gap-2 cursor-pointer">
-                    <input
-                      id={`f-${f.key}`}
-                      type="checkbox"
-                      checked={fieldValue(f) === 'Áno'}
-                      onChange={(e) =>
-                        setFieldValues((v) => ({ ...v, [f.key]: e.target.checked ? 'Áno' : 'Nie' }))
-                      }
-                      className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
-                    />
-                    <span className="text-sm text-slate-700">
-                      {fieldValue(f) === 'Áno' ? 'Áno' : 'Nie'}
-                    </span>
-                  </label>
-                ) : f.type === 'textarea' ? (
+                {f.type === 'textarea' ? (
                   <Textarea
                     id={`f-${f.key}`}
                     rows={3}

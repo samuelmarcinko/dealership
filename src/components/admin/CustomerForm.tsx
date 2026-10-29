@@ -22,6 +22,7 @@ interface CustomerData {
   email?: string | null
   address?: string | null
   birthDate?: string | Date | null
+  birthNumber?: string | null
   idCardNumber?: string | null
   bankAccount?: string | null
   note?: string | null
@@ -212,7 +213,7 @@ export default function CustomerForm({ initialData, isConsignor = false }: Props
         </div>
 
         {/* Údaje potrebné do zmlúv */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-2">
             <Label htmlFor="birthDate">Dátum narodenia</Label>
             <Input
@@ -224,6 +225,15 @@ export default function CustomerForm({ initialData, isConsignor = false }: Props
                   ? new Date(initialData.birthDate).toISOString().slice(0, 10)
                   : ''
               }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="birthNumber">Rodné číslo</Label>
+            <Input
+              id="birthNumber"
+              name="birthNumber"
+              defaultValue={initialData?.birthNumber ?? ''}
+              placeholder="880101/1234"
             />
           </div>
           <div className="space-y-2">
@@ -246,7 +256,8 @@ export default function CustomerForm({ initialData, isConsignor = false }: Props
           </div>
         </div>
         <p className="text-xs text-slate-500">
-          Tieto údaje sa dopĺňajú do zmlúv. Nie sú povinné.
+          Tieto údaje sa dopĺňajú do zmlúv, aby sa nemuseli vypisovať pri každom predaji.
+          Nie sú povinné — rodné číslo vypĺňajte len ak ho zmluvy, ktoré používate, naozaj žiadajú.
         </p>
       </div>
 

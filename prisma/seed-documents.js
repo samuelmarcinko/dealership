@@ -34,7 +34,7 @@ telefón: {predajca_telefon} &nbsp;&nbsp;|&nbsp;&nbsp; e-mail: {predajca_email}<
 <h3>Záujemca</h3>
 <p>{klient_nazov}<br>
 bydlisko / sídlo: {klient_adresa}<br>
-dátum narodenia: {klient_datum_narodenia} &nbsp;&nbsp;|&nbsp;&nbsp; rodné číslo: {rodne_cislo}<br>
+dátum narodenia: {klient_datum_narodenia} &nbsp;&nbsp;|&nbsp;&nbsp; rodné číslo: {klient_rodne_cislo}<br>
 číslo občianskeho preukazu: {klient_op}<br>
 ak ide o podnikateľa — IČO: {klient_ico} &nbsp;&nbsp;|&nbsp;&nbsp; DIČ: {klient_dic} &nbsp;&nbsp;|&nbsp;&nbsp; IČ DPH: {klient_ic_dph}<br>
 telefón: {klient_telefon} &nbsp;&nbsp;|&nbsp;&nbsp; e-mail: {klient_email}<br>
@@ -154,7 +154,6 @@ telefón: {klient_telefon} &nbsp;&nbsp;|&nbsp;&nbsp; e-mail: {klient_email}<br>
 `.trim()
 
 const SPROSTREDKOVATELSKA_FIELDS = [
-  { key: 'rodne_cislo', label: 'Rodné číslo záujemcu', type: 'text', defaultValue: '' },
   { key: 'min_cena', label: 'Minimálna predajná cena (€)', type: 'number', defaultValue: '' },
   { key: 'min_cena_slovom', label: 'Minimálna predajná cena slovom', type: 'text', defaultValue: '' },
   { key: 'provizia', label: 'Odmena sprostredkovateľa (€ s DPH)', type: 'number', defaultValue: '50' },
@@ -170,45 +169,92 @@ const SPROSTREDKOVATELSKA_FIELDS = [
 
 const PROTOKOL = `
 <h1>Preberací protokol</h1>
-<p style="text-align: center">k zmluve o sprostredkovaní predaja motorového vozidla zo dňa {datum_dnes}</p>
-
-<p><strong>Vozidlo:</strong> {vozidlo_znacka} {vozidlo_model} {vozidlo_variant}, VIN {vozidlo_vin}, EČV {vozidlo_ecv}<br>
-<strong>Záujemca:</strong> {klient_nazov}, {klient_adresa}<br>
-<strong>Sprostredkovateľ:</strong> {predajca_nazov}, {predajca_adresa}</p>
-
-<p>Sprostredkovateľ potvrdzuje, že spolu s vozidlom prevzal nasledujúce doklady a príslušenstvo:</p>
+<p style="text-align: center">k Zmluve o sprostredkovaní predaja motorového vozidla zo dňa {datum_dnes}</p>
 
 <table>
 <tbody>
-<tr><td><strong>Technický preukaz – kópia</strong></td><td>{protokol_tp}</td><td><strong>Osvedčenie o EK</strong></td><td>{protokol_ek_osvedcenie}</td></tr>
-<tr><td><strong>Osvedčenie o evidencii časť I – originál</strong></td><td>{protokol_osvedcenie_i}</td><td><strong>Protokol o EK</strong></td><td>{protokol_ek_protokol}</td></tr>
-<tr><td><strong>Návody a manuály k vozidlu</strong></td><td>{protokol_navody}</td><td><strong>Počet kľúčov</strong></td><td>{pocet_klucov}</td></tr>
-<tr><td><strong>Splnomocnenie</strong></td><td>{protokol_splnomocnenie}</td><td><strong>Počet ovládačov k alarmu</strong></td><td>{pocet_ovladacov}</td></tr>
-<tr><td><strong>Osvedčenie o STK – originál</strong></td><td>{protokol_stk_osvedcenie}</td><td><strong>Zdvihák</strong></td><td>{protokol_zdvihak}</td></tr>
-<tr><td><strong>Protokol o STK</strong></td><td>{protokol_stk_protokol}</td><td><strong>Osvedčenie k autofóliám</strong></td><td>{protokol_autofolie}</td></tr>
-<tr><td><strong>PZP – zelená karta</strong></td><td>{protokol_pzp}</td><td><strong>Kľúč na kolesá</strong></td><td>{protokol_kluc_kolesa}</td></tr>
-<tr><td><strong>Doklad o zaplatení</strong></td><td>{protokol_doklad_platba}</td><td><strong>Servisná kniha</strong></td><td>{protokol_servisna_kniha}</td></tr>
+<tr><td><strong>Vozidlo</strong></td><td>{vozidlo_znacka} {vozidlo_model} {vozidlo_variant}, VIN {vozidlo_vin}, EČV {vozidlo_ecv}</td></tr>
+<tr><td><strong>Záujemca</strong></td><td>{klient_nazov}, {klient_adresa}</td></tr>
+<tr><td><strong>Sprostredkovateľ</strong></td><td>{predajca_nazov}, {predajca_adresa}, IČO: {predajca_ico}</td></tr>
+<tr><td><strong>Stav tachometra pri prevzatí</strong></td><td>{vozidlo_km} (podľa vyhlásenia majiteľa: {vozidlo_km_vyhlasenie})</td></tr>
 </tbody>
 </table>
 
-<p><strong>Stav tachometra pri prevzatí:</strong> {vozidlo_km} (podľa vyhlásenia majiteľa: {vozidlo_km_vyhlasenie})</p>
+<h2>Vyhlásenie žiadateľa</h2>
+<p>Svojím podpisom v tomto dokumente potvrdzujem, že:</p>
+<ol>
+<li>spoločnosti {predajca_nazov} som dal/a na osobitnom dokumente písomný súhlas so spracúvaním mojich osobných údajov v súlade so zákonom č. 18/2018 Z. z. o ochrane osobných údajov a o zmene a doplnení niektorých zákonov v platnom znení a s nariadením Európskeho parlamentu a Rady (EÚ) 2016/679 (GDPR);</li>
+<li>v prípade, že nedôjde k realizácii sprostredkovania predaja, som uzrozumený s tým, že moje osobné údaje budú zlikvidované, ak ich ďalšie uchovávanie nevyžaduje osobitný právny predpis;</li>
+<li>všetky skutočnosti mnou uvedené v zmluve o sprostredkovaní predaja a v tomto protokole sú pravdivé a som si vedomý právnych následkov uvedenia nepravdivých údajov.</li>
+</ol>
+<p>Súhlas so spracúvaním mojich osobných údajov dávam na obdobie {suhlas_roky} rokov od podpisu zmluvy.</p>
 
-<h3>Poznámky ku stavu vozidla</h3>
+<p style="text-align: center"><br>.................................................<br>záujemca – predávajúci</p>
+
+<h2>Prevzaté doklady a príslušenstvo</h2>
+
+<table>
+<tbody>
+<tr>
+<th>Doklad / príslušenstvo</th><th>Áno</th><th>Nie</th>
+<th>Doklad / príslušenstvo</th><th>Áno</th><th>Nie</th>
+</tr>
+<tr>
+<td>Technický preukaz – kópia</td><td><p style="text-align: center">{protokol_tp_ano}</p></td><td><p style="text-align: center">{protokol_tp_nie}</p></td>
+<td>Osvedčenie o EK</td><td><p style="text-align: center">{protokol_ek_osvedcenie_ano}</p></td><td><p style="text-align: center">{protokol_ek_osvedcenie_nie}</p></td>
+</tr>
+<tr>
+<td>Osvedčenie o evidencii časť I – originál</td><td><p style="text-align: center">{protokol_osvedcenie_i_ano}</p></td><td><p style="text-align: center">{protokol_osvedcenie_i_nie}</p></td>
+<td>Protokol o EK</td><td><p style="text-align: center">{protokol_ek_protokol_ano}</p></td><td><p style="text-align: center">{protokol_ek_protokol_nie}</p></td>
+</tr>
+<tr>
+<td>Návody a manuály k vozidlu</td><td><p style="text-align: center">{protokol_navody_ano}</p></td><td><p style="text-align: center">{protokol_navody_nie}</p></td>
+<td>Počet kľúčov</td><td colspan="2"><p style="text-align: center">{pocet_klucov}</p></td>
+</tr>
+<tr>
+<td>Splnomocnenie</td><td><p style="text-align: center">{protokol_splnomocnenie_ano}</p></td><td><p style="text-align: center">{protokol_splnomocnenie_nie}</p></td>
+<td>Počet ovládačov k alarmu</td><td colspan="2"><p style="text-align: center">{pocet_ovladacov}</p></td>
+</tr>
+<tr>
+<td>Osvedčenie o STK – originál</td><td><p style="text-align: center">{protokol_stk_osvedcenie_ano}</p></td><td><p style="text-align: center">{protokol_stk_osvedcenie_nie}</p></td>
+<td>Zdvihák</td><td><p style="text-align: center">{protokol_zdvihak_ano}</p></td><td><p style="text-align: center">{protokol_zdvihak_nie}</p></td>
+</tr>
+<tr>
+<td>Protokol o STK</td><td><p style="text-align: center">{protokol_stk_protokol_ano}</p></td><td><p style="text-align: center">{protokol_stk_protokol_nie}</p></td>
+<td>Osvedčenie k autofóliám</td><td><p style="text-align: center">{protokol_autofolie_ano}</p></td><td><p style="text-align: center">{protokol_autofolie_nie}</p></td>
+</tr>
+<tr>
+<td>PZP – zelená karta</td><td><p style="text-align: center">{protokol_pzp_ano}</p></td><td><p style="text-align: center">{protokol_pzp_nie}</p></td>
+<td>Kľúč na kolesá</td><td><p style="text-align: center">{protokol_kluc_kolesa_ano}</p></td><td><p style="text-align: center">{protokol_kluc_kolesa_nie}</p></td>
+</tr>
+<tr>
+<td>Doklad o zaplatení</td><td><p style="text-align: center">{protokol_doklad_platba_ano}</p></td><td><p style="text-align: center">{protokol_doklad_platba_nie}</p></td>
+<td>Servisná kniha</td><td><p style="text-align: center">{protokol_servisna_kniha_ano}</p></td><td><p style="text-align: center">{protokol_servisna_kniha_nie}</p></td>
+</tr>
+</tbody>
+</table>
+
+<p style="text-align: center"><br>.................................................<br>sprostredkovateľ</p>
+
+<h2>Poznámky ku stavu vozidla</h2>
 <p>{stav_vozidla_poznamky}</p>
+
+<p>Známe vady uvedené v zmluve: {vozidlo_zavady}</p>
 
 <p>V {miesto}, dňa {datum_dnes}</p>
 
 <table>
 <tbody>
 <tr>
-<td style="text-align: center"><br><br>.................................................<br>sprostredkovateľ</td>
-<td style="text-align: center"><br><br>.................................................<br>záujemca – odovzdávajúci</td>
+<td><p style="text-align: center"><br>.................................................<br>sprostredkovateľ</p></td>
+<td><p style="text-align: center"><br>.................................................<br>záujemca – predávajúci</p></td>
 </tr>
 </tbody>
 </table>
 `.trim()
 
 const PROTOKOL_FIELDS = [
+  { key: 'suhlas_roky', label: 'Súhlas so spracúvaním údajov na obdobie (rokov)', type: 'number', defaultValue: '11' },
   { key: 'protokol_tp', label: 'Technický preukaz – kópia', type: 'checkbox', defaultValue: 'Nie' },
   { key: 'protokol_osvedcenie_i', label: 'Osvedčenie o evidencii časť I – originál', type: 'checkbox', defaultValue: 'Nie' },
   { key: 'protokol_navody', label: 'Návody a manuály k vozidlu', type: 'checkbox', defaultValue: 'Nie' },
@@ -219,12 +265,12 @@ const PROTOKOL_FIELDS = [
   { key: 'protokol_doklad_platba', label: 'Doklad o zaplatení', type: 'checkbox', defaultValue: 'Nie' },
   { key: 'protokol_ek_osvedcenie', label: 'Osvedčenie o EK', type: 'checkbox', defaultValue: 'Nie' },
   { key: 'protokol_ek_protokol', label: 'Protokol o EK', type: 'checkbox', defaultValue: 'Nie' },
-  { key: 'pocet_klucov', label: 'Počet kľúčov', type: 'number', defaultValue: '' },
-  { key: 'pocet_ovladacov', label: 'Počet ovládačov k alarmu', type: 'number', defaultValue: '' },
   { key: 'protokol_zdvihak', label: 'Zdvihák', type: 'checkbox', defaultValue: 'Nie' },
   { key: 'protokol_autofolie', label: 'Osvedčenie k autofóliám', type: 'checkbox', defaultValue: 'Nie' },
   { key: 'protokol_kluc_kolesa', label: 'Kľúč na kolesá', type: 'checkbox', defaultValue: 'Nie' },
   { key: 'protokol_servisna_kniha', label: 'Servisná kniha', type: 'checkbox', defaultValue: 'Nie' },
+  { key: 'pocet_klucov', label: 'Počet kľúčov', type: 'number', defaultValue: '' },
+  { key: 'pocet_ovladacov', label: 'Počet ovládačov k alarmu', type: 'number', defaultValue: '' },
   { key: 'stav_vozidla_poznamky', label: 'Poznámky ku stavu vozidla', type: 'textarea', defaultValue: '' },
 ]
 
