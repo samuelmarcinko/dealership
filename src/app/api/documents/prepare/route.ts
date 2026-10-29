@@ -5,7 +5,9 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 import { getTenantSettings } from '@/lib/tenant'
 import { isConsignmentEnabled } from '@/lib/features'
-import { buildPlaceholderValues, renderTemplate } from '@/lib/documents/placeholders'
+import {
+  buildPlaceholderValues, renderTemplate, formatAmount, amountToSlovakWords,
+} from '@/lib/documents/placeholders'
 import { parseCustomFields } from '@/lib/documents/schema'
 
 const schema = z.object({
@@ -99,10 +101,22 @@ export async function POST(req: NextRequest) {
     const derived: Record<string, string> = {}
     for (const t of templates) {
       for (const f of parseCustomFields(t.customFields)) {
-        if (f.type !== 'checkbox') continue
-        const yes = fieldValues[f.key] === 'Áno'
-        derived[`${f.key}_ano`] = yes ? 'X' : ''
-        derived[`${f.key}_nie`] = yes ? '' : 'X'
+        if (f.type === 'checkbox') {
+          const yes = fieldValues[f.key] === 'Áno'
+          derived[`${f.key}_ano`] = yes ? 'X' : ''
+          derived[`${f.key}_nie`] = yes ? '' : 'X'
+        }
+        // Suma sa zobrazí s medzerami medzi tisíckami a doplní sa k nej
+        // {kľúč_slovom}, aby sa do zmluvy nemusela písať ručne.
+        if (f.type === 'amount') {
+          const n = Number(String(fieldValues[f.key] ?? '').replace(',', '.'))
+          if (Number.isFinite(n)) {
+            derived[f.key] = formatAmount(n)
+            derived[`${f.key}_slovom`] = amountToSlovakWords(n)
+          } else {
+            derived[`${f.key}_slovom`] = ''
+          }
+        }
       }
     }
 

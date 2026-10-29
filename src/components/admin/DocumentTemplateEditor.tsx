@@ -26,6 +26,7 @@ const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
   { value: 'textarea', label: 'Dlhý text' },
   { value: 'number', label: 'Číslo' },
+  { value: 'amount', label: 'Suma (€)' },
   { value: 'date', label: 'Dátum' },
   { value: 'checkbox', label: 'Áno / Nie' },
 ] as const
@@ -283,6 +284,13 @@ export default function DocumentTemplateEditor({ initial }: { initial: TemplateF
               {field.key && (
                 <p className="w-full text-[11px] text-slate-500">
                   V texte použite <code className="font-mono text-orange-700">{`{${field.key}}`}</code>
+                  {field.type === 'amount' && (
+                    <>
+                      {' '}— doplní sa suma s medzerami medzi tisíckami. Navyše vznikne
+                      {' '}<code className="font-mono text-orange-700">{`{${field.key}_slovom}`}</code>
+                      {' '}so sumou vypísanou slovom, takže ju netreba písať ručne.
+                    </>
+                  )}
                   {field.type === 'checkbox' && (
                     <>
                       {' '}— doplní sa „Áno“ alebo „Nie“. Pre tabuľku so stĺpcami Áno/Nie použite
