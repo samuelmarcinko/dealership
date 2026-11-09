@@ -74,6 +74,9 @@ export default function BrandingForm({ settings }: Props) {
       { key: 'contact_phone', value: fd.get('contact_phone') as string },
       { key: 'contact_email', value: fd.get('contact_email') as string },
       { key: 'contact_address', value: fd.get('contact_address') as string },
+      { key: 'business_ico', value: fd.get('business_ico') as string },
+      { key: 'business_dic', value: fd.get('business_dic') as string },
+      { key: 'business_ic_dph', value: fd.get('business_ic_dph') as string },
       { key: 'social_facebook', value: fd.get('social_facebook') as string },
       { key: 'social_instagram', value: fd.get('social_instagram') as string },
       { key: 'footer_tagline', value: fd.get('footer_tagline') as string },
@@ -232,6 +235,42 @@ export default function BrandingForm({ settings }: Props) {
             defaultValue={settings['contact_address'] ?? ''}
             placeholder="Hlavná 1&#10;010 01 Žilina"
           />
+        </div>
+      </div>
+
+      <div className="border-t pt-5">
+        <h3 className="font-medium text-slate-900 mb-1">Identifikačné údaje</h3>
+        <p className="text-sm text-slate-500 mb-4">
+          Dopĺňajú sa do hlavičky každej zmluvy a dokumentu. Bez nich tam zostanú prázdne miesta.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="business_ico">IČO</Label>
+            <Input
+              id="business_ico"
+              name="business_ico"
+              defaultValue={settings['business_ico'] ?? ''}
+              placeholder="12345678"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="business_dic">DIČ</Label>
+            <Input
+              id="business_dic"
+              name="business_dic"
+              defaultValue={settings['business_dic'] ?? ''}
+              placeholder="1020304050"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="business_ic_dph">IČ DPH</Label>
+            <Input
+              id="business_ic_dph"
+              name="business_ic_dph"
+              defaultValue={settings['business_ic_dph'] ?? ''}
+              placeholder="SK1020304050"
+            />
+          </div>
         </div>
       </div>
 
