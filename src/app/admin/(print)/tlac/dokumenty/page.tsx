@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import PrintButton from '@/components/admin/PrintButton'
+import DocumentActions from '@/components/admin/DocumentActions'
 
 export const metadata = { title: 'Tlač dokumentov' }
 
@@ -47,9 +47,9 @@ export default async function PrintDocumentsPage({
       `}</style>
 
       <div className="toolbar no-print">
-        <PrintButton />
+        <DocumentActions ids={docs.map((d) => d.id)} />
         <span style={{ alignSelf: 'center', fontSize: '13px', color: '#64748b' }}>
-          {docs.length === 1 ? '1 dokument' : `${docs.length} dokumenty`} · v dialógu tlače zvoľte „Uložiť ako PDF“
+          {docs.length === 1 ? '1 dokument' : `${docs.length} dokumenty`} · pre PDF zvoľte v dialógu tlače „Uložiť ako PDF“
         </span>
       </div>
 
